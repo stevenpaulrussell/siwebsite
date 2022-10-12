@@ -7,6 +7,7 @@ name = "pypi"
 django = "==4.1.2"
 boto3 = "*"
 twilio = "*"
+botocore = "*"
 
 [dev-packages]
 
