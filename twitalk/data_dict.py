@@ -3,15 +3,17 @@
 
 # senders
 """
-f'free_tier/{from_tel}':                # This written by postmaster, read by twitalk
+f'{from_tel}':                # These are written by postmaster, read by twitalk.  It is the whole state for the sender!
+    'status': free_tier
     f'from_{from_tel}': -> sender name if key is present        # Use to customize sms to sender
     f'to_{to_tel}:  -> recipient name if key is present         # Use to customize sms to sender
 
-f'new_sender/{from_tel}':               # This written by twitalk, read by twitalk, deleted by postmaster
+
+f'{from_tel}':               # These are written by twitalk, read by twitalk, deleted by postmaster
+        'status': -> need_image, need_audio, need_profile, free_tier     # Simplify code by specifying what is acceptable
         'begun_at': -> time.time()      # When first heard from.  Pruned by postmaster if not completed within xx hours     
         'finished_at': -> time.time()   # When profile received.  This allows twitalk to process a new postcard immediately      
         'to_tel': -> to_tel             # Freeze any new to_tel until postmaster rewrites to free_tier
-        'next_step': -> one of bare_image, bare_audio, profile_image, free_tier     # Simplify code by specifying what is acceptable
         'image_url': -> image media_url
         'image_hint': -> image media_hint
         'audio_url': -> audio media_url

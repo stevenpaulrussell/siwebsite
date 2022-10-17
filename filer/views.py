@@ -1,3 +1,7 @@
+"""
+S3 and SQS read and write functions localized here.
+"""
+
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -5,8 +9,15 @@ import os
 
 from . import exceptions
 
-client = boto3.client(
+S3client = boto3.client(
             's3', 
+            aws_access_key_id=os.environ['AWSAccessKeyId'], 
+            aws_secret_access_key=os.environ['AWSSecretKey']
+            )
+
+SQSClient = boto3.client(
+            'sqs', 
+            region_name = 'us-east-1',
             aws_access_key_id=os.environ['AWSAccessKeyId'], 
             aws_secret_access_key=os.environ['AWSSecretKey']
             )
@@ -16,45 +27,62 @@ if os.environ['TEST'] == 'True':
     aws_bucket_name = os.environ['TEST_BUCKET']        # This from .env  Not from Heroku config
 
 
-#loading
-def load_twitalk_freetier(from_tel):
-    key = f'free_tier/{from_tel}'
-    return  _load_a_thing_using_key(f'free_tier/{from_tel}')
+#S3
+# Loading
+def load_sender(from_tel):
+    return  _load_a_thing_using_key(f'{from_tel}')
 
-def load_new_sender(from_tel):
-    key = f'new_sender/{from_tel}'
-    return  _load_a_thing_using_key(f'new_sender/{from_tel}')
+
 
 # Saving
 def save_new_sender_state(from_tel, state):
     _save_a_thing_using_key(state, thing_key=f'new_sender/{from_tel}')
 
 
+# SQS
+def get_queue_url(queue_name):
+    response = SQSClient.get_queue_url(QueueName=queue_name)
+    return response['QueueUrl']
+
+def send_an_sqs_message(queue_name, message):
+    SQSClient.send_message(QueueUrl=get_queue_url(queue_name), MessageBody=message)
+
+def get_sqs_messages(queue_name):
+    message_list = []
+    QueueUrl = get_queue_url(queue_name)
+    response = SQSClient.receive_message(QueueUrl=QueueUrl)
+    sqs_message_list = response['Messages']
+    for sqs_message in sqs_message_list:
+        receipt_handle = sqs_message['ReceiptHandle']
+        message_list.append(sqs_message['Body'])
+        SQSClient.delete_message(QueueUrl=QueueUrl, ReceiptHandle=receipt_handle)
+    return message_list
 
 
-# Utility functions
+
+# S3 Utility functions
 def _load_a_thing_using_key(thing_key):
     try:
-        response_dictionary = client.get_object(Bucket=aws_bucket_name, Key=thing_key)
-    except client.exceptions.NoSuchKey:
+        response_dictionary = S3client.get_object(Bucket=aws_bucket_name, Key=thing_key)
+    except S3client.exceptions.NoSuchKey:
         raise exceptions.S3KeyNotFound
     return json.loads(response_dictionary['Body'].read())
 
 def _save_a_thing_using_key(thing, thing_key):
     datastring = json.dumps(thing)
-    client.put_object(Body=datastring, Bucket=aws_bucket_name, Key=thing_key)
+    S3client.put_object(Body=datastring, Bucket=aws_bucket_name, Key=thing_key)
 
 def _delete_a_thing_using_key(thing_key):
-    client.delete_object(Bucket=aws_bucket_name, Key=thing_key)
+    S3client.delete_object(Bucket=aws_bucket_name, Key=thing_key)
 
 
 def clear_the_read_bucket(PREFIX=''):
     if TEST != True:
         raise Exception('In filer, calling clear_the_read_bucket with TEST = {TEST}')
     else:
-        s3_response = client.list_objects_v2(Bucket=aws_bucket_name, Prefix=PREFIX)
+        s3_response = S3client.list_objects_v2(Bucket=aws_bucket_name, Prefix=PREFIX)
         if 'Contents' in s3_response:
             for object in s3_response['Contents']:
-                client.delete_object(Bucket=aws_bucket_name, Key=object['Key'])
+                S3client.delete_object(Bucket=aws_bucket_name, Key=object['Key'])
 
 
