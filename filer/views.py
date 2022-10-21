@@ -29,14 +29,25 @@ if os.environ['TEST'] == 'True':
 
 #S3
 # Loading
-def load_sender(from_tel):
-    return  _load_a_thing_using_key(f'{from_tel}')
+def free_tier_flag(from_tel):
+    print('What actually gets returned below... how to strip out?')
+    try:
+        return  _load_a_thing_using_key('free_tier/{from_tel}')
+    except exceptions.S3KeyNotFound:
+        return None
+
+def load_from_free_tier(from_tel):
+    print('What actually gets returned below... how to strip out?')
+    try:
+        return  _load_a_thing_using_key('new_sender/{from_tel}')
+    except exceptions.S3KeyNotFound:
+        return 'image'
 
 
+# load new_sender and make blank if not found
 
 # Saving
-def save_new_sender_state(from_tel, state):
-    _save_a_thing_using_key(state, thing_key=f'new_sender/{from_tel}')
+# save wip 
 
 
 # SQS
