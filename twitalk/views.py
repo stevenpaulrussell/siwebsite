@@ -34,7 +34,7 @@ def accept_media(request):      # mms entry point, image only for now!!
             nq_admin_message(message="""note issues to error SQS""")
         image_url = postdata.get('MediaUrl0', None)
         free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)   
-        if free_tier_morsel:
+        if free_tier_morsel:  
             mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel)
         else:
             return mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
