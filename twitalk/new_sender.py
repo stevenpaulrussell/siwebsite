@@ -9,6 +9,9 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
     expect = filerviews.load_from_new_sender(from_tel)   # Postmaster will re-write the new_sender block
     wip = filerviews.load_wip(from_tel, to_tel)
     match expect:
+        case 'new_sender_ready':    # Handle as for free_tier
+            mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel={})
+
         case 'image':
             if image_url and not text:
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
@@ -27,7 +30,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
         case 'audio':
             message = """Send some instruction back to call the number, link to instructions."""
             sms_back(from_tel, message, from_twilio='WHATEVER1')
-            message = """This error message, some detail added aside from what is stored in S3"""
+            message = """User action telemetry"""     
             nq_admin_message(message)
 
         case 'profile':
@@ -40,11 +43,8 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 """Send instruction on profile and link to instructions. """
                 """ Make an error SQS for mgmt??"""
 
-        case 'new_sender_ready':    # Handle as for free_tier
-            mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel={})
-
         case _:
-            sms_mgmt_message('programmer error')
+            raise Exception('some message')   # Should drive an immediate sms to mgmt as well as nq_admin
     return
 
 

@@ -25,29 +25,35 @@ DEFAULT_TWILIO_NUMBER = '+18326626430'
 #  Entry points. A postcard is made by mms -> accept_media <- for the photo, and  voice call -> twi_recorder <- for the audio
 @csrf_exempt
 def accept_media(request):      # mms entry point, image only for now!!
-    postdata = request.POST
-    timestamp, from_tel, to_tel, text = extract_request_values(postdata)
-    media_type = postdata.get('MediaContentType0', 'no_media/no_media').split('/')[0]
-    if media_type not in ('image', 'no_media'):
-        sms_back(from_tel, message="""Send instructions, note error back to user""", from_twilio='WHATEVER1')
+    try:
+        postdata = request.POST
+        timestamp, from_tel, to_tel, text = extract_request_values(postdata)
+        media_type = postdata.get('MediaContentType0', 'no_media/no_media').split('/')[0]
+        if media_type not in ('image', 'no_media'):
+            sms_back(from_tel, message="""Send instructions, note error back to user""", from_twilio='WHATEVER1')
+            nq_admin_message(message="""note issues to error SQS""")
+        image_url = postdata.get('MediaUrl0', None)
+        free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)   
+        if free_tier_morsel:
+            mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel)
+        else:
+            return mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
+    except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
-    image_url = postdata.get('MediaUrl0', None)
-    free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)   
-    if free_tier_morsel:
-        mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel)
-    else:
-        return mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
 
             
 @csrf_exempt
 def twi_recorder(request):      # voice recording entry point
-    postdata = request.POST
-    timestamp, from_tel, to_tel, text = extract_request_values(postdata)
-    free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)  
-    if free_tier_morsel:
-        recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata)
-    else:
-        recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
+    try:
+        postdata = request.POST
+        timestamp, from_tel, to_tel, text = extract_request_values(postdata)
+        free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)  
+        if free_tier_morsel:
+            recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata)
+        else:
+            recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
+    except Exception as E:
+        nq_admin_message(message="""note issues to error SQS""")
            
 
 

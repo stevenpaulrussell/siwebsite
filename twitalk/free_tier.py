@@ -20,7 +20,7 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
         sms_back(from_tel, message='Good image received plus morsel stuff', from_twilio='WHATEVER1')
 
     else:
-       sms_mgmt_message('programmer error')
+       assert not 'Error catch'
 
 
 def recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata):
@@ -28,17 +28,17 @@ def recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdat
     if 'RecordingUrl' not in postdata and 'image_url' not in wip:
         """Send twilio command ask for image via mms and to not record."""
 
-    elif 'RecordingUrl' in postdata and 'image_url' not in wip:
-        """Error condition"""
+    elif 'RecordingUrl' in postdata and 'image_url' not in wip:  # Ignore the audio -- need an image!
+        pass
 
     elif 'RecordingUrl' not in postdata and 'image_url' in wip:
         """Send twilio command to record using free_tier_morsel if it exists"""
 
-    elif 'RecordingUrl'  in postdata and 'image_url' in wip:
+    else:
+        assert 'RecordingUrl'  in postdata and 'image_url' in wip  # Catch the exception at the entry point
         audio_url = postdata['RecordingUrl'] + '.mp3' 
         wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
         nq_postcard(from_tel, to_tel, wip)    # This call also deletes the wip
         sms_back(from_tel, 'postcard is sent .... use free_tier_morsel to personalize it.')
 
-    else:
-        sms_mgmt_message('programmer error')
+
