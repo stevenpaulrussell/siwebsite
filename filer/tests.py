@@ -31,6 +31,11 @@ class FilerViewS3FunctionsWork(TestCase):
         res = views.load_wip(self.new_from_tel, self.new_to_tel)
         self.assertEqual(res, {})
 
+    def test__save_new_sender_works_fine(self):
+        views.save_new_sender(self.new_from_tel, expect='audio')
+        res = views.load_from_new_sender(self.new_from_tel)
+        self.assertEqual(res, 'audio')
+
     def test__save_wip_works_fine(self):
         test_wip = dict(image_timestamp='image_timestamp', image_url='image_url')
         views.save_wip(self.new_from_tel, self.new_to_tel, test_wip)

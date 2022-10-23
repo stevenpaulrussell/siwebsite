@@ -15,12 +15,10 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
         case 'image':
             if image_url and not text:
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
-                """Save the wip using filer"""
-                message = 'Good image received new_sender'  # How to write this using S3 ?
-                sms_back(from_tel, message, from_twilio='WHATEVER1')
-                message = """Got this new sender OK"""   # How to write this using S3 and the new_sender info?
-                sms_mgmt_message(message, from_twilio='WHATEVER2')
-                """update expect to 'audio'"""
+                filerviews.save_wip(from_tel, to_tel, wip)
+                filerviews.save_new_sender(new_sender=from_tel, expects='audio')
+                sms_back(from_tel, message='Good image received new_sender', from_twilio='WHATEVER1')
+                sms_mgmt_message(message='New sender sent image OK', from_twilio='WHATEVER2')
             else:
                 message =  """Send request for first image and link to instructions, maybe note issues to error SQS, note error back to user"""
                 sms_back(from_tel, message, from_twilio='WHATEVER1')

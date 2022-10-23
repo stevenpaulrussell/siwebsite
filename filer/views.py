@@ -36,7 +36,7 @@ def load_from_free_tier(from_tel):
 
 def load_from_new_sender(from_tel):
     try:
-        return  _load_a_thing_using_key('new_sender/{from_tel}')
+        return  _load_a_thing_using_key(f'new_sender/{from_tel}')
     except exceptions.S3KeyNotFound:
         return 'image'
 
@@ -48,6 +48,10 @@ def load_wip(from_tel, to_tel):
 
 
 # S3 Saving
+
+def save_new_sender(from_tel, expect):
+    _save_a_thing_using_key(thing=expect, key=f'new_sender/{from_tel}')
+
 def save_wip(from_tel, to_tel, wip):
     _save_a_thing_using_key(wip, key=f'wip/{from_tel}/{to_tel}')
 
