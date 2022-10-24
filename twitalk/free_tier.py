@@ -15,8 +15,8 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
 
     elif image_url and not text:
         wip = filerviews.load_wip(from_tel, to_tel)
-        wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
-        """write wip back to filer"""   
+        wip.update(dict(image_url=image_url, image_timestamp=timestamp))  
+        filerviews.save_wip(from_tel, to_tel, wip)
         sms_back(from_tel, message='Good image received plus morsel stuff', from_twilio='WHATEVER1')
 
     else:

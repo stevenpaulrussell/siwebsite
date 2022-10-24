@@ -48,12 +48,12 @@ def load_wip(from_tel, to_tel):
 
 
 # S3 Saving
-
 def save_new_sender(from_tel, expect):
     _save_a_thing_using_key(thing=expect, key=f'new_sender/{from_tel}')
 
 def save_wip(from_tel, to_tel, wip):
     _save_a_thing_using_key(wip, key=f'wip/{from_tel}/{to_tel}')
+
 
 
 # S3 Utility functions
@@ -71,7 +71,6 @@ def _save_a_thing_using_key(thing, key):
 def _delete_a_thing_using_key(key):
     S3client.delete_object(Bucket=aws_bucket_name, Key=key)
 
-
 def clear_the_read_bucket(PREFIX=''):
     if TEST != True:
         raise Exception('In filer, calling clear_the_read_bucket with TEST = {TEST}')
@@ -82,7 +81,17 @@ def clear_the_read_bucket(PREFIX=''):
                 S3client.delete_object(Bucket=aws_bucket_name, Key=object['Key'])
 
 
-# SQS
+# SQS Use Functions
+def nq_postcard(from_tel, to_tel, wip):
+    """Build and sqs message, call filer to send it, call filer to remove the wip."""
+
+def nq_cmd(from_tel, cmd_json):
+        """Call filer to send it."""
+
+def nq_admin_message(message):
+        """Call filer to send it."""
+
+# SQS Utility functions
 def get_queue_url(queue_name):
     response = SQSClient.get_queue_url(QueueName=queue_name)
     return response['QueueUrl']

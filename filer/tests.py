@@ -8,6 +8,7 @@ from django.test import TestCase
 
 from .exceptions import S3KeyNotFound
 from . import views 
+from . import lines
 
 class FilerViewS3FunctionsWork(TestCase):
     def setUp(self) -> None:
@@ -43,15 +44,7 @@ class FilerViewS3FunctionsWork(TestCase):
         self.assertEqual(res, test_wip)
 
 
-       
-    def xtest_can_save_new_sender_and_read_it(self):
-        views.save_new_sender_state(self.newphonenumber, {'greet': 'hi there'})
-        res = views.load_new_sender(self.newphonenumber)
-        self.assertEqual(res['greet'], 'hi there')
-
-
-
-class FilerViewSQS_FunctionsWork(TestCase):
+class FilerViewSQS_Utility_FunctionsWork(TestCase):
     def setUp(self) -> None:
         return super().setUp()
 
@@ -70,6 +63,20 @@ class FilerViewSQS_FunctionsWork(TestCase):
         self.assertEqual(message['mylabel'], 'mycontent')
 
 
-       
+class SQS_NQ_Functions_Work(TestCase):
+    def setUp(self) -> None:
+        return super().setUp()
 
+    def test_nq_postcard(self):
+        pass
+
+
+class Can_Make_Needed_Strings_in_Lines(TestCase):
+    def test_lines_no_params(self):
+        res = lines.line('key')
+        self.assertEqual(res, "<key looked up> using {}")
+
+    def test_lines_with_params(self):
+        res = lines.line('key', recipient='recipient name', sender='sender_name')
+        self.assertEqual(res, "<key looked up> using {'recipient': 'recipient name', 'sender': 'sender_name'}")
 

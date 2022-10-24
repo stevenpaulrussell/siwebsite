@@ -16,14 +16,6 @@
 def sms_back(from_tel, message, from_twilio='WHATEVER1'):
     """Use twilio to send text message to to_tel"""
 
-def nq_postcard(from_tel, to_tel, wip):
-    """Build and sqs message, call filer to send it, call filer to remove the wip."""
-
-def nq_cmd(from_tel, cmd_json):
-        """Call filer to send it."""
-
-def nq_admin_message(message):
-        """Call filer to send it."""
 
 def sms_mgmt_message(message, from_twilio='WHATEVER2'):
         """Use twilio to send text message to WHATEVER2"""

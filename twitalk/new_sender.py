@@ -33,10 +33,10 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
 
         case 'profile':
             if image_url and text == 'profile':
+                filerviews.save_new_sender(new_sender=from_tel, expects='new_sender_ready')
+                nq_postcard(from_tel, to_tel, wip)   #This clears the wip
                 nq_cmd(cmd_json="""Send new_sender_profile on SQS""")
                 sms_back(from_tel, 'send welcome message')
-                """update expect to 'new_sender_ready'"""
-                nq_postcard(from_tel, to_tel, wip)   #This clears the wip
             else:
                 """Send instruction on profile and link to instructions. """
                 """ Make an error SQS for mgmt??"""
@@ -60,8 +60,8 @@ def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
             else :
                 audio_url = postdata['RecordingUrl'] + '.mp3' 
                 wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
-                """update expect to 'profile'"""
-                """write wip back to filer"""   
+                filerviews.save_new_sender(new_sender=from_tel, expects='profile')
+                filerviews.save_wip(from_tel, to_tel, wip) 
 
         case _:    
             if 'RecordingUrl' not in postdata:
