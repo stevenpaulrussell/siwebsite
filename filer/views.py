@@ -9,6 +9,8 @@ import os
 
 from . import exceptions
 
+TEST_SQS = 'twilio3-tests'
+
 S3client = boto3.client(
             's3', 
             aws_access_key_id=os.environ['AWSAccessKeyId'], 
@@ -99,14 +101,14 @@ def get_queue_url(queue_name):
 def send_an_sqs_message(queue_name, message):
     SQSClient.send_message(QueueUrl=get_queue_url(queue_name), MessageBody=message)
 
-def get_sqs_messages(queue_name):
-    message_list = []
+def get_an_sqs_message(queue_name):
     QueueUrl = get_queue_url(queue_name)
-    response = SQSClient.receive_message(QueueUrl=QueueUrl)
-    sqs_message_list = response['Messages']
-    for sqs_message in sqs_message_list:
+    response = SQSClient.receive_message(QueueUrl=QueueUrl, WaitTimeSeconds=1)
+    if 'Messages' in response:
+        sqs_message = response['Messages'][0]
         receipt_handle = sqs_message['ReceiptHandle']
-        message_list.append(sqs_message['Body'])
         SQSClient.delete_message(QueueUrl=QueueUrl, ReceiptHandle=receipt_handle)
-    return message_list
+        return sqs_message['Body']
+    else:
+        return None
 
