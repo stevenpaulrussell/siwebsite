@@ -97,6 +97,17 @@ class NQ_Functions_Put_Content_In_SQS(TestCase):
         self.assertIn('version', postcard_message)
         self.assertEqual(S3_wip_after, {})
         self.assertEqual(postcard_message['wip'], wip)
+        self.assertFalse('test_nq_postcard is safely writing to TEST_SQS not any production, and so are other tests!!')
+
+    def test_nq_cmd(self):
+        self.assertFalse('Still have work to do on writing and testing this including data_dict')
+
+    def test_nq_admin_message(self):
+        self.assertFalse('Still have work to do on writing and testing this including data_dict')
+
+    def test_twilio_cmds(self):
+        self.assertFalse('Still have work to do on writing and testing twilio_cmds in twilio_cmds.py')
+
 
 
 class Can_Make_Needed_Strings_in_Lines(TestCase):
