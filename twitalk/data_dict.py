@@ -16,11 +16,11 @@ f'new_sender/{from_tel}':               # Written and read, by twitalk and and d
 
 # wip     
 """
-f'wip/{from_tel}/{to_tel}'    `# Written, read, and deleted by twitalk for state store
+f'wip/{from_tel}/{to_tel}':    `# Written, read, and deleted by twitalk for state store
     'image_timestamp': 
     'image_url':
-    'audio_timestamp':          # Used only for new_sender
-    'audio_url':                # Used only for new_sender
+    'audio_timestamp':          
+    'audio_url':                
 """
 
 # command SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
