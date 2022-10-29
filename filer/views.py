@@ -9,10 +9,6 @@ import os
 
 from . import exceptions
 
-# twilio3-postcards   or   twilio3-commands   or   twilio3-tests
-POSTCARD_SQS = 'twilio3-postcards'
-CMD_SQS = 'twilio3-commands'
-TEST_SQS = 'twilio3-tests'
 
 S3client = boto3.client(
             's3', 
@@ -27,9 +23,21 @@ SQSClient = boto3.client(
             aws_secret_access_key=os.environ['AWSSecretKey']
             )
 
+
+#  twilio3-commands   or   twilio3-tests
+CMD_SQS = 'twilio3-commands'
+ADMIN_SQS = 'twilio3-admin'
+TEST_SQS = 'twilio3-tests'
+
 if os.environ['TEST'] == 'True':    
     TEST = True
     aws_bucket_name = os.environ['TEST_BUCKET']        # This from .env  Not from Heroku config
+    CMD_SQS = TEST_SQS
+    ADMIN_SQS = TEST_SQS
+CMD_URL = SQSClient.get_queue_url(QueueName=CMD_SQS)['QueueUrl']
+ADMIN_URL = SQSClient.get_queue_url(QueueName=CMD_SQS)['QueueUrl']
+print('Remember to add the sqs names to .env filer.views line 33 or so')
+
 
 
 # S3 Loading
@@ -92,27 +100,25 @@ def clear_the_read_bucket(PREFIX=''):
 # SQS Use Functions
 def nq_postcard(from_tel, to_tel, wip):
     """Build and sqs message, call filer to send it, call filer to remove the wip."""
-    message = dict(from_tel=from_tel, to_tel=to_tel, wip=wip, version=1)
-    send_an_sqs_message(POSTCARD_SQS, message)
+    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard', wip=wip)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
-def nq_cmd(from_tel, cmd_json):
-        """Call filer to send it."""
+def nq_cmd(from_tel, to_tel, cmd, **kwds):
+    message = dict(from_tel=from_tel, to_tel=to_tel, cmd=cmd).update(kwds)
+    send_an_sqs_message(message, CMD_URL)
 
 def nq_admin_message(message):
-        """Call filer to send it."""
+    send_an_sqs_message(message, ADMIN_URL)
 
 # SQS Utility functions
-def get_queue_url(queue_name):
-    response = SQSClient.get_queue_url(QueueName=queue_name)
-    return response['QueueUrl']
 
-def send_an_sqs_message(queue_name, message):
+def send_an_sqs_message(message, QueueUrl):
     json_message = json.dumps(message)
-    SQSClient.send_message(QueueUrl=get_queue_url(queue_name), MessageBody=json_message)
+    SQSClient.send_message(MessageBody=json_message, QueueUrl=QueueUrl)
 
-def get_an_sqs_message(queue_name):
-    QueueUrl = get_queue_url(queue_name)
+# twilio3-admin never read from, only twilio3-commands and twilio3-tests, so CMD_URL
+#       covers all cases!
+def get_an_sqs_message(QueueUrl=CMD_URL):
     response = SQSClient.receive_message(QueueUrl=QueueUrl, WaitTimeSeconds=1)
     if 'Messages' in response:
         sqs_message = response['Messages'][0]
