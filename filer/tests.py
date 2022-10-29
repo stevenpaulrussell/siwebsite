@@ -58,52 +58,43 @@ class FilerViewSQS_Utility_FunctionsWork(TestCase):
         received_message = views.get_an_sqs_message()
         self.assertEqual(received_message['mylabel'], 'test_can_write_and_read_to_a_queue')
 
-    # def test_can_write_multiple_and_read_from_a_queue(self):
-    #     sent_message0 = {'mylabel': 'mycontent0'}
-    #     sent_message1 = {'mylabel': 'mycontent1'}
-    #     views.send_an_sqs_message(message=sent_message0)
-    #     views.send_an_sqs_message(message=sent_message1)
-    #     received_message0 = views.get_an_sqs_message()
-    #     received_message1 = views.get_an_sqs_message()
-    #     received_message2 = views.get_an_sqs_message()
+    def test_can_write_multiple_and_read_from_a_queue(self):
+        sent_message0 = {'mylabel': 'mycontent0'}
+        sent_message1 = {'mylabel': 'mycontent1'}
+        views.send_an_sqs_message(message=sent_message0, QueueUrl=views.CMD_URL)
+        views.send_an_sqs_message(message=sent_message1, QueueUrl=views.CMD_URL)
+        received_message0 = views.get_an_sqs_message()
+        received_message1 = views.get_an_sqs_message()
+        received_message2 = views.get_an_sqs_message()
 
-    #     # FIFO not guaranteed, but per-sender processing written so few second FIFO not needed
-    #     self.assertIn(received_message0['mylabel'], ('mycontent0', 'mycontent1'))
-    #     self.assertIn(received_message1['mylabel'], ('mycontent0', 'mycontent1'))
-    #     self.assertEqual(received_message2, None)
+        # FIFO not guaranteed, but per-sender processing written so few second FIFO not needed
+        self.assertIn(received_message0['mylabel'], ('mycontent0', 'mycontent1'))
+        self.assertIn(received_message1['mylabel'], ('mycontent0', 'mycontent1'))
+        self.assertEqual(received_message2, None)
 
 
 
-# class NQ_Functions_Put_Content_In_SQS(TestCase):
-#     def setUp(self) -> None:
-#         self.from_tel = '+12135551212'
-#         self.to_tel = '+13105551212'
-#         self.url1 = 'url1'
-#         self.url2 = 'url2'
+class NQ_Functions_Put_Content_In_SQS(TestCase):
+    def setUp(self) -> None:
+        self.from_tel = '+12135551212'
+        self.to_tel = '+13105551212'
+        self.url1 = 'url1'
+        self.url2 = 'url2'
 
-#     def test_nq_postcard(self):
-#         now = time.time()
-#         wip =  dict(image_timestamp=now, image_url=self.url1, audio_timestamp=now, audio_url=self.url2)
-#         views.save_wip(self.from_tel, self.to_tel, wip)               
-#         S3_wip_before = views.load_wip(self.from_tel, self.to_tel)
-#         # call to nq_postcard writes to sqs and deletes wip from S3
-#         views.nq_postcard(self.from_tel, self.to_tel, wip)
-#         S3_wip_after = views.load_wip(self.from_tel, self.to_tel)
-#         postcard_message = views.get_an_sqs_message()
-#         self.assertIn('from_tel', postcard_message)
-#         self.assertIn('to_tel', postcard_message)
-#         self.assertIn('version', postcard_message)
-#         self.assertEqual(S3_wip_after, {})
-#         self.assertEqual(postcard_message['wip'], wip)
+    def test_nq_postcard(self):
+        now = time.time()
+        wip =  dict(image_timestamp=now, image_url=self.url1, audio_timestamp=now, audio_url=self.url2)
+        views.save_wip(self.from_tel, self.to_tel, wip)               
+        S3_wip_before = views.load_wip(self.from_tel, self.to_tel)
+        # call to nq_postcard writes to sqs and deletes wip from S3
+        views.nq_postcard(self.from_tel, self.to_tel, wip)
+        S3_wip_after = views.load_wip(self.from_tel, self.to_tel)
+        postcard_message = views.get_an_sqs_message()
+        self.assertIn('from_tel', postcard_message)
+        self.assertIn('to_tel', postcard_message)
+        self.assertEqual(S3_wip_after, {})
+        self.assertEqual(postcard_message['wip'], wip)
 
-#     def test_nq_cmd(self):
-#         self.assertFalse('Still have work to do on writing and testing this including data_dict')
-
-#     def test_nq_admin_message(self):
-#         self.assertFalse('Still have work to do on writing and testing this including data_dict')
-
-#     def test_twilio_cmds(self):
-#         self.assertFalse('Still have work to do on writing and testing twilio_cmds in twilio_cmds.py')
 
 
 

@@ -103,8 +103,8 @@ def nq_postcard(from_tel, to_tel, wip):
     nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard', wip=wip)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
-def nq_cmd(from_tel, to_tel, cmd, **kwds):
-    message = dict(from_tel=from_tel, to_tel=to_tel, cmd=cmd).update(kwds)
+def nq_cmd(from_tel, to_tel, cmd, **message):
+    message.update(dict(from_tel=from_tel, to_tel=to_tel, cmd=cmd))
     send_an_sqs_message(message, CMD_URL)
 
 def nq_admin_message(message):
