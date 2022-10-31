@@ -9,7 +9,18 @@ import os
 
 from . import exceptions
 
+# Placeholder for static file storing strings for constructing messages
+ALL_MESSAGES = {}
 
+MGMT_TELEPHONE_NUMBER = 'MGMT_TELEPHONE_NUMBER'
+DEFAULT_TWILIO_NUMBER = '+18326626430'
+
+#  twilio3-commands   or   twilio3-tests
+CMD_SQS = 'twilio3-commands'
+ADMIN_SQS = 'twilio3-admin'
+TEST_SQS = 'twilio3-tests'
+
+# Set up resources to access AWS
 S3client = boto3.client(
             's3', 
             aws_access_key_id=os.environ['AWSAccessKeyId'], 
@@ -22,12 +33,6 @@ SQSClient = boto3.client(
             aws_access_key_id=os.environ['AWSAccessKeyId'], 
             aws_secret_access_key=os.environ['AWSSecretKey']
             )
-
-
-#  twilio3-commands   or   twilio3-tests
-CMD_SQS = 'twilio3-commands'
-ADMIN_SQS = 'twilio3-admin'
-TEST_SQS = 'twilio3-tests'
 
 if os.environ['TEST'] == 'True':    
     TEST = True

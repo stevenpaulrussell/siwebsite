@@ -8,7 +8,6 @@ import uuid
 
 from twilio.rest import Client as twilioClient
 
-from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from filer import views as filerviews
@@ -22,7 +21,7 @@ from twilio_cmds import sms_back, sms_mgmt_message, nq_admin_message, nq_cmd, nq
 DEFAULT_TWILIO_NUMBER = '+18326626430'
 
 
-#  Entry points. A postcard is made by mms -> accept_media <- for the photo, and  voice call -> twi_recorder <- for the audio
+#  Entry points. A postcard is made by mms  ->accept_media<-  for the photo, and  voice call  ->twi_recorder<-  for the audio
 @csrf_exempt
 def accept_media(request):      # mms entry point, image only for now!!
     try:
@@ -41,7 +40,6 @@ def accept_media(request):      # mms entry point, image only for now!!
     except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
 
-            
 @csrf_exempt
 def twi_recorder(request):      # voice recording entry point
     try:
@@ -55,7 +53,6 @@ def twi_recorder(request):      # voice recording entry point
     except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
            
-
 
 def extract_request_values(postdata):
     from_tel = postdata['From']
