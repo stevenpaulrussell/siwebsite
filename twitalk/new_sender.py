@@ -17,17 +17,16 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)
                 filerviews.save_new_sender(new_sender=from_tel, expects='audio')
-                sms_back(from_tel, message='Good image received new_sender', from_twilio='WHATEVER1')
+                sms_back(from_tel, to_tel, message_key='Good image received new_sender', from_twilio='WHATEVER1')
                 sms_mgmt_message(message='New sender sent image OK', from_twilio='WHATEVER2')
             else:
-                message =  """Send request for first image and link to instructions, maybe note issues to error SQS, note error back to user"""
-                sms_back(from_tel, message, from_twilio='WHATEVER1')
+                sms_back(from_tel, to_tel, 
+                \   message_key="""Send request for first image and link to instructions, maybe note issues to error SQS, note error back to user""")
                 message = """This error message, some detail added aside from what is stored in S3"""
                 nq_admin_message(message)
 
         case 'audio':
-            message = """Send some instruction back to call the number, link to instructions."""
-            sms_back(from_tel, message, from_twilio='WHATEVER1')
+            sms_back(from_tel, to_tel, message_key="""Send some instruction back to call the number, link to instructions.""")
             message = """User action telemetry"""     
             nq_admin_message(message)
 
@@ -36,9 +35,9 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 filerviews.save_new_sender(new_sender=from_tel, expects='new_sender_ready')
                 nq_postcard(from_tel, to_tel, wip)   #This clears the wip
                 nq_cmd(cmd_json="""Send new_sender_profile on SQS""")
-                sms_back(from_tel, 'send welcome message')
+                sms_back(from_tel, to_tel, message_key='send welcome message')
             else:
-                """Send instruction on profile and link to instructions. """
+                sms_back(from_tel, to_tel, message_key="""Send instruction on profile and link to instructions. """)
                 """ Make an error SQS for mgmt??"""
 
         case _:
@@ -66,5 +65,6 @@ def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
         case _:    
             if 'RecordingUrl' not in postdata:
                 """Send twilio command to not record and play Play greeting to caller that says 'will send instructions"""
-                """Send sms to from_tel with instructions"""
+                sms_back(from_tel, to_tel, message_key="""Send instruction link to instructions. """)
+
 

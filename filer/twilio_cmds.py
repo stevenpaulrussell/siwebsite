@@ -9,15 +9,14 @@ from . import lines
 from .views import MGMT_TELEPHONE_NUMBER, DEFAULT_TWILIO_NUMBER 
 
 
-def sms_back(from_tel, message_key, **kwds):
+def sms_back(from_tel, to_tel, message_key, **kwds):
     """Use twilio to send text message to from_tel"""
     text_back_to_sender = lines.line(message_key, kwds)
     if os.environ['TEST'] == 'True':    
         """nq_admin_message(message) """
         pass
     else:
-        """send to from_tel via twilio"""
-        sms_to_some_telephone_number(text_back_to_sender, destination_number=from_tel)
+        sms_to_some_telephone_number(text_back_to_sender, destination_number=from_tel, twilio_number=to_tel)
 
 
 def sms_mgmt_message(message_key, **kwds):

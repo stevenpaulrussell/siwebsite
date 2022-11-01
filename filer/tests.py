@@ -112,5 +112,13 @@ class Can_Make_Needed_Strings_in_Lines(TestCase):
 
 
 class Twilio_Cmds_Testing(TestCase):
-    def test_sms_bacj(self):
-        pass
+    def test_sms_to_some_telephone_number(self):
+        # no_res = twilio_cmds.sms_to_some_telephone_number('Test filer line 116', 
+        #         '+16502196500', twilio_number=views.DEFAULT_TWILIO_NUMBER)
+        # print(f'\n\nFinished test, got no_res: {no_res}\n\n')
+        # self.assertEqual(no_res, None)
+        self.assertFalse('Took this working test, and rewrote to test sms_back and sms_mgmt_message.')
+
+    def test_have_given_Http_return_to_each_twilio_call(self):
+        self.assertFalse('Still have to check the twilio HTTP returns.')
+
