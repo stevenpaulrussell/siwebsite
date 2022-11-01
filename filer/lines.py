@@ -12,9 +12,10 @@ The lines are read in at program load.
 
 LINES = {}    # to be replaced by reading some item from S3.
 
-def line(key, **kwds):
-    """key is the 'name' of the line allowing retrieval.  'args' will be any additional parameters, such as To: or From:"""
-    # msg_frame = ALL_MESSAGES[key]
-    # message = f'{msg_frame} ... how to apply kwds??'
+def line(msg_key, **kwds):
     if os.environ['TEST'] == 'True':    
-        return f'<{key} looked up> using {kwds}'
+        return msg_key.format(**kwds) 
+    else:
+        """msg_key is the 'name' of the line, coming from some static file. """
+        msg_frame = ALL_MESSAGES[msg_key]
+        return msg_frame.format(**kwds)
