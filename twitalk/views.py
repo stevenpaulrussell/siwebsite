@@ -9,6 +9,7 @@ import uuid
 from twilio.rest import Client as twilioClient
 
 from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
 
 from filer import views as filerviews
 from filer import exceptions as filerexceptions
@@ -39,6 +40,7 @@ def accept_media(request):      # mms entry point, image only for now!!
             return mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
     except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
+    return HttpResponse()
 
 @csrf_exempt
 def twi_recorder(request):      # voice recording entry point
@@ -52,6 +54,10 @@ def twi_recorder(request):      # voice recording entry point
             return recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
     except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
+
+    assert('Doing HTTP responses for Record and for normal termination ok'==False)
+    # return http_back_message  # 'Record' command or error to Twilio, else have audio in media_url
+    # Get this from recorder_to_free_tier or  recorder_from_new_sender
            
 
 def extract_request_values(postdata):

@@ -49,10 +49,7 @@ class FilerViewS3FunctionsWork(TestCase):
 
 class FilerViewSQS_Utility_FunctionsWork(TestCase):
     def setUp(self) -> None:
-        while True:
-            message = views.get_an_sqs_message()
-            if not message:
-                break
+        views.clear_the_sqs_queue_TEST_SQS()
 
     def test_can_write_and_read_to_a_queue(self):
         sent_message = {'mylabel': 'test_can_write_and_read_to_a_queue'}

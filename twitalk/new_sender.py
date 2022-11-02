@@ -1,6 +1,7 @@
-from twilio_cmds import sms_back, sms_mgmt_message, nq_admin_message, nq_cmd, nq_postcard
+
 from filer import views as filerviews
-from free_tier import mms_to_free_tier, recorder_to_free_tier
+from filer.twilio_cmds import sms_back, sms_mgmt_message, twilio_answering_machine_announcement
+from .free_tier import mms_to_free_tier, recorder_to_free_tier
 
 
 
@@ -16,25 +17,25 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
             if image_url and not text:
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)
-                filerviews.save_new_sender(new_sender=from_tel, expects='audio')
+                filerviews.save_new_sender(from_tel=from_tel, expects='audio')
                 sms_back(from_tel, to_tel, message_key='Good image received new_sender', from_twilio='WHATEVER1')
-                sms_mgmt_message(message='New sender sent image OK', from_twilio='WHATEVER2')
+                sms_mgmt_message(message='New sender sent image OK')
             else:
-                sms_back(from_tel, to_tel, 
-                \   message_key="""Send request for first image and link to instructions, maybe note issues to error SQS, note error back to user""")
-                message = """This error message, some detail added aside from what is stored in S3"""
-                nq_admin_message(message)
+                sender_msg_key = 'New sender: Request first image. Also, link to instructions as second msg?'
+                sms_back(from_tel, to_tel, message_key=sender_msg_key)
+                message = f'Admin message new sender, From_tel: {from_tel}'
+                filerviews.nq_admin_message(message)
 
         case 'audio':
             sms_back(from_tel, to_tel, message_key="""Send some instruction back to call the number, link to instructions.""")
             message = """User action telemetry"""     
-            nq_admin_message(message)
+            filerviews.nq_admin_message(message)
 
         case 'profile':
             if image_url and text == 'profile':
                 filerviews.save_new_sender(new_sender=from_tel, expects='new_sender_ready')
-                nq_postcard(from_tel, to_tel, wip)   #This clears the wip
-                nq_cmd(cmd_json="""Send new_sender_profile on SQS""")
+                filerviews.nq_postcard(from_tel, to_tel, wip)   #This clears the wip
+                filerviews.nq_cmd(cmd_json="""Send new_sender_profile on SQS""")
                 sms_back(from_tel, to_tel, message_key='send welcome message')
             else:
                 sms_back(from_tel, to_tel, message_key="""Send instruction on profile and link to instructions. """)
