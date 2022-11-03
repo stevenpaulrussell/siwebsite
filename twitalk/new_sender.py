@@ -4,7 +4,6 @@ from filer.twilio_cmds import sms_back, sms_mgmt_message, twilio_answering_machi
 from .free_tier import mms_to_free_tier, recorder_to_free_tier
 
 
-
 # Processing of mms and voice call for new senders, setting them up including the profile image.
 def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
     expect = filerviews.load_from_new_sender(from_tel)   # Postmaster will re-write the new_sender block
@@ -18,13 +17,12 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)
                 filerviews.save_new_sender(from_tel=from_tel, expects='audio')
-                sms_back(from_tel, to_tel, message_key='Good image received new_sender', from_twilio='WHATEVER1')
-                sms_mgmt_message(message='New sender sent image OK')
+                sms_back(from_tel, to_tel, message_key='New sender sends image')
+                filerviews.nq_admin_message(f'New sender <{from_tel}>, image OK')
             else:
                 sender_msg_key = 'New sender: Request first image. Also, link to instructions as second msg?'
                 sms_back(from_tel, to_tel, message_key=sender_msg_key)
-                message = f'Admin message new sender, From_tel: {from_tel}'
-                filerviews.nq_admin_message(message)
+                filerviews.nq_admin_message(message=f'New sender <{from_tel}>, missing plain image.')
 
         case 'audio':
             sms_back(from_tel, to_tel, message_key="""Send some instruction back to call the number, link to instructions.""")

@@ -26,6 +26,19 @@ class SiWebCarepostUser:
         key_values.update(kwds)
         return key_values
 
+def get_all_sqs():
+    admin_list = []
+    sms_list = []
+    while True:
+        msg = filerviews.get_an_sqs_message()
+        if isinstance(msg, str):
+            admin_list.append(msg)
+        elif isinstance(msg, dict):
+            sms_list.append(msg)
+        else:
+            break
+    return admin_list, sms_list
+
 
 class New_Sender_Test_Cases(TestCase):
     def setUp(self) -> None:
@@ -36,25 +49,23 @@ class New_Sender_Test_Cases(TestCase):
     def test_text_only_from_new_sender(self):
         key_values = self.User1._set_key_values_from_view(text='some random text')
         mms_from_new_sender(**key_values)
-        res = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        msg1 = filerviews.get_an_sqs_message()
-        msg2 = filerviews.get_an_sqs_message()
-        msg3 = filerviews.get_an_sqs_message()
-        self.assertIsNone(msg3)
-        self.assertEqual(res, 'image')
-        print(f'\n msg1:\n{msg1}\n')
-        print(f'\n msg2:\n{msg2}\n')
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 1)
+        self.assertEqual(len(sms_list), 1)
+        self.assertEqual(expect, 'image')
+        self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
+        self.assertIn('New sender: Request first image. Also, link to instructions as second msg?', sms_list[0].values())
 
     def test_image_only_from_new_sender(self):
         key_values = self.User1._set_key_values_from_view(image_url=SiWebCarepostUser.url0)
         mms_from_new_sender(**key_values)
-        res = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        msg1 = filerviews.get_an_sqs_message()
-        msg2 = filerviews.get_an_sqs_message()
-        msg3 = filerviews.get_an_sqs_message()
-        self.assertIsNone(msg3)
-        self.assertEqual(res, 'audio')
-        print(f'\n msg1:\n{msg1}\n')
-        print(f'\n msg2:\n{msg2}\n')
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 1)
+        self.assertEqual(len(sms_list), 1)
+        self.assertEqual(expect, 'audio')
+        self.assertIn('New sender <user1_+1mobile_number>, image OK', admin_list[0])
+        self.assertIn('New sender sends image', sms_list[0].values())
 
 
