@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+
 from filer import views as filerviews
 from filer import twilio_cmds as twilio_cmds
 
@@ -32,6 +34,12 @@ def recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdat
         pass
 
     elif 'RecordingUrl' not in postdata and 'image_url' in wip:
+        if '+1' in recipient_handle:
+            spoken = f'Hello {sender_name}. Have your photo.  Now tell your story about it, then just hang up.'
+        else:
+            spoken = f'Hello {sender_name}. Have your photo.  Now tell {recipient_handle} your story about it, then just hang up.'
+        twilio_cmd = f'<Say>{spoken}</Say><Record maxLength="100"/>'
+        return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{twilio_cmd}</Response>')
         return twilio_cmds.twilio_answering_machine_announcement('message_key', free_tier_morsel)
 
     else:

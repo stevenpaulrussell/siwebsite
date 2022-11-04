@@ -1,6 +1,7 @@
+from django.http import HttpResponse
 
 from filer import views as filerviews
-from filer.twilio_cmds import sms_back, sms_mgmt_message, twilio_answering_machine_announcement
+from filer.twilio_cmds import sms_back
 from .free_tier import mms_to_free_tier, recorder_to_free_tier
 
 
@@ -41,7 +42,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
 
         case _:
             raise Exception('some message')   # Should drive an immediate sms to mgmt as well as nq_admin
-    return
+    return HttpResponse()
 
 
 def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
@@ -54,7 +55,11 @@ def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
         case 'audio':
             wip = filerviews.load_wip(from_tel, to_tel)
             if 'RecordingUrl' not in postdata:
-                """Send twilio command to record for new_sender"""
+                spoken = f'Hello, and welcome to the postcard system audio function. The system got your photo.  \
+                            Now, record your story about that photo in two minutes or less. \
+                            Then just hang up, and you will have made your first postcard. '
+                twilio_cmd = f'<Say>{spoken}</Say><Record maxLength="120"/>'
+                return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{twilio_cmd}</Response>')
             else :
                 audio_url = postdata['RecordingUrl'] + '.mp3' 
                 wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
