@@ -29,8 +29,16 @@ class SiWebCarepostUser:
         return key_values
 
     def set_blank_recorder_key_values_from_view(self, **kwds):
+        postdata={}
         key_values = dict(timestamp=time.time(), from_tel=self.user_mobile_number, 
-                                to_tel=SiWebCarepostUser.to_0, postdata={})
+                                to_tel=SiWebCarepostUser.to_0, postdata=postdata)
+        key_values.update(kwds)
+        return key_values
+
+    def set_RecordingUrl_recorder_key_values_from_view(self, **kwds):
+        postdata=dict(RecordingUrl=SiWebCarepostUser.url0)
+        key_values = dict(timestamp=time.time(), from_tel=self.user_mobile_number, 
+                                to_tel=SiWebCarepostUser.to_0, postdata=postdata)
         key_values.update(kwds)
         return key_values
 
@@ -90,43 +98,40 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(sms_list, [])
         self.assertEqual(expect, 'audio')
 
-    # def test_call_to_make_audio_when_image_NOT_present(self):
-    #     key_values = self.User1.set_blank_recorder_key_values_from_view() 
-    #     http_response = recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertIsInstance(http_response, HttpResponse)
-    #     self.assertIn('Hello, and welcome to the postcard system audio function.', str(http_response.content))
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertEqual(expect, 'audio')
+    def test_call_to_make_audio_when_image_NOT_present(self):
+        # New sender calls the number but has not sent an image
+        key_values = self.User1.set_blank_recorder_key_values_from_view() 
+        from_tel_msg =  recorder_from_new_sender(**key_values)
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(admin_list, [])
+        self.assertEqual(sms_list, [])
+        self.assertIn('To use this, please text the system an image first.', from_tel_msg)
+        self.assertEqual(expect, 'image')
 
-    # def test_audio_delivery_when_image_present(self):
-    #     key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
-    #     mms_from_new_sender(**key_values)
-    #     get_all_sqs()    # Dump this first set
-    #     key_values = self.User1.set_blank_recorder_key_values_from_view() 
-    #     http_response = recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertIsInstance(http_response, HttpResponse)
-    #     self.assertIn('Hello, and welcome to the postcard system audio function.', str(http_response.content))
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertEqual(expect, 'audio')
+    def test_audio_delivery_when_image_present(self):
+        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        mms_from_new_sender(**key_values)
+        get_all_sqs()    # Dump this first set
+        key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
+        from_tel_msg =  recorder_from_new_sender(**key_values)
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(from_tel_msg, 'Congrats to new sender making a first postcard.')
+        self.assertEqual(admin_list, [])
+        self.assertEqual(sms_list, [])
+        self.assertEqual(expect, 'profile')
 
-    # def test_audio_delivery_when_image_NOT_present(self):
-    #     key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
-    #     mms_from_new_sender(**key_values)
-    #     get_all_sqs()    # Dump this first set
-    #     key_values = self.User1.set_blank_recorder_key_values_from_view() 
-    #     http_response = recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertIsInstance(http_response, HttpResponse)
-    #     self.assertIn('Hello, and welcome to the postcard system audio function.', str(http_response.content))
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertEqual(expect, 'audio')
+    def test_audio_delivery_when_image_NOT_present(self):
+        # The recording is being delivered
+        key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
+        from_tel_msg =  recorder_from_new_sender(**key_values)
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(admin_list, [])
+        self.assertEqual(sms_list, [])
+        self.assertEqual(from_tel_msg, 'Send instruction link to instructions.')
+        self.assertEqual(expect, 'image')
+
 
 

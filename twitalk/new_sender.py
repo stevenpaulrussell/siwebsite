@@ -59,17 +59,20 @@ def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
                             Now, record your story about that photo in two minutes or less. \
                             Then just hang up, and you will have made your first postcard. '
                 from_tel_msg =  f'<Say>{spoken}</Say><Record maxLength="120"/>'
-            else :
+            else:
                 audio_url = postdata['RecordingUrl'] + '.mp3' 
                 wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
-                filerviews.save_new_sender(new_sender=from_tel, expects='profile')
+                filerviews.save_new_sender(from_tel, expects='profile')
                 filerviews.save_wip(from_tel, to_tel, wip) 
-                from_tel_msg = 'Congrats to new sender making a first postcard'
+                from_tel_msg = 'Congrats to new sender making a first postcard.'
         case _:    
             if 'RecordingUrl' not in postdata:
-                """Send twilio command to not record and play Play greeting to caller that says 'will send instructions"""
+                spoken = f'Hello! Welcome to the postcard system audio function. \
+                            To use this, please text the system an image first. \
+                            The system will text you instructions when you hang up. '
+                from_tel_msg =  f'<Say>{spoken}</Say><Record maxLength="120"/>'
+            else:
                 from_tel_msg = 'Send instruction link to instructions.'
-
     return from_tel_msg
 
 
