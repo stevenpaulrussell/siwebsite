@@ -16,7 +16,7 @@ from filer import exceptions as filerexceptions
 
 from free_tier import mms_to_free_tier, recorder_to_free_tier
 from new_sender import mms_from_new_sender, recorder_from_new_sender
-from twilio_cmds import sms_back, sms_mgmt_message, nq_admin_message, nq_cmd, nq_postcard
+from twilio_cmds import nq_admin_message
 
 
 DEFAULT_TWILIO_NUMBER = '+18326626430'
@@ -30,17 +30,20 @@ def accept_media(request):      # mms entry point, image only for now!!
         timestamp, from_tel, to_tel, text = extract_request_values(postdata)
         media_type = postdata.get('MediaContentType0', 'no_media/no_media').split('/')[0]
         if media_type not in ('image', 'no_media'):
-            sms_back(from_tel, to_tel, message_key="""Send instructions, note error back to user""")
+            from_tel_msg = 'Send instructions, note error back to user'
             nq_admin_message(message="""note issues to error SQS""")
-        image_url = postdata.get('MediaUrl0', None)
-        free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)   
-        if free_tier_morsel:  
-            return mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel)
         else:
-            return mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
+            image_url = postdata.get('MediaUrl0', None)
+            free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)   
+            if free_tier_morsel:  
+                from_tel_msg =  mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel)
+            else:
+                from_tel_msg =  mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
     except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
-    return HttpResponse()
+    assert(from_tel_msg)
+    return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{from_tel_msg}</Response>')
+
 
 @csrf_exempt
 def twi_recorder(request):      # voice recording entry point
@@ -49,15 +52,13 @@ def twi_recorder(request):      # voice recording entry point
         timestamp, from_tel, to_tel, text = extract_request_values(postdata)
         free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)  
         if free_tier_morsel:
-            return recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata)
+            from_tel_msg = recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata)
         else:
-            return recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
+            from_tel_msg = recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
     except Exception as E:
         nq_admin_message(message="""note issues to error SQS""")
-
-    assert('Doing HTTP responses for Record and for normal termination ok'==False)
-    # return http_back_message  # 'Record' command or error to Twilio, else have audio in media_url
-    # Get this from recorder_to_free_tier or  recorder_from_new_sender
+    assert(from_tel_msg)
+    return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{from_tel_msg}</Response>')
            
 
 def extract_request_values(postdata):
