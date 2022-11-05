@@ -18,7 +18,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
             if image_url and not text:
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)
-                filerviews.save_new_sender(from_tel=from_tel, expects='audio')
+                filerviews.save_new_sender(from_tel=from_tel, expect='audio')
                 filerviews.nq_admin_message(f'New sender <{from_tel}>, image OK')
                 from_tel_msg = 'New sender welcome image'
             else:
@@ -31,7 +31,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
 
         case 'profile':
             if image_url and text == 'profile':
-                filerviews.save_new_sender(new_sender=from_tel, expects='new_sender_ready')
+                filerviews.save_new_sender(new_sender=from_tel, expect='new_sender_ready')
                 filerviews.nq_postcard(from_tel, to_tel, wip)   #This clears the wip
                 filerviews.nq_cmd(cmd_json="""Send new_sender_profile on SQS""")
                 from_tel_msg = 'message_key send welcome message'
@@ -62,7 +62,7 @@ def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
             else:
                 audio_url = postdata['RecordingUrl'] + '.mp3' 
                 wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
-                filerviews.save_new_sender(from_tel, expects='profile')
+                filerviews.save_new_sender(from_tel, expect='profile')
                 filerviews.save_wip(from_tel, to_tel, wip) 
                 from_tel_msg = 'Congrats to new sender making a first postcard.'
         case _:    

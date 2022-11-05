@@ -66,8 +66,8 @@ def load_wip(from_tel, to_tel):
 
 
 # S3 Saving
-def save_new_sender(from_tel, expects):
-    _save_a_thing_using_key(thing=expects, key=f'new_sender/{from_tel}')
+def save_new_sender(from_tel, expect):
+    _save_a_thing_using_key(thing=expect, key=f'new_sender/{from_tel}')
 
 def save_wip(from_tel, to_tel, wip):
     _save_a_thing_using_key(wip, key=f'wip/{from_tel}/{to_tel}')
