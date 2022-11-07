@@ -46,6 +46,15 @@ class FilerViewS3FunctionsWork(TestCase):
         res = views.load_wip(self.new_from_tel, self.new_to_tel)
         self.assertEqual(res, test_wip)
 
+    def test__update_free_tier_works_to_initiate(self):
+        views.update_free_tier(from_tel=self.new_from_tel, to_tel=self.new_to_tel)
+        res = views.load_from_free_tier(self.new_from_tel)
+        self.assertIsInstance(res, dict)
+        print(res[self.new_to_tel]['from'])
+        self.assertEqual(res[self.new_to_tel]['from'], '1 2 1 2')
+        self.assertEqual(res[self.new_to_tel]['to'], 'a kith or kin')
+
+
 
 class FilerViewSQS_Utility_FunctionsWork(TestCase):
     def setUp(self) -> None:

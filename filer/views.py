@@ -69,6 +69,22 @@ def load_wip(from_tel, to_tel):
 def save_new_sender(from_tel, expect):
     _save_a_thing_using_key(thing=expect, key=f'new_sender/{from_tel}')
 
+def update_free_tier(from_tel, to_tel, sender_name=None, recipient_name=None):  # 'from' seems to be a reserved keyword
+    sender_name = sender_name or f'{from_tel[-4]} {from_tel[-3]} {from_tel[-2]} {from_tel[-1]}'
+    recipient_name = recipient_name or 'a kith or kin'
+    key = f'free_tier/{from_tel}'
+    try:
+        value = _load_a_thing_using_key(key)
+    except exceptions.S3KeyNotFound:
+        value = {}
+    value.update({to_tel: {'from': sender_name, 'to': recipient_name}})
+    print(f'debug line 81 views key: {key}  value: {value}\n')
+    _save_a_thing_using_key(value, key)
+    trythis = _load_a_thing_using_key(key)
+    print(f'debug line 84 views trythis: {trythis}\n')
+    trythat = load_from_free_tier(from_tel)
+    print(f'debug line 86 views trythat: {trythat}\n')
+
 def save_wip(from_tel, to_tel, wip):
     _save_a_thing_using_key(wip, key=f'wip/{from_tel}/{to_tel}')
 
