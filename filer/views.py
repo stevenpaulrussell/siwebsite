@@ -48,7 +48,7 @@ print('Remember to add the sqs names to .env filer.views line 33 or so')
 # S3 Loading
 def load_from_free_tier(from_tel):
     try:
-        return  _load_a_thing_using_key('free_tier/{from_tel}')
+        return  _load_a_thing_using_key(f'free_tier/{from_tel}')
     except exceptions.S3KeyNotFound:
         return None
 
@@ -78,12 +78,7 @@ def update_free_tier(from_tel, to_tel, sender_name=None, recipient_name=None):  
     except exceptions.S3KeyNotFound:
         value = {}
     value.update({to_tel: {'from': sender_name, 'to': recipient_name}})
-    print(f'debug line 81 views key: {key}  value: {value}\n')
     _save_a_thing_using_key(value, key)
-    trythis = _load_a_thing_using_key(key)
-    print(f'debug line 84 views trythis: {trythis}\n')
-    trythat = load_from_free_tier(from_tel)
-    print(f'debug line 86 views trythat: {trythat}\n')
 
 def save_wip(from_tel, to_tel, wip):
     _save_a_thing_using_key(wip, key=f'wip/{from_tel}/{to_tel}')

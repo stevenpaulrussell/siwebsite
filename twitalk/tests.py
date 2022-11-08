@@ -7,6 +7,7 @@ from django.http import HttpResponse
 
 from filer import views as filerviews 
 from .new_sender import mms_from_new_sender, recorder_from_new_sender
+from .free_tier import mms_to_free_tier, recorder_to_free_tier
 
 AUDIO = 'audio/ogg'
 IMAGE = 'image/jpeg'
@@ -133,29 +134,39 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(from_tel_msg, 'Send instruction link to instructions.')
         self.assertEqual(expect, 'image')
 
+    def test_profile_delivered_finish_enrollment(self):
+        image_key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        mms_from_new_sender(**image_key_values)
+        audio_key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
+        recorder_from_new_sender(**audio_key_values)
+        get_all_sqs()    # Dump this first set
+        profile_key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0, text='profile')
+        from_tel_msg = mms_from_new_sender(**profile_key_values)
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(from_tel_msg, 'message_key send welcome message')
+        self.assertEqual(admin_list, [])
+        self.assertEqual(sms_list, [])
+        self.assertEqual(expect, 'profile')
+
+
 
 class Free_Tier_Common_Test_Cases(TestCase):
     def setUp(self) -> None:
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = SiWebCarepostUser(name='user1')
-        # Set up a free_tier sender in filer.
-            # f'free_tier/{from_tel}':                # These are written by postmaster, read by twitalk.
-            #         f'{to_tel}':  
-            #         'from': -> sender name if key 'from' is present        # Use to customize sms to sender
-            #         'to': -> recipient name if key is present         # Use to customize sms to sender
+        filerviews.update_free_tier(self.User1.user_mobile_number, SiWebCarepostUser.to_0)
 
     def test_text_only(self):
-        self.assertFalse('No more work to do in free_tier testing, but it should be easy!!')
-        # key_values = self.User1.set_blank_mms_key_values_from_view(text='some random text')
-        # from_tel_msg = mms_from_new_sender(**key_values)
-        # expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        # admin_list, sms_list = get_all_sqs()
-        # self.assertEqual(len(admin_list), 1)
-        # self.assertEqual(len(sms_list), 0)
-        # self.assertEqual(expect, 'image')
-        # self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
-        # self.assertIn('New sender: Request first image. Also, link to instructions as second msg?', from_tel_msg)
+        text='some random text'
+        key_values = self.User1.set_blank_mms_key_values_from_view(text=text, free_tier_morsel={})
+        from_tel_msg = mms_to_free_tier(**key_values)
+        admin_list, sms_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 1)
+        self.assertEqual(len(sms_list), 0)
+        self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
+        self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
 
     # def test_image_only(self):
     #     key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)

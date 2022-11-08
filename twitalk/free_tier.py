@@ -12,11 +12,11 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
         from_tel_msg = 'help message and http link'
 
     elif not image_url and text != 'help':
-        filerviews.nq_cmd(from_tel, cmd_json="""Call command pre-processor""")
+        filerviews.nq_cmd(from_tel, to_tel, cmd='cmd general', text=text)
         from_tel_msg = 'Your command <{text}> is queued for processing... you will hear back!'
 
     elif image_url and text == 'profile':
-        filerviews.nq_cmd(from_tel, cmd_json="""Send profile command SQS pre-processor. """)
+        filerviews.nq_cmd(from_tel, to_tel, cmd='profile')
         from_tel_msg = 'You will be notified shortly, when your profile has been updated.'
 
     elif image_url and not text:

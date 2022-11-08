@@ -26,6 +26,13 @@ class FilerViewS3FunctionsWork(TestCase):
     def test_load_from_free_tier_returns_None_on_missing_key(self):
         res = views.load_from_free_tier(self.new_from_tel)
         self.assertEqual(res, None)
+
+    def test__update_free_tier_works_to_initiate(self):
+        views.update_free_tier(from_tel=self.new_from_tel, to_tel=self.new_to_tel)
+        res = views.load_from_free_tier(self.new_from_tel)
+        self.assertIsInstance(res, dict)
+        self.assertEqual(res[self.new_to_tel]['from'], '1 2 1 2')
+        self.assertEqual(res[self.new_to_tel]['to'], 'a kith or kin')
        
     def test_load_from_new_sender_returns_image_on_missing_key(self):
         res = views.load_from_new_sender(self.new_from_tel)
@@ -45,14 +52,6 @@ class FilerViewS3FunctionsWork(TestCase):
         views.save_wip(self.new_from_tel, self.new_to_tel, test_wip)
         res = views.load_wip(self.new_from_tel, self.new_to_tel)
         self.assertEqual(res, test_wip)
-
-    def test__update_free_tier_works_to_initiate(self):
-        views.update_free_tier(from_tel=self.new_from_tel, to_tel=self.new_to_tel)
-        res = views.load_from_free_tier(self.new_from_tel)
-        self.assertIsInstance(res, dict)
-        print(res[self.new_to_tel]['from'])
-        self.assertEqual(res[self.new_to_tel]['from'], '1 2 1 2')
-        self.assertEqual(res[self.new_to_tel]['to'], 'a kith or kin')
 
 
 

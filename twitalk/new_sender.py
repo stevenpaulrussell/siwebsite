@@ -31,9 +31,9 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
 
         case 'profile':
             if image_url and text == 'profile':
-                filerviews.save_new_sender(new_sender=from_tel, expect='new_sender_ready')
+                filerviews.save_new_sender(from_tel=from_tel, expect='new_sender_ready')
                 filerviews.nq_postcard(from_tel, to_tel, wip)   #This clears the wip
-                filerviews.nq_cmd(cmd_json="""Send new_sender_profile on SQS""")
+                filerviews.nq_cmd(from_tel, to_tel, cmd='profile')
                 from_tel_msg = 'message_key send welcome message'
             else:
                 """ Make an error SQS for mgmt??"""
