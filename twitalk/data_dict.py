@@ -23,12 +23,24 @@ f'wip/{from_tel}/{to_tel}':    `# Written, read, and deleted by twitalk for stat
     'audio_url':                
 """
 
+
 # command SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
 """ 
-json with from_tel, to_tel, command string
+....  json dict: from_tel:, to_tel:, cmd:, **message
+cmd:
+    profile
+        image_url:
+
+    new_postcard    
+        wip:
+
+    cmd_general
+        text: 'text string..'
 """
 
-# postcard SQS
+
+
+# admin SQS
 """
-json with from_tel, to_tel, image_url, image_hint, audio_url, audio_hint, time_stamp
+string
 """

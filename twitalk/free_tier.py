@@ -12,7 +12,7 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
         from_tel_msg = 'help message and http link'
 
     elif not image_url and text != 'help':
-        filerviews.nq_cmd(from_tel, to_tel, cmd='cmd general', text=text)
+        filerviews.nq_cmd(from_tel, to_tel, cmd='cmd_general', text=text)
         from_tel_msg = 'Your command <{text}> is queued for processing... you will hear back!'
 
     elif image_url and text == 'profile':

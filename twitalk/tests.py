@@ -162,29 +162,25 @@ class Free_Tier_Common_Test_Cases(TestCase):
         filerviews.update_free_tier(self.User1.user_mobile_number, SiWebCarepostUser.to_0)
 
     def test_text_for_help(self):
-        text='help'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
-        key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
+        key_values = self.User1.set_blank_mms_key_values_from_view(text='help')
         from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(len(admin_list), 0)
-        self.assertEqual(len(cmd_list), 1)
-        cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['cmd'], 'cmd general')
-        self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
+        self.assertEqual(len(cmd_list), 0)
+        self.assertIn('help message and http link', from_tel_msg)
 
     def test_text_profile_with_image(self):
-        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0, text='profile')
         from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
-        text='profile'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
-        key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
-        from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
+        # text='profile'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
+        # key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
+        # from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(len(admin_list), 0)
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['cmd'], 'cmd general')
-        self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
-        self.assertFalse('still have not set up the profile command for free_tier and clear the wip and good test')
+        self.assertEqual(cmd_from_list['cmd'], 'profile')
+        self.assertIn('You will be notified shortly, when your profile has been updated', from_tel_msg)
 
     def test_text_random_only(self):
         text='some random text'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
@@ -194,7 +190,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(len(admin_list), 0)
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['cmd'], 'cmd general')
+        self.assertEqual(cmd_from_list['cmd'], 'cmd_general')
         self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
 
     def test_image_only(self):
@@ -238,7 +234,6 @@ class Free_Tier_Common_Test_Cases(TestCase):
         cmd_from_list = cmd_list[0]
         self.assertEqual(cmd_from_list['cmd'], 'new_postcard')
 
-
     def test_audio_delivery_when_image_NOT_present(self):
         # The recording is being delivered
         key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
@@ -247,3 +242,6 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(admin_list, [])
         self.assertEqual(cmd_list, [])
         self.assertEqual(from_tel_msg, 'free_tier instruction link to instructions.')
+
+    def test_check_age_of_image_when_making_postcard_as_way_to_allow_abandonment(self):
+        self.assertFalse('Age checking of image may be needed but is not done.')
