@@ -132,9 +132,11 @@ def send_an_sqs_message(message, QueueUrl):
     json_message = json.dumps(message)
     SQSClient.send_message(MessageBody=json_message, QueueUrl=QueueUrl)
 
-# twilio3-admin never read from, only twilio3-commands and twilio3-tests, so CMD_URL
-#       covers all cases!
 def get_an_sqs_message(QueueUrl=CMD_URL):
+# In Production, only 'twilio3-commands' is read by these program, as
+#    'twilio3-admin' goes elsewhere.  In Test, CMD_URL and ADMIN_URL
+#     both point to 'twilio3-tests'. Therefore, in both Production
+#     and Test, reads from CMD_URL get all that is needed.  
     response = SQSClient.receive_message(QueueUrl=QueueUrl, WaitTimeSeconds=1)
     if 'Messages' in response:
         sqs_message = response['Messages'][0]

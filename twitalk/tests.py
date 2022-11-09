@@ -45,17 +45,20 @@ class SiWebCarepostUser:
 
 
 def get_all_sqs():
+    # In Test, both admin and cmd sqs go to test_sqs.
+    # This function reads the one sqs queue, and demuxes
+    # messages based on structure
     admin_list = []
-    sms_list = []
+    cmd_list = []
     while True:
         msg = filerviews.get_an_sqs_message()
         if isinstance(msg, str):
             admin_list.append(msg)
         elif isinstance(msg, dict):
-            sms_list.append(msg)
+            cmd_list.append(msg)
         else:
             break
-    return admin_list, sms_list
+    return admin_list, cmd_list
 
 
 class New_Sender_Common_Test_Cases(TestCase):
@@ -68,9 +71,9 @@ class New_Sender_Common_Test_Cases(TestCase):
         key_values = self.User1.set_blank_mms_key_values_from_view(text='some random text')
         from_tel_msg = mms_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertEqual(len(admin_list), 1)
-        self.assertEqual(len(sms_list), 0)
+        self.assertEqual(len(cmd_list), 0)
         self.assertEqual(expect, 'image')
         self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
         self.assertIn('New sender: Request first image. Also, link to instructions as second msg?', from_tel_msg)
@@ -79,9 +82,9 @@ class New_Sender_Common_Test_Cases(TestCase):
         key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
         from_tel_msg = mms_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertEqual(len(admin_list), 1)
-        self.assertEqual(len(sms_list), 0)
+        self.assertEqual(len(cmd_list), 0)
         self.assertEqual(expect, 'audio')
         self.assertIn('New sender <user1_+1mobile_number>, image OK', admin_list[0])
         self.assertIn('New sender welcome image', from_tel_msg)
@@ -93,10 +96,10 @@ class New_Sender_Common_Test_Cases(TestCase):
         key_values = self.User1.set_blank_recorder_key_values_from_view() 
         from_tel_msg = recorder_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertIn('Hello, and welcome to the postcard system audio function.', from_tel_msg)
         self.assertEqual(admin_list, [])
-        self.assertEqual(sms_list, [])
+        self.assertEqual(cmd_list, [])
         self.assertEqual(expect, 'audio')
 
     def test_call_to_make_audio_when_image_NOT_present(self):
@@ -104,9 +107,9 @@ class New_Sender_Common_Test_Cases(TestCase):
         key_values = self.User1.set_blank_recorder_key_values_from_view() 
         from_tel_msg =  recorder_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertEqual(admin_list, [])
-        self.assertEqual(sms_list, [])
+        self.assertEqual(cmd_list, [])
         self.assertIn('To use this, please text the system an image first.', from_tel_msg)
         self.assertEqual(expect, 'image')
 
@@ -117,10 +120,10 @@ class New_Sender_Common_Test_Cases(TestCase):
         key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
         from_tel_msg =  recorder_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertEqual(from_tel_msg, 'Congrats to new sender making a first postcard.')
         self.assertEqual(admin_list, [])
-        self.assertEqual(sms_list, [])
+        self.assertEqual(cmd_list, [])
         self.assertEqual(expect, 'profile')
 
     def test_audio_delivery_when_image_NOT_present(self):
@@ -128,9 +131,9 @@ class New_Sender_Common_Test_Cases(TestCase):
         key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
         from_tel_msg =  recorder_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertEqual(admin_list, [])
-        self.assertEqual(sms_list, [])
+        self.assertEqual(cmd_list, [])
         self.assertEqual(from_tel_msg, 'Send instruction link to instructions.')
         self.assertEqual(expect, 'image')
 
@@ -143,11 +146,11 @@ class New_Sender_Common_Test_Cases(TestCase):
         profile_key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0, text='profile')
         from_tel_msg = mms_from_new_sender(**profile_key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-        admin_list, sms_list = get_all_sqs()
+        admin_list, cmd_list = get_all_sqs()
         self.assertEqual(from_tel_msg, 'message_key send welcome message')
         self.assertEqual(admin_list, [])
-        self.assertEqual(sms_list, [])
-        self.assertEqual(expect, 'profile')
+        self.assertEqual(len(cmd_list), 2)
+        self.assertEqual(expect, 'new_sender_ready')
 
 
 
@@ -158,71 +161,89 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.User1 = SiWebCarepostUser(name='user1')
         filerviews.update_free_tier(self.User1.user_mobile_number, SiWebCarepostUser.to_0)
 
-    def test_text_only(self):
-        text='some random text'
-        key_values = self.User1.set_blank_mms_key_values_from_view(text=text, free_tier_morsel={})
-        from_tel_msg = mms_to_free_tier(**key_values)
-        admin_list, sms_list = get_all_sqs()
-        self.assertEqual(len(admin_list), 1)
-        self.assertEqual(len(sms_list), 0)
-        self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
+    def test_text_for_help(self):
+        text='help'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
+        key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
+        from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 0)
+        self.assertEqual(len(cmd_list), 1)
+        cmd_from_list = cmd_list[0]
+        self.assertEqual(cmd_from_list['cmd'], 'cmd general')
         self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
 
-    # def test_image_only(self):
-    #     key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
-    #     from_tel_msg = mms_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertEqual(len(admin_list), 1)
-    #     self.assertEqual(len(sms_list), 0)
-    #     self.assertEqual(expect, 'audio')
-    #     self.assertIn('New sender <user1_+1mobile_number>, image OK', admin_list[0])
-    #     self.assertIn('New sender welcome image', from_tel_msg)
+    def test_text_profile_with_image(self):
+        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
+        text='profile'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
+        key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
+        from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 0)
+        self.assertEqual(len(cmd_list), 1)
+        cmd_from_list = cmd_list[0]
+        self.assertEqual(cmd_from_list['cmd'], 'cmd general')
+        self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
+        self.assertFalse('still have not set up the profile command for free_tier and clear the wip and good test')
 
-    # def test_call_to_make_audio_when_image_present(self):
-    #     key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
-    #     mms_from_new_sender(**key_values)
-    #     get_all_sqs()    # Dump this first set
-    #     key_values = self.User1.set_blank_recorder_key_values_from_view() 
-    #     from_tel_msg = recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertIn('Hello, and welcome to the postcard system audio function.', from_tel_msg)
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertEqual(expect, 'audio')
+    def test_text_random_only(self):
+        text='some random text'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
+        key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
+        from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 0)
+        self.assertEqual(len(cmd_list), 1)
+        cmd_from_list = cmd_list[0]
+        self.assertEqual(cmd_from_list['cmd'], 'cmd general')
+        self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
 
-    # def test_call_to_make_audio_when_image_NOT_present(self):
-    #     # New sender calls the number but has not sent an image
-    #     key_values = self.User1.set_blank_recorder_key_values_from_view() 
-    #     from_tel_msg =  recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertIn('To use this, please text the system an image first.', from_tel_msg)
-    #     self.assertEqual(expect, 'image')
+    def test_image_only(self):
+        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(len(admin_list), 0)
+        self.assertEqual(len(cmd_list), 0)
+        self.assertIn('Good image received free tier', from_tel_msg)
 
-    # def test_audio_delivery_when_image_present(self):
-    #     key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
-    #     mms_from_new_sender(**key_values)
-    #     get_all_sqs()    # Dump this first set
-    #     key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
-    #     from_tel_msg =  recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertEqual(from_tel_msg, 'Congrats to new sender making a first postcard.')
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertEqual(expect, 'profile')
+    def test_call_to_make_audio_when_image_present(self):
+        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        mms_to_free_tier(**key_values, free_tier_morsel={})
+        get_all_sqs()    # Dump this first set
+        key_values = self.User1.set_blank_recorder_key_values_from_view() 
+        from_tel_msg = recorder_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertIn('free_tier recording announcement OK image', from_tel_msg)
+        self.assertEqual(admin_list, [])
+        self.assertEqual(cmd_list, [])
 
-    # def test_audio_delivery_when_image_NOT_present(self):
-    #     # The recording is being delivered
-    #     key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
-    #     from_tel_msg =  recorder_from_new_sender(**key_values)
-    #     expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
-    #     admin_list, sms_list = get_all_sqs()
-    #     self.assertEqual(admin_list, [])
-    #     self.assertEqual(sms_list, [])
-    #     self.assertEqual(from_tel_msg, 'Send instruction link to instructions.')
-    #     self.assertEqual(expect, 'image')
+    def test_call_to_make_audio_when_image_NOT_present(self):
+        # Free tier sender calls the number but has not sent an image
+        key_values = self.User1.set_blank_recorder_key_values_from_view(free_tier_morsel={}) 
+        from_tel_msg =  recorder_to_free_tier(**key_values)
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(admin_list, [])
+        self.assertEqual(cmd_list, [])
+        self.assertIn('free_tier recording announcement without image', from_tel_msg)
+
+    def test_audio_delivery_when_image_present(self):
+        key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
+        mms_to_free_tier(**key_values, free_tier_morsel={})
+        get_all_sqs()    # Dump this first set
+        key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
+        from_tel_msg =  recorder_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(from_tel_msg, 'free_tier postcard sent')
+        self.assertEqual(admin_list, [])
+        self.assertEqual(len(cmd_list), 1)
+        cmd_from_list = cmd_list[0]
+        self.assertEqual(cmd_from_list['cmd'], 'new_postcard')
+
+
+    def test_audio_delivery_when_image_NOT_present(self):
+        # The recording is being delivered
+        key_values = self.User1.set_RecordingUrl_recorder_key_values_from_view() 
+        from_tel_msg =  recorder_to_free_tier(**key_values, free_tier_morsel={})
+        admin_list, cmd_list = get_all_sqs()
+        self.assertEqual(admin_list, [])
+        self.assertEqual(cmd_list, [])
+        self.assertEqual(from_tel_msg, 'free_tier instruction link to instructions.')
