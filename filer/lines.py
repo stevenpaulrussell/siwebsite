@@ -1,5 +1,4 @@
 import os
-from tkinter import ALL
 
 from .views import  ALL_MESSAGES
 
@@ -10,12 +9,12 @@ For testing, the lines may be reflected version of the line name, so that UI cha
 The lines are read in at program load.  
 """
 
-LINES = {}    # to be replaced by reading some item from S3.
 
 def line(msg_key, **kwds):
-    if os.environ['TEST'] == 'True':    
+    if os.environ['TEST'] == 'True':   
+        msg_frame = {}.get(msg_key, msg_key)
         return msg_key.format(**kwds) 
     else:
         """msg_key is the 'name' of the line, coming from some static file. """
-        msg_frame = ALL_MESSAGES[msg_key]
+        msg_frame = ALL_MESSAGES.get(msg_key, msg_key)
         return msg_frame.format(**kwds)

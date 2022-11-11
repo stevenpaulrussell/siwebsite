@@ -110,7 +110,14 @@ class Can_Make_Needed_Strings_in_Lines(TestCase):
 
     def test_lines_with_params(self):
         msg_key = 'msg_key_{name}_{value}'
-        res = lines.line(msg_key, name='fulano', value=76)
+        keys = dict(name='fulano', value=76)
+        res = lines.line(msg_key, **keys)
+        self.assertEqual(res, 'msg_key_fulano_76')
+
+    def test_lines_with_extra_params(self):
+        msg_key = 'msg_key_{name}_{value}'
+        keys = dict(name='fulano', value=76, xtra1=1, xtra2=2)
+        res = lines.line(msg_key, **keys)
         self.assertEqual(res, 'msg_key_fulano_76')
 
 

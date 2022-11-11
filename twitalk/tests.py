@@ -242,6 +242,3 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(admin_list, [])
         self.assertEqual(cmd_list, [])
         self.assertEqual(from_tel_msg, 'free_tier instruction link to instructions.')
-
-    def test_check_age_of_image_when_making_postcard_as_way_to_allow_abandonment(self):
-        self.assertFalse('Age checking of image may be needed but is not done.')
