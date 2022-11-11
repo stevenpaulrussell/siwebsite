@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 
 from filer import views as filerviews
-from filer import twilio_cmds as twilio_cmds
+from filer import lines
 
 
 # Processing of mms and voice call when the sender is established in free_tier

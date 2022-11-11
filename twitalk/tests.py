@@ -76,7 +76,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(len(cmd_list), 0)
         self.assertEqual(expect, 'image')
         self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
-        self.assertIn('New sender: Request first image. Also, link to instructions as second msg?', from_tel_msg)
+        self.assertIn('New sender: Request first image & link to instructions', from_tel_msg)
 
     def test_image_only(self):
         key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
@@ -108,7 +108,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         from_tel_msg =  recorder_from_new_sender(**key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
         admin_list, cmd_list = get_all_sqs()
-        self.assertEqual(admin_list, [])
+        self.assertEqual(admin_list, ['New sender unexpected call to twilio.'])
         self.assertEqual(cmd_list, [])
         self.assertIn('To use this, please text the system an image first.', from_tel_msg)
         self.assertEqual(expect, 'image')
@@ -134,7 +134,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(admin_list, [])
         self.assertEqual(cmd_list, [])
-        self.assertEqual(from_tel_msg, 'Send instruction link to instructions.')
+        self.assertEqual(from_tel_msg, 'New sender instructions link on unexpected call to twilio.')
         self.assertEqual(expect, 'image')
 
     def test_profile_delivered_finish_enrollment(self):
@@ -147,7 +147,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         from_tel_msg = mms_from_new_sender(**profile_key_values)
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
         admin_list, cmd_list = get_all_sqs()
-        self.assertEqual(from_tel_msg, 'message_key send welcome message')
+        self.assertEqual(from_tel_msg, 'New sender complete welcome message')
         self.assertEqual(admin_list, [])
         self.assertEqual(len(cmd_list), 2)
         self.assertEqual(expect, 'new_sender_ready')

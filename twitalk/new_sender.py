@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 
 from filer import views as filerviews
-from filer.twilio_cmds import sms_back
+from filer import lines
 from .free_tier import mms_to_free_tier, recorder_to_free_tier
 
 
@@ -10,6 +10,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
     from_tel_msg = None
     expect = filerviews.load_from_new_sender(from_tel)   # Postmaster will re-write the new_sender block
     wip = filerviews.load_wip(from_tel, to_tel)
+    msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp)
     match expect:
         case 'new_sender_ready':    # Handle as for free_tier
             from_tel_msg =  mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel={})
@@ -19,25 +20,25 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)
                 filerviews.save_new_sender(from_tel=from_tel, expect='audio')
-                filerviews.nq_admin_message(f'New sender <{from_tel}>, image OK')
-                from_tel_msg = 'New sender welcome image'
+                filerviews.nq_admin_message(lines.line('New sender <{from_tel}>, image OK', **msg_keys))
+                from_tel_msg = lines.line('New sender welcome image', **msg_keys)
             else:
-                filerviews.nq_admin_message(message=f'New sender <{from_tel}>, missing plain image.')
-                from_tel_msg = 'New sender: Request first image. Also, link to instructions as second msg?'
+                filerviews.nq_admin_message(lines.line('New sender <{from_tel}>, missing plain image.', **msg_keys))
+                from_tel_msg = lines.line('New sender: Request first image & link to instructions', **msg_keys)
 
         case 'audio':
-            from_tel_msg = 'Send some instruction back to call the number, link to instructions.'
-            filerviews.nq_admin_message('User action telemetry')
+            from_tel_msg = lines.line('New sender ask to call & make recording & link to instructions.', **msg_keys)
+            filerviews.nq_admin_message(lines.line('New sender <{from_tel}> error: expect audio, in mms', **msg_keys))
 
         case 'profile':
             if image_url and text == 'profile':
                 filerviews.save_new_sender(from_tel=from_tel, expect='new_sender_ready')
                 filerviews.nq_postcard(from_tel, to_tel, wip)   #This clears the wip
                 filerviews.nq_cmd(from_tel, to_tel, cmd='profile', image_url=image_url)
-                from_tel_msg = 'message_key send welcome message'
+                from_tel_msg = lines.line('New sender complete welcome message', **msg_keys)
             else:
-                """ Make an error SQS for mgmt??"""
-                from_tel_msg = 'Send instruction on profile and link to instructions.'
+                from_tel_msg = lines.line('New sender profile instruction & link to instructions.', **msg_keys)
+                filerviews.nq_admin_message(lines.line('New sender <{from_tel}> error: expect profile', **msg_keys))
 
         case _:
             raise Exception('some message')   # Should drive an immediate sms to mgmt as well as nq_admin
@@ -47,6 +48,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
 def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
     from_tel_msg = None
     expect = filerviews.load_from_new_sender(from_tel)   # Postmaster will re-write the new_sender block
+    msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp)
     match expect:
         case 'new_sender_ready':
             free_tier_morsel = {}
@@ -55,24 +57,25 @@ def recorder_from_new_sender(timestamp, from_tel, to_tel, postdata):
         case 'audio':
             wip = filerviews.load_wip(from_tel, to_tel)
             if 'RecordingUrl' not in postdata:
-                spoken = f'Hello, and welcome to the postcard system audio function. The system got your photo.  \
+                spoken = lines.line('Hello, and welcome to the postcard system audio function. The system got your photo.  \
                             Now, record your story about that photo in two minutes or less. \
-                            Then just hang up, and you will have made your first postcard. '
+                            Then just hang up, and you will have made your first postcard.', **msg_keys)
                 from_tel_msg =  f'<Say>{spoken}</Say><Record maxLength="120"/>'
             else:
                 audio_url = postdata['RecordingUrl'] + '.mp3' 
                 wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
                 filerviews.save_new_sender(from_tel, expect='profile')
                 filerviews.save_wip(from_tel, to_tel, wip) 
-                from_tel_msg = 'Congrats to new sender making a first postcard.'
+                from_tel_msg = lines.line('Congrats to new sender making a first postcard.', **msg_keys)
         case _:    
             if 'RecordingUrl' not in postdata:
-                spoken = f'Hello! Welcome to the postcard system audio function. \
+                spoken = lines.line('Hello! Welcome to the postcard system audio function. \
                             To use this, please text the system an image first. \
-                            The system will text you instructions when you hang up. '
+                            The system will text you instructions when you hang up.', **msg_keys)
                 from_tel_msg =  f'<Say>{spoken}</Say><Record maxLength="120"/>'
+                filerviews.nq_admin_message(lines.line('New sender unexpected call to twilio.', **msg_keys))
             else:
-                from_tel_msg = 'Send instruction link to instructions.'
+                from_tel_msg = lines.line('New sender instructions link on unexpected call to twilio.', **msg_keys)
     return from_tel_msg
 
 
