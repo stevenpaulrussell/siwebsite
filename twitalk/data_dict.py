@@ -45,6 +45,8 @@ cmd:
 string
 """
 
+
+
 # message keys
 """
 new_sender
@@ -72,5 +74,23 @@ new_sender
                             To use this, please text the system an image first. \
                             The system will text you instructions when you hang up.'
 
+"""
+# more message keys
+"""
+free_tier
+    from_tel_msg
+        'Free tier help: Link to instructions'
+        'Your command <{text}> is queued for processing... you will hear back!'
+        'Your profile will be updated shortly, and you will be notified.'
+        'Good image received free tier'
+        'free_tier postcard sent'
+        'free tier ask to call & make recording & link to instructions.'
+
+    nq_admin_message
+
+
+    twilio speaks
+        'free_tier recording announcement OK image'
+        'free_tier recording announcement without image'
 
 """

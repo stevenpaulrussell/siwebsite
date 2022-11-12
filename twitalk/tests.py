@@ -167,7 +167,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(len(admin_list), 0)
         self.assertEqual(len(cmd_list), 0)
-        self.assertIn('help message and http link', from_tel_msg)
+        self.assertIn('Free tier help: Link to instructions', from_tel_msg)
 
     def test_text_profile_with_image(self):
         key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0, text='profile')
@@ -180,7 +180,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
         self.assertEqual(cmd_from_list['cmd'], 'profile')
-        self.assertIn('You will be notified shortly, when your profile has been updated', from_tel_msg)
+        self.assertIn('Your profile will be updated shortly, and you will be notified', from_tel_msg)
 
     def test_text_random_only(self):
         text='some random text'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
@@ -191,7 +191,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
         self.assertEqual(cmd_from_list['cmd'], 'cmd_general')
-        self.assertIn('Your command <{text}> is queued for processing... you will hear back!', from_tel_msg)
+        self.assertIn('Your command <some random text> is queued for processing... you will hear back!', from_tel_msg)
 
     def test_image_only(self):
         key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
@@ -241,4 +241,4 @@ class Free_Tier_Common_Test_Cases(TestCase):
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(admin_list, [])
         self.assertEqual(cmd_list, [])
-        self.assertEqual(from_tel_msg, 'free_tier instruction link to instructions.')
+        self.assertEqual(from_tel_msg, 'free tier ask to call & make recording & link to instructions.')
