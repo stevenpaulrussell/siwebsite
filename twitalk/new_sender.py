@@ -21,7 +21,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 filerviews.save_wip(from_tel, to_tel, wip)
                 filerviews.save_new_sender(from_tel=from_tel, expect='audio')
                 filerviews.nq_admin_message(lines.line('New sender <{from_tel}>, image OK', **msg_keys))
-                from_tel_msg = lines.line('New sender welcome image', **msg_keys)
+                from_tel_msg = lines.line('New sender welcome: image recvd', **msg_keys)
             else:
                 filerviews.nq_admin_message(lines.line('New sender <{from_tel}>, missing plain image.', **msg_keys))
                 from_tel_msg = lines.line('New sender: Request first image & link to instructions', **msg_keys)

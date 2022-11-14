@@ -13,6 +13,7 @@ from django.http import HttpResponse
 
 from filer import views as filerviews
 from filer import exceptions as filerexceptions
+from filer import lines
 
 from .free_tier import mms_to_free_tier, recorder_to_free_tier
 from .new_sender import mms_from_new_sender, recorder_from_new_sender
@@ -29,8 +30,8 @@ def accept_media(request):      # mms entry point, image only for now!!
         postdata = request.POST
         timestamp, from_tel, to_tel, text = extract_request_values(postdata)
         media_type = postdata.get('MediaContentType0', 'no_media/no_media').split('/')[0]
-        if media_type not in ('image', 'no_media'):
-            from_tel_msg = 'Send instructions, note error back to user'
+        if media_type not in ('image', 'no_media'):   
+            from_tel_msg = lines.line('Send instructions for mms, got media <{media_type}>, expe', media_type=media_type)
             filerviews.nq_admin_message(message="""note issues to error SQS""")
         else:
             image_url = postdata.get('MediaUrl0', None)

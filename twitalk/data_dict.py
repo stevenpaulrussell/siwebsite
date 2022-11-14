@@ -47,11 +47,11 @@ string
 
 
 
-# message keys
+# new_sender message keys
 """
 new_sender
     from_tel_msg
-        'New sender welcome image'
+        'New sender welcome: image recvd'
         'New sender: Request first image & link to instructions'
         'New sender ask to call & make recording & link to instructions.'
         'New sender complete welcome message'
@@ -75,7 +75,7 @@ new_sender
                             The system will text you instructions when you hang up.'
 
 """
-# more message keys
+# free_tier message keys
 """
 free_tier
     from_tel_msg
@@ -92,5 +92,11 @@ free_tier
     twilio speaks
         'free_tier recording announcement OK image'
         'free_tier recording announcement without image'
+
+"""
+
+# twitalk views message keys
+"""
+
 
 """

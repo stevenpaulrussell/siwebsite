@@ -81,24 +81,38 @@ def get_all_sqs():
 
 
 
-class ViewAcceptMediaErrorFromEstablishedSendersCaseTest(TestCase):
+class ViewAcceptMedia_NewSendersCases(TestCase):
     def setUp(self) -> None:
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = CarepostUser(name='user1')
 
-    def test_accept_media_view_function_enforces_media_order(self):
+    def test_good_image_from_new_sender(self):
+        response = self.User1.make_media_request(media=IMAGE)
+        admin_list, cmd_list = get_all_sqs()
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        self.assertIn('New sender welcome: image recvd', str(response.content))
+        self.assertEqual(len(admin_list), 1)
+        self.assertEqual(len(cmd_list), 0)
+        self.assertEqual(expect, 'audio')
+
+    def test_new_sender_enforces_media_order(self):
         response = self.User1.make_media_request(media=AUDIO)
-        self.assertIn('To begin, please send an image with no text', str(response.content))
-        self.assertIn('Your status: starting', str(response.content))
+        admin_list, cmd_list = get_all_sqs()
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_msg = admin_list[0]
+        expected_admin_msg = 'note issues to error SQS'
+        self.assertIn('Send instructions for mms, got media <audio>, ', str(response.content))
+        self.assertEqual(expected_admin_msg, admin_msg)
+        self.assertEqual(cmd_list, [])
+        self.assertEqual(expect, 'image')
+
 
     def test_accept_media_view_function_returns_proper_media_request(self):
         response = self.User1.make_media_request(media=IMAGE)
-        self.assertIn('Welcome and good job!  Got the image, next send an audio', str(response.content))
-        self.assertIn('Your status: need_audio', str(response.content))
+        self.assertIn('New sender welcome: image recvd', str(response.content))
 
-    def xxxxxxxxxxxxxxxxxxxx_____test_have_got_boto3_exceptions_defined_for_new_sender_pbox_views_line_91(self):
-        self.assertFalse('Handled boto3 exceptions')
+
 
 class ViewAcceptMediaGoodPushCaseTest(TestCase):
     def setUp(self) -> None:
@@ -106,9 +120,9 @@ class ViewAcceptMediaGoodPushCaseTest(TestCase):
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = CarepostUser(name='user1')
 
-    def test_view_function_stores_first_good_image(self):
-        response = self.User1.make_media_request(media=IMAGE)
-        self.assertEqual('New sender welcome image', str(response.content))
+    # def test_view_function_stores_first_good_image(self):
+    #     response = self.User1.make_media_request(media=IMAGE)
+    #     self.assertEqual('New sender welcome image', str(response.content))
     
 
 # class PostCardConstructorTests(TestCase):
