@@ -11,6 +11,9 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
     expect = filerviews.load_from_new_sender(from_tel)   # Postmaster will re-write the new_sender block
     wip = filerviews.load_wip(from_tel, to_tel)
     msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp)
+
+    # First check for text=='help' to return something specific to new sender asking for help
+
     match expect:
         case 'new_sender_ready':    # Handle as for free_tier
             from_tel_msg =  mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel={})
@@ -24,10 +27,11 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 from_tel_msg = lines.line('New sender welcome: image recvd', **msg_keys)
             else:
                 filerviews.nq_admin_message(lines.line('New sender <{from_tel}>, missing plain image.', **msg_keys))
-                from_tel_msg = lines.line('New sender: Request first image & link to instructions', **msg_keys)
+               
+                from_tel_msg = lines.line('New sender: Request first image & link to specific instructions', **msg_keys)
 
         case 'audio':
-            from_tel_msg = lines.line('New sender ask to call & make recording & link to instructions.', **msg_keys)
+            from_tel_msg = lines.line('New sender ask to call & make recording & link to specific instructions.', **msg_keys)
             filerviews.nq_admin_message(lines.line('New sender <{from_tel}> error: expect audio, in mms', **msg_keys))
 
         case 'profile':
@@ -37,7 +41,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 filerviews.nq_cmd(from_tel, to_tel, cmd='profile', image_url=image_url)
                 from_tel_msg = lines.line('New sender complete welcome message', **msg_keys)
             else:
-                from_tel_msg = lines.line('New sender profile instruction & link to instructions.', **msg_keys)
+                from_tel_msg = lines.line('New sender profile instruction & link to specific instructions.', **msg_keys)
                 filerviews.nq_admin_message(lines.line('New sender <{from_tel}> error: expect profile', **msg_keys))
 
         case _:

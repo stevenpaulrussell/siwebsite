@@ -1,9 +1,7 @@
 from django.test import TestCase
-
-from django.test import TestCase
 from django.test.client import RequestFactory
+from filer import views as filerviews
 
-from filer import views as filerviews 
 from .views import accept_media, twi_recorder
 
 AUDIO = 'audio/ogg'
@@ -96,21 +94,26 @@ class ViewAcceptMedia_NewSendersCases(TestCase):
         self.assertEqual(len(cmd_list), 0)
         self.assertEqual(expect, 'audio')
 
-    def test_new_sender_enforces_media_order(self):
+    def test_mms_rejects_audio_with_explanation(self):
         response = self.User1.make_media_request(media=AUDIO)
+        # The above response is generated immediately from accept_media
         admin_list, cmd_list = get_all_sqs()
-        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
         admin_msg = admin_list[0]
+
+        # Fix this
         expected_admin_msg = 'note issues to error SQS'
+        # Fix this
+
+        #
         self.assertIn('Send instructions for mms, got media <audio>, ', str(response.content))
         self.assertEqual(expected_admin_msg, admin_msg)
         self.assertEqual(cmd_list, [])
-        self.assertEqual(expect, 'image')
+  
 
 
-    def test_accept_media_view_function_returns_proper_media_request(self):
-        response = self.User1.make_media_request(media=IMAGE)
-        self.assertIn('New sender welcome: image recvd', str(response.content))
+    def test_text_from_new_sender_gets_to_new_sender_mms(self):
+        response = self.User1.make_text_only_request(body='help')
+        self.assertIn('New sender: Request first image & link to specific instructions', str(response.content))
 
 
 
