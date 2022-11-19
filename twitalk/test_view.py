@@ -110,23 +110,52 @@ class ViewAcceptMedia_NewSendersCases(TestCase):
         self.assertEqual(cmd_list, [])
   
 
-
     def test_text_from_new_sender_gets_to_new_sender_mms(self):
         response = self.User1.make_text_only_request(body='help')
         self.assertIn('New sender: Request first image & link to specific instructions', str(response.content))
 
 
 
-class ViewAcceptMediaGoodPushCaseTest(TestCase):
+class ViewTwi_Recorder_NewSendersCases(TestCase):
     def setUp(self) -> None:
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = CarepostUser(name='user1')
 
-    # def test_view_function_stores_first_good_image(self):
-    #     response = self.User1.make_media_request(media=IMAGE)
-    #     self.assertEqual('New sender welcome image', str(response.content))
+
+
+
+
+
+class ViewAcceptMedia_FreeTierCases(TestCase):
+    def setUp(self) -> None:
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.User1 = CarepostUser(name='user1')
+
+
+
+class ViewTwi_Recorder_FreeTierCases(TestCase):
+    def setUp(self) -> None:
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.User1 = CarepostUser(name='user1')
+
+    def test_I_remember_what_I_am_doing(self):
+        self.assertFalse('Accept media and twi_recorder calls not done for free_tier and new-sender.')
     
+
+
+
+
+
+
+
+
+
+
+
+
 
 # class PostCardConstructorTests(TestCase):
 #     def setUp(self) -> None:
