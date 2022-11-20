@@ -179,6 +179,26 @@ class View_Whole_Process__NewSendersCases(TestCase):
         self.assertEqual(admin_list, [])
         self.assertEqual(expect, 'new_sender_ready')
 
+    def test_postcard_made_through_free_tier_calls_when_new_sender_expect_is___new_sender_ready(self):
+        self.User1.make_media_request(media=IMAGE)
+        self.User1.make_twi_recordering_done_request()
+        self.User1.make_media_request(media=IMAGE, body='profile')
+        self.User1.make_media_request(media=IMAGE)
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        response = self.User1.make_twi_recordering_done_request()
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        admin_list, cmd_list = get_all_sqs()
+        self.assertIn('free_tier postcard sent', str(response.content))
+        self.assertEqual(len(cmd_list), 1)
+        self.assertEqual(admin_list, [])
+        self.assertEqual(expect, 'new_sender_ready')
+        new_cmd = cmd_list[0]
+        self.assertEqual(new_cmd['cmd'], 'new_postcard')
+        
+
+
+
+
 
  
 
