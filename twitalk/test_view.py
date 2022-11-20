@@ -147,16 +147,40 @@ class ViewTwi_Recorder_NewSendersCases(TestCase):
 
 
 
-
-
-
-
-class ViewAcceptMedia_FreeTierCases(TestCase):
+class View_Whole_Process__NewSendersCases(TestCase):
     def setUp(self) -> None:
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = CarepostUser(name='user1')
 
+    def test_all_through_profile_error(self):
+        self.User1.make_media_request(media=IMAGE)
+        self.User1.make_twi_recordering_done_request()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        response = self.User1.make_media_request(media=IMAGE, body='Xprofile')
+        admin_list, cmd_list = get_all_sqs()
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        self.assertIn('New sender profile instruction & link to specific instructions', str(response.content))
+        self.assertEqual(cmd_list, [])
+        self.assertIn('error: expect profile', admin_list[0])
+        self.assertEqual(expect, 'profile')
+ 
+    def test_all_through_good_profile(self):
+        self.User1.make_media_request(media=IMAGE)
+        self.User1.make_twi_recordering_done_request()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        response = self.User1.make_media_request(media=IMAGE, body='profile')
+        admin_list, cmd_list = get_all_sqs()
+        expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
+        self.assertIn('New sender complete welcome message', str(response.content))
+        print('\nChange new_sender profile cmd in expect==profile to <first postcard> and include profile.\n')
+        print('Also, add tests of new_sender_ready state as part of whole free_tier testing\n')
+        self.assertEqual(len(cmd_list), 2)
+        self.assertEqual(admin_list, [])
+        self.assertEqual(expect, 'new_sender_ready')
+
+
+ 
 
 
 class ViewTwi_Recorder_FreeTierCases(TestCase):
