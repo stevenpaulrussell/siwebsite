@@ -19,6 +19,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
             from_tel_msg =  mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel={})
 
         case 'image':
+            # The caller, twitalk.views, checks media type allowing only None or image
             if image_url and not text:
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)
@@ -27,7 +28,6 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
                 from_tel_msg = lines.line('New sender welcome: image recvd', **msg_keys)
             else:
                 filerviews.nq_admin_message(lines.line('New sender <{from_tel}>, missing plain image.', **msg_keys))
-               
                 from_tel_msg = lines.line('New sender: Request first image & link to specific instructions', **msg_keys)
 
         case 'audio':

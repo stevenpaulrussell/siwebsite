@@ -95,21 +95,15 @@ class ViewAcceptMedia_NewSendersCases(TestCase):
         self.assertEqual(expect, 'audio')
 
     def test_mms_rejects_audio_with_explanation(self):
+        # This response  and admin msgs are generated immediately from accept_media
         response = self.User1.make_media_request(media=AUDIO)
-        # The above response is generated immediately from accept_media
         admin_list, cmd_list = get_all_sqs()
         admin_msg = admin_list[0]
-
-        # Fix this
         expected_admin_msg = 'note issues to error SQS'
-        # Fix this
-
-        #
         self.assertIn('Send instructions for mms, got media <audio>, ', str(response.content))
         self.assertEqual(expected_admin_msg, admin_msg)
         self.assertEqual(cmd_list, [])
   
-
     def test_text_from_new_sender_gets_to_new_sender_mms(self):
         response = self.User1.make_text_only_request(body='help')
         self.assertIn('New sender: Request first image & link to specific instructions', str(response.content))
@@ -121,6 +115,36 @@ class ViewTwi_Recorder_NewSendersCases(TestCase):
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = CarepostUser(name='user1')
+
+    def test_twi_recorder_announcement__before_media_received_gives_audio_instruction_and_sms_link(self):
+        response = self.User1.make_twi_voice_recorder_start_request()
+        admin_list, cmd_list = get_all_sqs()
+        self.assertIn('</Say><Record maxLength="120"/>', str(response.content))
+        self.assertIn('To use this, please text the system an image first', str(response.content))
+        self.assertIn('New sender unexpected call to twilio', admin_list[0])
+
+    def test_twi_recorder_message__before_media_received_gives_instruction_link(self):
+        response = self.User1.make_twi_recordering_done_request()
+        admin_list, cmd_list = get_all_sqs()
+        self.assertIn('New sender instructions link on unexpected call to twilio', str(response.content))
+        self.assertEqual([], admin_list)
+
+    def test_twi_recorder_instructs_on_audio_recording_if_image_already_received(self):
+        self.User1.make_media_request(media=IMAGE)
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        response = self.User1.make_twi_voice_recorder_start_request()
+        admin_list, cmd_list = get_all_sqs()
+        self.assertIn('welcome to the postcard system audio function. The system got your photo', str(response.content))
+        self.assertEqual(admin_list, [])
+
+    def test_twi_recorder_gives__congrats_if_image_already_received(self):
+        self.User1.make_media_request(media=IMAGE)
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        response = self.User1.make_twi_recordering_done_request()
+        admin_list, cmd_list = get_all_sqs()
+        self.assertIn('Congrats to new sender', str(response.content))
+        self.assertEqual(admin_list, [])
+
 
 
 
@@ -141,8 +165,8 @@ class ViewTwi_Recorder_FreeTierCases(TestCase):
         filerviews.clear_the_sqs_queue_TEST_SQS()
         self.User1 = CarepostUser(name='user1')
 
-    def test_I_remember_what_I_am_doing(self):
-        self.assertFalse('Accept media and twi_recorder calls not done for free_tier and new-sender.')
+    # def test_I_remember_what_I_am_doing(self):
+    #     self.assertFalse('Accept media and twi_recorder calls not done for free_tier and new-sender.')
     
 
 

@@ -43,7 +43,7 @@ def accept_media(request):      # mms entry point, image only for now!!
     except Exception as E:
         filerviews.nq_admin_message(message="""note issues to error SQS""")
         if os.environ['TEST'] == 'True': 
-            raise E
+            raise
     assert(from_tel_msg)
     return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{from_tel_msg}</Response>')
 
@@ -54,13 +54,15 @@ def twi_recorder(request):      # voice recording entry point
     try:
         postdata = request.POST
         timestamp, from_tel, to_tel, text = extract_request_values(postdata)
-        free_tier_morsel = filerviews.load_from_free_tier(from_tel, to_tel)  
+        free_tier_morsel = filerviews.load_from_free_tier(from_tel)  
         if free_tier_morsel:
             from_tel_msg = recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata)
         else:
             from_tel_msg = recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
     except Exception as E:
         filerviews.nq_admin_message(message="""note issues to error SQS""")
+        if os.environ['TEST'] == 'True': 
+            raise
     assert(from_tel_msg)
     return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{from_tel_msg}</Response>')
            
