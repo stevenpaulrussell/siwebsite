@@ -114,17 +114,23 @@ def clear_the_read_bucket(PREFIX=''):
 
 
 # SQS Use Functions
-def nq_postcard(from_tel, to_tel, wip):
-    """Build and sqs message, call filer to send it, call filer to remove the wip."""
-    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard', wip=wip)
-    delete_wip(from_tel=from_tel, to_tel=to_tel)
-
 def nq_cmd(from_tel, to_tel, cmd, **message):
     message.update(dict(from_tel=from_tel, to_tel=to_tel, cmd=cmd))
     send_an_sqs_message(message, CMD_URL)
 
 def nq_admin_message(message):
     send_an_sqs_message(message, ADMIN_URL)
+
+def nq_postcard(from_tel, to_tel, wip):
+    """Build and sqs message, call filer to send it, call filer to remove the wip."""
+    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard', wip=wip)
+    delete_wip(from_tel=from_tel, to_tel=to_tel)
+
+def nq_first_postcard(from_tel, to_tel, wip, profile_url):
+    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='first_postcard', wip=wip, profile_url=profile_url)
+    delete_wip(from_tel=from_tel, to_tel=to_tel)
+
+
 
 
 # SQS Utility functions

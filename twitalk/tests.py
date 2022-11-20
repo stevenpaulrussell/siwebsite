@@ -76,7 +76,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(len(cmd_list), 0)
         self.assertEqual(expect, 'image')
         self.assertIn('New sender <user1_+1mobile_number>, missing plain image', admin_list[0])
-        self.assertIn('New sender: Request first image & link to instructions', from_tel_msg)
+        self.assertIn('New sender: Request first image & link to specific instructions', from_tel_msg)
 
     def test_image_only(self):
         key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
@@ -87,7 +87,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(len(cmd_list), 0)
         self.assertEqual(expect, 'audio')
         self.assertIn('New sender <user1_+1mobile_number>, image OK', admin_list[0])
-        self.assertIn('New sender welcome image', from_tel_msg)
+        self.assertIn('New sender welcome: image recvd', from_tel_msg)
 
     def test_call_to_make_audio_when_image_present(self):
         key_values = self.User1.set_blank_mms_key_values_from_view(image_url=SiWebCarepostUser.url0)
@@ -149,7 +149,9 @@ class New_Sender_Common_Test_Cases(TestCase):
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(from_tel_msg, 'New sender complete welcome message')
         self.assertEqual(admin_list, [])
-        self.assertEqual(len(cmd_list), 2)
+        self.assertEqual(len(cmd_list), 1)
+        command = cmd_list[0]
+        self.assertEqual(command['cmd'], 'first_postcard')
         self.assertEqual(expect, 'new_sender_ready')
 
 
@@ -183,8 +185,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertIn('Your profile will be updated shortly, and you will be notified', from_tel_msg)
 
     def test_text_random_only(self):
-        text='some random text'   # 'help' or 'profile' get specific action. All else sent as cmd 'cmd general'
-        key_values = self.User1.set_blank_mms_key_values_from_view(text=text)
+        key_values = self.User1.set_blank_mms_key_values_from_view(text='some random text')
         from_tel_msg = mms_to_free_tier(**key_values, free_tier_morsel={})
         admin_list, cmd_list = get_all_sqs()
         self.assertEqual(len(admin_list), 0)

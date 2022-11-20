@@ -173,9 +173,9 @@ class View_Whole_Process__NewSendersCases(TestCase):
         admin_list, cmd_list = get_all_sqs()
         expect = filerviews.load_from_new_sender(self.User1.user_mobile_number)
         self.assertIn('New sender complete welcome message', str(response.content))
-        print('\nChange new_sender profile cmd in expect==profile to <first postcard> and include profile.\n')
-        print('Also, add tests of new_sender_ready state as part of whole free_tier testing\n')
-        self.assertEqual(len(cmd_list), 2)
+        self.assertEqual(len(cmd_list), 1)
+        new_cmd = cmd_list[0]
+        self.assertEqual(new_cmd['cmd'], 'first_postcard')
         self.assertEqual(admin_list, [])
         self.assertEqual(expect, 'new_sender_ready')
 

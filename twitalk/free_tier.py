@@ -6,29 +6,29 @@ from filer import lines
 
 # Processing of mms and voice call when the sender is established in free_tier
 def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel):
+    """Provide something to sender immediately.  Intend to move this to Twilio jscript.  Minimal state lookup"""
     msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp, text=text)
     from_tel_msg = None
-
-    if not image_url and text == 'help':
+    if text == 'help':
         from_tel_msg = 'help message and http link'
         from_tel_msg = lines.line('Free tier help: Link to instructions', **msg_keys)
-
-    elif not image_url and text != 'help':
+    elif image_url:
+        if not text:
+            wip = filerviews.load_wip(from_tel, to_tel)
+            wip.update(dict(image_url=image_url, image_timestamp=timestamp))  
+            filerviews.save_wip(from_tel, to_tel, wip)
+            from_tel_msg = lines.line('Good image received free tier', **msg_keys)
+        elif text == 'profile':   # Have cmd 'profile' with image_url, all ok
+            filerviews.nq_cmd(from_tel, to_tel, cmd='profile', profile_url=image_url)
+            from_tel_msg = lines.line('Your profile will be updated shortly, and you will be notified.', **msg_keys)
+        else:
+            msg = 'Free tier image with unimplemented command <{text}> received.'
+            from_tel_msg = lines.line(msg, **msg_keys)
+            filerviews.nq_admin_message(msg)
+    else:  
+        assert(text and not image_url)
         filerviews.nq_cmd(from_tel, to_tel, cmd='cmd_general', text=text)
         from_tel_msg = lines.line('Your command <{text}> is queued for processing... you will hear back!', **msg_keys)
-
-    elif image_url and text == 'profile':
-        filerviews.nq_cmd(from_tel, to_tel, cmd='profile', image_url=image_url)
-        from_tel_msg = lines.line('Your profile will be updated shortly, and you will be notified.', **msg_keys)
-
-    elif image_url and not text:
-        wip = filerviews.load_wip(from_tel, to_tel)
-        wip.update(dict(image_url=image_url, image_timestamp=timestamp))  
-        filerviews.save_wip(from_tel, to_tel, wip)
-        from_tel_msg = lines.line('Good image received free tier', **msg_keys)
-
-    else:
-       assert(not 'Error catch')
     return from_tel_msg
 
 

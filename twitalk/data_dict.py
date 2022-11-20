@@ -28,11 +28,15 @@ f'wip/{from_tel}/{to_tel}':    `# Written, read, and deleted by twitalk for stat
 """ 
 ....  json dict: from_tel:, to_tel:, cmd:, **message
 cmd:
-    profile
-        image_url:
+    first_postcard
+        wip:
+        profile_url:
 
     new_postcard    
         wip:
+
+    profile:
+        profile_url:
 
     cmd_general
         text: 'text string..'
