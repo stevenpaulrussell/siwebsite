@@ -37,7 +37,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
         case 'profile':
             if image_url and text == 'profile':
                 filerviews.save_new_sender(from_tel=from_tel, expect='new_sender_ready')
-                filerviews.nq_first_postcard(from_tel, to_tel, wip=wip, profile_url=image_url)  #This clears the wip
+                filerviews.nq_sender_first_postcard(from_tel, to_tel, wip=wip, profile_url=image_url)  #This clears the wip
                 from_tel_msg = lines.line('New sender complete welcome message', **msg_keys)
             else:
                 from_tel_msg = lines.line('New sender profile instruction & link to specific instructions.', **msg_keys)

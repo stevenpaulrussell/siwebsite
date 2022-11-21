@@ -126,7 +126,7 @@ def nq_postcard(from_tel, to_tel, wip):
     nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard', wip=wip)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
-def nq_first_postcard(from_tel, to_tel, wip, profile_url):
+def nq_sender_first_postcard(from_tel, to_tel, wip, profile_url):
     nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='first_postcard', wip=wip, profile_url=profile_url)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
