@@ -33,23 +33,23 @@ def new_postcard(from_tel, to_tel, **msg):
     card_id, sent_at = make_card_entry(from_tel, to_tel, wip, profile_photo_url)
     sender['heard_from'] = sent_at
     conn = sender['conn']
-    if to_tel in conn:              # This an existing connection, so just update the card information
-        pobox_id = conn[to_tel]['pobox_id']
-        conn[to_tel]['recent_card_id'] = card_id
-        conn[to_tel]['recent_card_when'] = sent_at
-        update_pobox(pobox_id, from_tel, card_id)
-    else:
-        conn[to_tel] = dict(
-            to =  'kith or kin',                    # Used by twilio to customize sms to sender
-            po_box_id = None,                           # None until viewer is connected for (from_tel, to_tel). 
-            recent_card_id = card_id,
-            recent_card_when = sent_at
-        )
-        conn['from'] = 'from_tel derived'              # Added explicitly, not in dict(...) because 'from' is a reserved word
+    if to_tel not in conn:              
+        conn[to_tel] = {}
+        conn[to_tel]['to'] =  'kith or kin',                    # Used by twilio to customize sms to sender
+        conn[to_tel]['from'] = 'from_tel derived'              
+        conn[to_tel]['pobox_id'] = None                     # None until viewer is connected for (from_tel, to_tel). 
         msg = 'Sender {from_tel} using new to_tel {to_tel}.'
         new_postcard_msg = lines.line(msg, from_tel=from_tel, to_tel=to_tel)
         filerviews.nq_admin_message(new_postcard_msg)
+    conn[to_tel]['recent_card_id'] = card_id
+    conn[to_tel]['recent_card_when'] = sent_at
     save_sender(sender)
+
+    pobox_id =  conn[to_tel]['pobox_id']
+    if pobox_id:
+        pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
+        pobox[from_tel].append(card_id)
+        save_pobox(pobox)
 
         
 def make_card_entry(from_tel, to_tel, wip, profile_photo_url):
@@ -70,14 +70,6 @@ def make_card_entry(from_tel, to_tel, wip, profile_photo_url):
     return card_id, sent_at
 
 
-def update_pobox(pobox_id, from_tel, card_id):
-    """contains a list of viewable cards, newest appended"""
-    pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
-    pobox[from_tel].append(card_id)
-    save_pobox(pobox)
-
-
-    
 def save_card(card):
     filerviews._save_a_thing_using_key(thing=card, key=f'card_{"id"}')
 
