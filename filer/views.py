@@ -1,13 +1,15 @@
 """
 S3 and SQS read and write functions localized here.
 """
-
-import boto3
-from botocore.exceptions import ClientError
+import time
 import json
 import os
 
+import boto3
+from botocore.exceptions import ClientError
+
 from . import exceptions
+
 
 # Placeholder for static file storing strings for constructing messages
 ALL_MESSAGES = {}
@@ -121,15 +123,11 @@ def nq_cmd(from_tel, to_tel, cmd, **message):
 def nq_admin_message(message):
     send_an_sqs_message(message, ADMIN_URL)
 
-def nq_postcard(from_tel, to_tel, wip):
+def nq_postcard(from_tel, to_tel, **message):
     """Build and sqs message, call filer to send it, call filer to remove the wip."""
-    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard', wip=wip)
+    message['sent_at'] = time.time()
+    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard',  **message)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
-
-def nq_sender_first_postcard(from_tel, to_tel, wip, profile_url):
-    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='first_postcard', wip=wip, profile_url=profile_url)
-    delete_wip(from_tel=from_tel, to_tel=to_tel)
-
 
 
 

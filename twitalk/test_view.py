@@ -175,7 +175,10 @@ class View_Whole_Process__NewSendersCases(TestCase):
         self.assertIn('New sender complete welcome message', str(response.content))
         self.assertEqual(len(cmd_list), 1)
         new_cmd = cmd_list[0]
-        self.assertEqual(new_cmd['cmd'], 'first_postcard')
+        self.assertEqual(new_cmd['cmd'], 'new_postcard')
+        self.assertEqual(new_cmd['context'], 'NewSenderFirst')
+        self.assertIn('sent_at', new_cmd)
+        self.assertIn('profile_url', new_cmd)
         self.assertEqual(admin_list, [])
         self.assertEqual(expect, 'new_sender_ready')
 

@@ -93,11 +93,13 @@ class NQ_Functions_Put_Content_In_SQS(TestCase):
         views.save_wip(self.from_tel, self.to_tel, wip)               
         S3_wip_before = views.load_wip(self.from_tel, self.to_tel)
         # call to nq_postcard writes to sqs and deletes wip from S3
-        views.nq_postcard(self.from_tel, self.to_tel, wip)
+        views.nq_postcard(self.from_tel, self.to_tel, wip=wip, context='HaveViewer')
         S3_wip_after = views.load_wip(self.from_tel, self.to_tel)
         postcard_message = views.get_an_sqs_message()
         self.assertIn('from_tel', postcard_message)
         self.assertIn('to_tel', postcard_message)
+        self.assertIn('context', postcard_message)
+        self.assertIn('sent_at', postcard_message)
         self.assertEqual(S3_wip_after, {})
         self.assertEqual(postcard_message['wip'], wip)
 

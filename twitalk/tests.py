@@ -151,7 +151,10 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(admin_list, [])
         self.assertEqual(len(cmd_list), 1)
         command = cmd_list[0]
-        self.assertEqual(command['cmd'], 'first_postcard')
+        self.assertEqual(command['cmd'], 'new_postcard')
+        self.assertEqual(command['context'], 'NewSenderFirst')
+        self.assertIn('sent_at', command)
+        self.assertIn('profile_url', command)
         self.assertEqual(expect, 'new_sender_ready')
 
 

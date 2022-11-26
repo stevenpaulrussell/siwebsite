@@ -42,7 +42,7 @@ def recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdat
         if 'RecordingUrl' in postdata:
             audio_url = postdata['RecordingUrl'] + '.mp3' 
             wip.update(dict(audio_url=audio_url, audio_timestamp=timestamp))   
-            filerviews.nq_postcard(from_tel, to_tel, wip)    # This call also deletes the wip
+            filerviews.nq_postcard(from_tel, to_tel, wip=wip, context='NewSenderFirst')    
             from_tel_msg = lines.line('free_tier postcard sent', **msg_keys)
         else:
             
