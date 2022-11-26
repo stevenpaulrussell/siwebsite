@@ -19,7 +19,8 @@ def new_postcard(from_tel, to_tel, **msg):
             create_new_connection(sender, from_tel, to_tel)
             create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
             save_sender(sender)
-            make_morsel(sender)
+            morsel = make_morsel(sender)
+            save_morsel(sender, morsel)
             delete_twilio_new_sender(sender)
 
         case 'NewRecipientFirst':
@@ -28,21 +29,24 @@ def new_postcard(from_tel, to_tel, **msg):
             create_new_connection(sender, from_tel, to_tel)
             create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
             save_sender(sender)
-            make_morsel(sender)
+            morsel = make_morsel(sender)
+            save_morsel(sender, morsel)
 
         case 'NoViewer':
             """Retrieve sender, create postcard, create postcard & update sender, save sender & make morsel."""
             sender = get_sender(from_tel)
             create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
             save_sender(sender)
-            make_morsel(sender)
+            morsel = make_morsel(sender)
+            save_morsel(sender, morsel)
 
         case 'HaveViewer':
             """Retrieve sender, create postcard & update sender, save sender & make morsel, update_postbox."""
             sender = get_sender(from_tel)
             create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
             save_sender(sender)
-            make_morsel(sender)
+            morsel = make_morsel(sender)
+            save_morsel(sender, morsel)
             update_postbox_and_save(sender, to_tel)
 
 
@@ -94,6 +98,16 @@ def update_postbox_and_save(sender, to_tel):
     pobox[from_tel].append(card_id)
     save_pobox(pobox)
 
+def make_morsel(sender):      #  Called by save_sender
+    """This a read-only, limited-info entry for twilio processing."""
+    morsel =  sender['conn'].copy()
+    for this_connection in morsel.values():     # Want to leave 'from' and 'to' as only keys
+        for key in this_connection:
+            if key not in ('from', 'to', 'have_viewer'):
+                this_connection.pop(key)
+        this_connection['have_viewer'] = bool(this_connection['pobox_id'])
+    return morsel
+
     
 def get_sender(from_tel):
     return filerviews._load_a_thing_using_key(key=f'sender/{from_tel}')
@@ -107,13 +121,7 @@ def get_pobox(pobox_id):
 def save_pobox(pobox):
     filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox_{pobox["id"]}')
 
-def make_morsel(sender):      #  Called by save_sender
-    """This a read-only, limited-info entry for twilio processing."""
-    morsel =  sender['conn'].copy()
-    for this_connection in morsel.values():     # Want to leave 'from' and 'to' as only keys
-        for key in this_connection:
-            if key not in ('from', 'to'):
-                this_connection.pop(key)
+def save_morsel(sender, morsel)
     filerviews._save_a_thing_using_key(thing=morsel, key=f'free_tier/{sender["from_tel"]}')
 
 def delete_twilio_new_sender(sender):
