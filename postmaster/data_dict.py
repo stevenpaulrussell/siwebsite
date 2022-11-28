@@ -4,7 +4,7 @@
 f'sender/{from_tel}':
     'version': -> start at 1
     'from_tel' -> from_tel              # Serves as ID.  Make a uuid for the sender??
-    'profile_photo_url': ->
+    'profile_url': ->
     'heard_from': -> time.time() of last sms, mms, or twilio
     'conn':
         to_tel: 

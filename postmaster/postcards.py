@@ -12,46 +12,43 @@ def new_postcard(from_tel, to_tel, **msg):
     sent_at = msg['sent_at']
     match msg['context']:
         case 'NewSenderFirst':
-            """Create sender, create connection in sender, create postcard & update sender, 
-                        save sender & make morsel, delete the twilio new sender"""
             profile_url = msg['profile_url']
             sender = create_new_sender(from_tel, profile_url)
             create_new_connection(sender, to_tel)
-            create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_sender_and_morsel(sender)
-            delete_twilio_new_sender(sender)
+            save_sender_and_morsel(sender)          # Save the new 'morsel' before deleting twilio's record
+            delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
         case 'NewRecipientFirst':
-            """Retrieve sender, create connection in sender, create postcard & update sender, save sender & make morsel."""
             sender = get_sender(from_tel)
             create_new_connection(sender, to_tel)
-            create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_sender_and_morsel(sender)
+            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
+            save_postcard(card)
 
         case 'NoViewer':
-            """Retrieve sender, create postcard, create postcard & update sender, save sender & make morsel."""
             sender = get_sender(from_tel)
-            create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_sender_and_morsel(sender)
+            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
+            save_postcard(card)
 
         case 'HaveViewer':
-            """Retrieve sender, create postcard & update sender, save sender & make morsel, update_postbox."""
             sender = get_sender(from_tel)
-            create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_sender_and_morsel(sender)
-            update_postbox_and_save(sender, to_tel)
+            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
+            save_postcard(card)
+            pobox = get_and_update_postbox(sender, to_tel)
+            save_pobox(pobox)
+
+    save_sender_and_morsel(sender)          # Is a re-save in case context == NewSenderFirst
+
 
 def save_sender_and_morsel(sender):
     save_sender(sender)
     morsel = make_morsel(sender)
     save_morsel(sender, morsel)
 
-
 def create_new_sender(from_tel, profile_url):
     return dict(
         version = 1,
         from_tel = from_tel,
-        profile_photo_url = profile_url,
+        profile_url = profile_url,
         name = 'from_tel derived',                       # Change by <from: name> command
         heard_from = time.time(),
         conn = {}
@@ -72,7 +69,7 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
     card_id = str(uuid.uuid4())
     card = dict(
         version = 1,
-        id = card_id, 
+        card_id = card_id, 
         plays = 0,                                  
         from_tel = from_tel,
         to_tel = to_tel,
@@ -81,20 +78,20 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
         audio_url = wip['audio_url'],
         profile_url = sender['profile_url']       #  Viewer may see something different, but saving current profile with each card
     )
-    filerviews._save_a_thing_using_key(thing=card, key=f'card_{"id"}')
     sender['heard_from'] = sent_at
     this_conn = sender['conn'][to_tel]
     this_conn['recent_card_id'] = card_id
     this_conn['recent_card_when'] = sent_at
+    return card
 
-def update_postbox_and_save(sender, to_tel):
+def get_and_update_postbox(sender, to_tel):
     from_tel = sender['recent_card_id']
     this_conn = sender['conn'][to_tel]
     pobox_id =  this_conn['pobox_id']
     card_id = this_conn['recent_card_id']
     pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
     pobox[from_tel].append(card_id)
-    save_pobox(pobox)
+    return pobox
 
 def make_morsel(sender):      #  Called by save_sender
     """This a read-only, limited-info entry for twilio processing."""
@@ -122,72 +119,11 @@ def save_pobox(pobox):
 def save_morsel(sender, morsel):
     filerviews._save_a_thing_using_key(thing=morsel, key=f'free_tier/{sender["from_tel"]}')
 
+def save_postcard(postcard):
+    card_id = postcard['card_id']
+    filerviews._save_a_thing_using_key(thing=card, key=f'card_{card_id}')
+
+
 def delete_twilio_new_sender(sender):
     filerviews._delete_a_thing_using_key(key=f'new_sender/{sender["from_tel"]}')
 
-
-
-
-
-
-
-# def first_postcard(from_tel, to_tel, **msg):
-#     """Creates the sender with nothing in connections"""
-#     wip = msg['wip']
-#     profile_url = msg['profile_url']
-#     sender = dict(
-#         version = 1,
-#         from_tel = from_tel,
-#         profile_photo_url = profile_url,
-#         name = 'from_tel derived',                       # Change by <from: name> command
-#         heard_from = time.time(),
-#         conn = {}
-#     )
-#     save_sender(sender)
-#     new_postcard(from_tel, to_tel, **msg)
-#     delete_twilio_new_sender(sender)
-
-
-# def new_postcard(from_tel, to_tel, **msg):
-#     """ Writes the postcard,  updates sender, updates the pobox if there is one """
-#     wip = msg['wip']                
-#     sender = get_sender(from_tel)
-#     profile_photo_url = sender['profile_photo_url']
-#     card_id, sent_at = make_card_entry(from_tel, to_tel, wip, profile_photo_url)
-#     sender['heard_from'] = sent_at
-#     conn = sender['conn']
-#     if to_tel not in conn:              
-#         conn[to_tel] = {}
-#         conn[to_tel]['to'] =  'kith or kin',                    # Used by twilio to customize sms to sender
-#         conn[to_tel]['from'] = 'from_tel derived'              
-#         conn[to_tel]['pobox_id'] = None                     # None until viewer is connected for (from_tel, to_tel). 
-#         msg = 'Sender {from_tel} using new to_tel {to_tel}.'
-#         new_postcard_msg = lines.line(msg, from_tel=from_tel, to_tel=to_tel)
-#         filerviews.nq_admin_message(new_postcard_msg)
-#     conn[to_tel]['recent_card_id'] = card_id
-#     conn[to_tel]['recent_card_when'] = sent_at
-#     save_sender(sender)
-
-#     pobox_id =  conn[to_tel]['pobox_id']
-#     if pobox_id:
-#         pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
-#         pobox[from_tel].append(card_id)
-#         save_pobox(pobox)
-
-        
-# def make_card_entry(from_tel, to_tel, wip, profile_photo_url):
-#     card_id = str(uuid.uuid4())
-#     card = dict(
-#         version = 1,
-#         id = card_id, 
-#         plays = 0,                                  
-#         from_tel = from_tel,
-#         to_tel = to_tel,
-#         sent_at = sent_at,    
-#         image_url = wip['image_url'],
-#         audio_url = wip['audio_url'],
-#         profile_url = profile_photo_url       #  Viewer may see something different
-#     )
-#     filerviews._save_a_thing_using_key(thing=card, key=f'card_{"id"}')
-#     return card_id
-    
