@@ -61,7 +61,7 @@ def create_new_connection(sender, to_tel):
     from_tel = sender['from_tel']
     conn = sender['conn']
     conn[to_tel] = {}
-    conn[to_tel]['to'] =  'kith or kin',                    # Used by twilio to customize sms to sender
+    conn[to_tel]['to'] =  'kith or kin'                 # Used by twilio to customize sms to sender
     conn[to_tel]['from'] = 'from_tel derived'              
     conn[to_tel]['pobox_id'] = None                     # None until viewer is connected for (from_tel, to_tel). 
     msg = 'Sender {from_tel} using new to_tel {to_tel}.'
@@ -98,12 +98,12 @@ def update_postbox_and_save(sender, to_tel):
 
 def make_morsel(sender):      #  Called by save_sender
     """This a read-only, limited-info entry for twilio processing."""
-    morsel =  sender['conn'].copy()
-    for this_connection in morsel.values():     # Want to leave 'from' and 'to' as only keys
-        for key in this_connection:
-            if key not in ('from', 'to', 'have_viewer'):
-                this_connection.pop(key)
-        this_connection['have_viewer'] = bool(this_connection['pobox_id'])
+    morsel =  {}
+    for to_tel in sender['conn']: 
+        morsel[to_tel] = {}
+        morsel[to_tel]['from'] = sender['conn'][to_tel]['from']
+        morsel[to_tel]['to'] = sender['conn'][to_tel]['to']
+        morsel[to_tel]['have_viewer'] = bool(sender['conn'][to_tel]['pobox_id'])
     return morsel
 
     
