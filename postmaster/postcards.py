@@ -83,7 +83,7 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
     )
     filerviews._save_a_thing_using_key(thing=card, key=f'card_{"id"}')
     sender['heard_from'] = sent_at
-    this_conn = sender['conn']['to_tel']
+    this_conn = sender['conn'][to_tel]
     this_conn['recent_card_id'] = card_id
     this_conn['recent_card_when'] = sent_at
 
