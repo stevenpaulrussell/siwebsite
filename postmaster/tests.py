@@ -5,6 +5,7 @@ from django.test import TestCase
 from filer import views as filerviews 
 from twitalk.tests import SiWebCarepostUser
 from . import postcards
+from .import cmds
 
 class Postcard_commands(TestCase):
     def setUp(self):
@@ -53,5 +54,33 @@ class Postcard_commands(TestCase):
                             to_tel=self.twilio_phone_number, wip=wip, sent_at=test_time)
         self.assertEqual(card['card_id'], sender['conn'][self.twilio_phone_number]['recent_card_id'])
         self.assertEqual(card['sent_at'], test_time)
+
+class HelperFunctionTests(TestCase):
+    def setUp(self):
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.sender_mobile_number = '+1_sender_mobile_number'
+        self.twilio_phone_number = 'twilio_number_1'
+        self.profile_url = 'sender_selfie_url'
+
+    def test_get_passkey_when_absent(self):
+        passkey = cmds.get_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        self.assertIsNone(passkey)
    
+    def test_set_passkey_when_absent(self):
+        passkey = cmds.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        print(f'tests line 72, passkey: {passkey}')
+        self.assertEqual(len(passkey), 4)
+   
+    def test_get_passkey_when_present(self):
+        passkey1 = cmds.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        passkey2 = cmds.get_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        self.assertEqual(passkey1, passkey2)
+   
+    def test_get_passkey_when_expired(self):
+        passkey1 = cmds.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number, duration=-1)
+        passkey2 = cmds.get_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        self.assertEqual(len(passkey1), 4)
+        self.assertIsNone(passkey2)
+  
     

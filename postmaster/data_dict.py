@@ -16,19 +16,21 @@ f'sender/{from_tel}':
 
 
 
-
+# CHANGED !
 f'pobox_{pobox_id}':
-    'version': -> start at 1
-    'id': pobox_id
-    key_operator: f'{from_tel}              # set when viewer is first connected for (from_tel, to_tel)
-    f'{from_tel}:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
+    'meta':
+        'version': -> start at 1
+        'pobox_id': pobox_id
+        'key_operator': f'{from_tel}              # set when viewer is first connected for (from_tel, to_tel)
+    'card_lists':
+        f'{from_tel}:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
     ...
 
     
     
 f'card_{postcard_id}':
     'version': -> start at 1
-    'id':  -> card_id, 
+    'card_id':  -> card_id, 
     'plays':  -> default 0, then updated from Recently_Played_Cards_V1 when archived  ---> change this?                                  
     'from_tel':
     'to_tel': 
@@ -39,10 +41,25 @@ f'card_{postcard_id}':
 
 
     
-f'keys_{from_tel}':             # Used for 'connect' for security and to identify the to_tel and avoid having to type that.
-    'version': -> start at 1
-    'key': -> value
-    'to_tel': ->
+f'passkey_{from_tel}_{to_tel}':             # Used for 'connect' for security and to identify the to_tel and avoid having to type that.
+    'from_tel': -> from_tel
+    'to_tel': -> to_tel
+    'passkey': -> value
     'expire': -> time.time of expiration
+
+
+f'viewer_data_{pobox_id}':
+    'meta':
+        'version': -> 1
+        'pobox_id': pobox_id
+    'cards':
+        'card_uuid': -> 
+        'play_count' -> 
+        'profile_url': -> 
+        'image_url': -> 
+        'audio_url': -> 
+        'audio_duration': -> 
+
+
 
 """

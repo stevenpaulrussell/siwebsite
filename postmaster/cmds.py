@@ -5,67 +5,29 @@ def some_cmd(from_tel, to_tel, **msg):
     assert(msg['cmd'] == 'some_cmd')
 
 """
+
+
 import time
-from filer import views as filerviews
+import uuid
+
+from . postcards import get_passkey_dictionary, save_passkey_dictionary
+
+from filer import lines, exceptions
 
 
-def sender_first_postcard(from_tel, to_tel, **msg):
-    """
-    Set up this new sender from profile_url and wip. 
-    Fix up the twilio-visible data by adding the free_tier info then removing the new_sender entry.
-    """
-    # Check for and make sender 
-    # Check for and make conn with None for pobox_uuid
-    # Proceed as in 'new_postcard'
-
-
-    
-    
-def new_postcard(from_tel, to_tel, **msg):
-    """
-    """
-    # Make postcard uuid data structure and store
-    # Store postcard_uuid in the right place
-
-    
-def make_a_key(from_tel, to_tel):
-    """
-        Request may come from twilio or from website
-        f'keys_{from_tel}':
-        key -> value, to_tel -> to_tel, expire -> time.time of expiration
-    """
-    # Make and store a key
-    # Where is the cleaner function that removes expired keys, new_senders?
-
-    
-def make_a_viewer(from_tel, key):
-    """find the to_tel if any and check validity.
-    If valid, ...pobox??
-    """
-    # Check for existing pobox, make new if needed.
-    # Send announcement to all senders on pobox of new viewer.
-
+def get_passkey(from_tel, to_tel):
+    current_key = get_passkey_dictionary(from_tel, to_tel)
+    if current_key and time.time() < current_key['expire']:
+        return current_key['passkey']
     
 
-def connect_a_sender():
-    """
-    Make this better
-    Include possible recipient_name and key_sender name as to:   from:
-    """
-
-    
-
-def set_recipient_name():
-    """
-    """
-
-    
-    
-def set_sender_name():
-    """
-    ss"""
-
-
+def set_passkey(from_tel, to_tel, duration=24):
+    """Stores a short-lived 'passkey' for both security and easy id of a to_tell when adding a sender """
+    expire = time.time() + duration*60*60
+    passkey = str(uuid.uuid4())[0:4]
+    current_key = dict(passkey=passkey, from_tel=from_tel, to_tel=to_tel, expire=expire)
+    save_passkey_dictionary(current_key)
+    return passkey
 
     
 
