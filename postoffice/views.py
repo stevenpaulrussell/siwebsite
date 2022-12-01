@@ -3,10 +3,8 @@
 from django.shortcuts import render
 
 from filer import views as filerviews
-from filer import lines
-from filer import exceptions as filerexceptions
 
-from postcards.views import get_postcard, get_pobox
+from postcards.views import get_postcard
 
 # viewer_data and pobox are both initialized when the pobox_id is assigned.
 # As each sender is connected, update both viewer_data and pobox

@@ -8,22 +8,23 @@ from postoffice.views import update_viewer_data, save_viewer_data
 
 
 
-def connect_viewer(from_tel, possible_key):
-    """Called from web form for making a viewer.  Makes uuid4 for postboxz_id and for unique url for viewer"""
-    #  Could do error check on from_tel!
-    sender = postcards.get_sender(from_tel)
+def check_passkey(from_tel, possible_key):
     passkey, to_tel = postcards.get_passkey(from_tel)
-    if passkey != possible_key:
-        return 'xxx'    # Make a proper message back to the web or to the sender somehow... prefer the sender,
+    if passkey == possible_key:
+        return dict(to_tel=to_tel)
+    else:
+        return dict(error='xxx')    # Make a proper message back to the web or to the sender somehow... prefer the sender,
                         # but should run a check on the sender number since that might be the error!
-    # Check sender to see if pobox_id already exists. If so, use it.  If not: 
-    # Return the pobox_id
+
+
+def connect_viewer(sender, to_tel):
     pobox_id = sender['conn'][to_tel]['pobox_id']
     if not pobox_id:
         # assign new pobox_id to sender
         pobox_id = str(uuid.uuid4())
         sender['conn'][to_tel]['pobox_id'] = pobox_id
         # make pobox
+        from_tel = sender['from_tel']
         meta = dict(version=1, pobox_id=pobox_id, key_operator=from_tel)
         recent_card = sender['conn'][to_tel]['recent_card_id']
         card_lists = dict(from_tel=[recent_card,])
@@ -40,7 +41,7 @@ def connect_viewer(from_tel, possible_key):
     
 def get_passkey(from_tel):
     """Return both the passkey and the to_tel associated, to allow matching for security or for to_tel ident."""
-    current_key = get_passkey_dictionary(from_tel)
+    current_key = postcards.get_passkey_dictionary(from_tel)
     if current_key and time.time() < current_key['expire']:
         return current_key['passkey'], current_key['to_tel']
     
@@ -50,7 +51,7 @@ def set_passkey(from_tel, to_tel, duration=24):
     expire = time.time() + duration*60*60
     passkey = str(uuid.uuid4())[0:4]
     current_key = dict(passkey=passkey, from_tel=from_tel, to_tel=to_tel, expire=expire)
-    save_passkey_dictionary(current_key)
+    postcards.save_passkey_dictionary(current_key)
     return passkey
 
     
