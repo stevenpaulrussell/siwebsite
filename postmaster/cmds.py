@@ -2,14 +2,14 @@
 import time
 import uuid
 
-import postcards
+from . import postcards
 
 from postoffice.views import update_viewer_data, save_viewer_data
 
 
 
 def check_passkey(from_tel, possible_key):
-    passkey, to_tel = postcards.get_passkey(from_tel)
+    passkey, to_tel = get_passkey(from_tel)
     if passkey == possible_key:
         return dict(to_tel=to_tel)
     else:
