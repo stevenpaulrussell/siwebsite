@@ -21,9 +21,9 @@ f'pobox_{pobox_id}':
     'meta':
         'version': -> start at 1
         'pobox_id': pobox_id
-        'key_operator': f'{from_tel}              # set when viewer is first connected for (from_tel, to_tel)
+        'key_operator': from_tel              # set when viewer is first connected for (from_tel, to_tel)
     'card_lists':
-        f'{from_tel}:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
+        from_tel:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
     ...
 
     
@@ -52,7 +52,7 @@ f'viewer_data_{pobox_id}':
     'meta':
         'version': -> 1
         'pobox_id': pobox_id
-    'cards':
+    from_tel:
         'card_uuid': -> 
         'play_count' -> 
         'profile_url': -> 
