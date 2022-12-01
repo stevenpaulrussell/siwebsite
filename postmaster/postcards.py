@@ -127,16 +127,15 @@ def get_postcard(card_id):
     return filerviews._load_a_thing_using_key(key=f'card_{card_id}')
 
 
-def get_passkey_dictionary(from_tel, to_tel):
+def get_passkey_dictionary(from_tel):
     try:
-        return filerviews._load_a_thing_using_key(f'passkey_{from_tel}_{to_tel}')
+        return filerviews._load_a_thing_using_key(f'passkey_{from_tel}')
     except filerexceptions.S3KeyNotFound:
         return None
 
 def save_passkey_dictionary(passkey):
     from_tel =  passkey['from_tel']
-    to_tel =  passkey['to_tel']
-    filerviews._save_a_thing_using_key(thing=passkey, key=f'passkey_{from_tel}_{to_tel}')  
+    filerviews._save_a_thing_using_key(thing=passkey, key=f'passkey_{from_tel}')  
 
 
 def save_morsel(sender, morsel):

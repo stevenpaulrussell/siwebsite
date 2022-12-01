@@ -41,7 +41,7 @@ f'card_{postcard_id}':
 
 
     
-f'passkey_{from_tel}_{to_tel}':             # Used for 'connect' for security and to identify the to_tel and avoid having to type that.
+f'passkey_{from_tel}':             # Used for 'connect' for security and to identify the to_tel and avoid having to type that.
     'from_tel': -> from_tel
     'to_tel': -> to_tel
     'passkey': -> value

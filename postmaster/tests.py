@@ -64,22 +64,22 @@ class HelperFunctionTests(TestCase):
         self.profile_url = 'sender_selfie_url'
 
     def test_get_passkey_when_absent(self):
-        passkey = cmds.get_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        passkey = cmds.get_passkey(from_tel=self.sender_mobile_number)
         self.assertIsNone(passkey)
    
     def test_set_passkey_when_absent(self):
         passkey = cmds.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-        print(f'tests line 72, passkey: {passkey}')
         self.assertEqual(len(passkey), 4)
    
     def test_get_passkey_when_present(self):
         passkey1 = cmds.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-        passkey2 = cmds.get_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        passkey2, to_tel = cmds.get_passkey(from_tel=self.sender_mobile_number)
         self.assertEqual(passkey1, passkey2)
+        self.assertEqual(to_tel, self.twilio_phone_number)
    
     def test_get_passkey_when_expired(self):
         passkey1 = cmds.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number, duration=-1)
-        passkey2 = cmds.get_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        passkey2 = cmds.get_passkey(from_tel=self.sender_mobile_number)
         self.assertEqual(len(passkey1), 4)
         self.assertIsNone(passkey2)
   
