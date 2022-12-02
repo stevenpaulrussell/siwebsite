@@ -6,6 +6,7 @@ from filer import views as filerviews
 from twitalk.tests import SiWebCarepostUser
 from . import postcards
 from . import cmds
+from postoffice.views import get_viewer_data
 
 class PostcardProcessing(TestCase):
     def setUp(self):
@@ -129,4 +130,20 @@ class NewPostcardCases(TestCase):
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], True)
         
-    
+    def test_new_postcard_HaveViewer(self):
+        # Setup and connect a sender to a viewer
+        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
+        sender = postcards.get_sender(self.sender_mobile_number)
+        cmds.connect_viewer(sender, to_tel=self.twilio_phone_number)
+        # Send the test postcard
+        specifics = dict(context='HaveViewer', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
+        # See what happened
+        pobox_id =  sender['conn'][self.twilio_phone_number]['pobox_id']
+        viewer_data = get_viewer_data(pobox_id)
+        self.assertIn(self.sender_mobile_number, viewer_data)
+        self.assertFalse('Still have to add asserts to this test function that seems to work')
+

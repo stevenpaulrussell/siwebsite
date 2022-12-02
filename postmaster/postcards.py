@@ -96,10 +96,9 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
     return card
 
 def get_and_update_postbox(sender, to_tel):
-    from_tel = sender['recent_card_id']
-    this_conn = sender['conn'][to_tel]
-    pobox_id =  this_conn['pobox_id']
-    card_id = this_conn['recent_card_id']
+    from_tel = sender['from_tel']
+    pobox_id =  sender['conn'][to_tel]['pobox_id']
+    card_id = sender['conn'][to_tel]['recent_card_id']
     pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
     pobox['cardlists'][from_tel].append(card_id)
     return pobox
