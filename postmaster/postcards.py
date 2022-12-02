@@ -5,7 +5,8 @@ import uuid
 
 from filer import views as filerviews
 from filer import lines
-from filer import exceptions as filerexceptions
+
+from . import saveget
 
 
 def new_postcard(from_tel, to_tel, **msg):
@@ -17,43 +18,34 @@ def new_postcard(from_tel, to_tel, **msg):
             sender = create_new_sender(from_tel, profile_url)
             create_new_connection(sender, to_tel)
             card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_postcard(card)
-            save_sender_and_morsel(sender)          # Save the new 'morsel' before deleting twilio's record
-            delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
+            saveget.save_postcard(card)
+            morsel = make_morsel(sender)                    # Duplicate of save at end stops a theoritical race
+            saveget.save_morsel(sender, morsel)             # Duplicate of save at end stops a theoritical race
+            saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
         case 'NewRecipientFirst':
-            sender = get_sender(from_tel)
+            sender = saveget.get_sender(from_tel)
             create_new_connection(sender, to_tel)
             card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_postcard(card)
+            saveget.save_postcard(card)
 
         case 'NoViewer':
-            sender = get_sender(from_tel)
+            sender = saveget.get_sender(from_tel)
             card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_postcard(card)
+            saveget.save_postcard(card)
 
         case 'HaveViewer':
-            sender = get_sender(from_tel)
+            """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
+            sender = saveget.get_sender(from_tel)
             card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            save_postcard(card)
+            saveget.save_postcard(card)
             pobox = get_and_update_postbox(sender, to_tel)
-            save_pobox(pobox)
+            saveget.save_pobox(pobox)
 
-    save_sender_and_morsel(sender)          # Is a re-save in case context == NewSenderFirst
-
-    #
-    #    ----------> someone should call update_viewer_data
-    #
-
-
-
-
-
-
-def save_sender_and_morsel(sender):
-    save_sender(sender)
     morsel = make_morsel(sender)
-    save_morsel(sender, morsel)
+    saveget.save_morsel(sender, morsel)
+    saveget.save_sender(sender)
+
 
 def create_new_sender(from_tel, profile_url):
     return dict(
@@ -99,7 +91,7 @@ def get_and_update_postbox(sender, to_tel):
     from_tel = sender['from_tel']
     pobox_id =  sender['conn'][to_tel]['pobox_id']
     card_id = sender['conn'][to_tel]['recent_card_id']
-    pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
+    pobox = saveget.get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
     pobox['cardlists'][from_tel].append(card_id)
     return pobox
 
@@ -112,43 +104,4 @@ def make_morsel(sender):
         morsel[to_tel]['to'] = sender['conn'][to_tel]['to']
         morsel[to_tel]['have_viewer'] = bool(sender['conn'][to_tel]['pobox_id'])
     return morsel
-
-
-
-    
-def get_sender(from_tel):
-    return filerviews._load_a_thing_using_key(key=f'sender/{from_tel}')
-
-def save_sender(sender):
-    filerviews._save_a_thing_using_key(thing=sender, key=f'sender/{sender["from_tel"]}')
-
-
-def get_pobox(pobox_id):
-    return filerviews._load_a_thing_using_key(key=f'pobox_{pobox_id}')
-def save_pobox(pobox):
-    pobox_id = pobox['meta']['pobox_id']
-    filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox_{pobox_id}')
-
-
-def save_postcard(postcard):
-    card_id = postcard['card_id']
-    filerviews._save_a_thing_using_key(thing=postcard, key=f'card_{card_id}')
-
-
-def get_passkey_dictionary(from_tel):
-    try:
-        return filerviews._load_a_thing_using_key(f'passkey_{from_tel}')
-    except filerexceptions.S3KeyNotFound:
-        return None
-
-def save_passkey_dictionary(passkey):
-    from_tel =  passkey['from_tel']
-    filerviews._save_a_thing_using_key(thing=passkey, key=f'passkey_{from_tel}')  
-
-
-def save_morsel(sender, morsel):
-    filerviews._save_a_thing_using_key(thing=morsel, key=f'free_tier/{sender["from_tel"]}')
-
-def delete_twilio_new_sender(sender):
-    filerviews._delete_a_thing_using_key(key=f'new_sender/{sender["from_tel"]}')
 

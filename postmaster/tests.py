@@ -4,9 +4,8 @@ from django.test import TestCase
 
 from filer import views as filerviews 
 from twitalk.tests import SiWebCarepostUser
-from . import postcards
-from . import connects
-from postoffice.views import get_viewer_data
+from . import postcards, connects, saveget
+
 
 class PostcardProcessing(TestCase):
     def setUp(self):
@@ -112,7 +111,7 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
-        sender = postcards.get_sender(self.sender_mobile_number)
+        sender = saveget.get_sender(self.sender_mobile_number)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
         self.assertIn('conn', sender)
         self.assertEqual(sender['conn'][self.twilio_phone_number]['pobox_id'], None)
@@ -123,7 +122,7 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
-        sender = postcards.get_sender(self.sender_mobile_number)
+        sender = saveget.get_sender(self.sender_mobile_number)
         url_msg_string = connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
         self.assertIn(sender['conn'][self.twilio_phone_number]['pobox_id'], url_msg_string)
@@ -135,14 +134,14 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
-        sender = postcards.get_sender(self.sender_mobile_number)
+        sender = saveget.get_sender(self.sender_mobile_number)
         # Connect to a viewer
         connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
         # See what happened
         pobox_id =  sender['conn'][self.twilio_phone_number]['pobox_id']
-        pobox = postcards.get_pobox(pobox_id)
+        pobox = saveget.get_pobox(pobox_id)
         cardlists = pobox['cardlists']
-        viewer_data = get_viewer_data(pobox_id)
+        viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertIn(self.sender_mobile_number, cardlists)
         self.assertEqual(len(cardlists[self.sender_mobile_number]), 1)
         self.assertIn(self.sender_mobile_number, viewer_data)
@@ -152,7 +151,7 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
-        sender = postcards.get_sender(self.sender_mobile_number)
+        sender = saveget.get_sender(self.sender_mobile_number)
         connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
         # Send the test postcard
         specifics = dict(context='HaveViewer', profile_url=self.profile_url)
@@ -160,9 +159,9 @@ class NewPostcardCases(TestCase):
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
         # See what happened
         pobox_id =  sender['conn'][self.twilio_phone_number]['pobox_id']
-        pobox = postcards.get_pobox(pobox_id)
+        pobox = saveget.get_pobox(pobox_id)
         cardlists = pobox['cardlists']
-        viewer_data = get_viewer_data(pobox_id)
+        viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertIn(self.sender_mobile_number, cardlists)
         self.assertEqual(len(cardlists[self.sender_mobile_number]), 2)
         self.assertIn(self.sender_mobile_number, viewer_data)
