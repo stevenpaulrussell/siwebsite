@@ -32,8 +32,10 @@ def connect_viewer(sender, to_tel):
         # make viewer_data  
         viewer_data = dict(meta=dict(version=1, pobox_id=pobox_id))
         update_viewer_data(pobox=pobox, viewer_data=viewer_data)
-        # Save sender, pobox, viewer_data
+        # Save sender, morsel, pobox, viewer_data
+        morsel = postcards.make_morsel(sender)
         postcards.save_sender(sender)       # pobox_id is set
+        postcards.save_morsel(sender, morsel)
         postcards.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
         save_viewer_data(viewer_data)       # viewer_data is made from the new pobox
     return f'This a stand-in at postmaster.connect_viewer for the url for postbox: {pobox_id}'

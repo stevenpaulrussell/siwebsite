@@ -104,7 +104,7 @@ def get_and_update_postbox(sender, to_tel):
     pobox['cardlists'][from_tel].append(card_id)
     return pobox
 
-def make_morsel(sender):      #  Called by save_sender
+def make_morsel(sender):     
     """This a read-only, limited-info entry for twilio processing."""
     morsel =  {}
     for to_tel in sender['conn']: 
