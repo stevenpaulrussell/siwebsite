@@ -19,9 +19,6 @@ def new_postcard(from_tel, to_tel, **msg):
             create_new_connection(sender, to_tel)
             card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
             saveget.save_postcard(card)
-            morsel = make_morsel(sender)                    # Duplicate of save at end stops a theoritical race
-            saveget.save_morsel(sender, morsel)             # Duplicate of save at end stops a theoritical race
-            saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
         case 'NewRecipientFirst':
             sender = saveget.get_sender(from_tel)
@@ -42,9 +39,9 @@ def new_postcard(from_tel, to_tel, **msg):
             pobox = get_and_update_postbox(sender, to_tel)
             saveget.save_pobox(pobox)
 
-    morsel = make_morsel(sender)
-    saveget.save_morsel(sender, morsel)
-    saveget.save_sender(sender)
+    saveget.update_sender_and_morsel(sender)    # pobox_id is set
+    if msg['context'] == 'NewSenderFirst':
+        saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
 
 def create_new_sender(from_tel, profile_url):
@@ -94,14 +91,3 @@ def get_and_update_postbox(sender, to_tel):
     pobox = saveget.get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
     pobox['cardlists'][from_tel].append(card_id)
     return pobox
-
-def make_morsel(sender):     
-    """This a read-only, limited-info entry for twilio processing."""
-    morsel =  {}
-    for to_tel in sender['conn']: 
-        morsel[to_tel] = {}
-        morsel[to_tel]['from'] = sender['conn'][to_tel]['from']
-        morsel[to_tel]['to'] = sender['conn'][to_tel]['to']
-        morsel[to_tel]['have_viewer'] = bool(sender['conn'][to_tel]['pobox_id'])
-    return morsel
-

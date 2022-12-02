@@ -1,6 +1,23 @@
 from filer import exceptions as filerexceptions
 from filer import views as filerviews
 
+
+def update_sender_and_morsel(sender):  
+    """Morsel a read-only, limited-info represent of sender for twilio processing."""
+    morsel = make_morsel(sender)
+    filerviews._save_a_thing_using_key(thing=morsel, key=f'free_tier/{sender["from_tel"]}')
+    save_sender(sender)
+
+def make_morsel(sender):            #  This separated from update_sender_and_morsel for test.
+    morsel =  {}
+    for to_tel in sender['conn']: 
+        morsel[to_tel] = {}
+        morsel[to_tel]['from'] = sender['conn'][to_tel]['from']
+        morsel[to_tel]['to'] = sender['conn'][to_tel]['to']
+        morsel[to_tel]['have_viewer'] = bool(sender['conn'][to_tel]['pobox_id'])
+    return morsel
+
+
     
 def get_sender(from_tel):
     return filerviews._load_a_thing_using_key(key=f'sender/{from_tel}')
@@ -13,6 +30,9 @@ def get_pobox(pobox_id):
 def save_pobox(pobox):
     pobox_id = pobox['meta']['pobox_id']
     filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox_{pobox_id}')
+def delete_pobox(pobox):
+    pobox_id = pobox['meta']['pobox_id']
+    filerviews._delete_a_thing_using_key(key=f'pobox_{pobox_id}')
 
 
 def get_postcard(card_id):
@@ -37,9 +57,10 @@ def get_viewer_data(pobox_id):
 def save_viewer_data(viewer_data):
     pobox_id = viewer_data['meta']['pobox_id']
     filerviews._save_a_thing_using_key(thing=viewer_data, key=f'viewer_data_{pobox_id}')
+def delete_viewer_data(viewer_data):
+    pobox_id = viewer_data['meta']['pobox_id']
+    filerviews._delete_a_thing_using_key(key=f'viewer_data_{pobox_id}')
 
-def save_morsel(sender, morsel):
-    filerviews._save_a_thing_using_key(thing=morsel, key=f'free_tier/{sender["from_tel"]}')
 
 def delete_twilio_new_sender(sender):
     filerviews._delete_a_thing_using_key(key=f'new_sender/{sender["from_tel"]}')
