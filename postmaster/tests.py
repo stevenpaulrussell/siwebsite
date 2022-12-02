@@ -123,11 +123,11 @@ class NewPostcardCases(TestCase):
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, **self.msg)
         sender = postcards.get_sender(self.sender_mobile_number)
-        url = cmds.connect_viewer(sender, to_tel=self.twilio_phone_number)
+        url_msg_string = cmds.connect_viewer(sender, to_tel=self.twilio_phone_number)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
-        self.assertEqual(sender['conn'][self.twilio_phone_number]['pobox_id'], url)
+        self.assertIn(sender['conn'][self.twilio_phone_number]['pobox_id'], url_msg_string)
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], True)
-        print(f'\n\nurl is {url}')
+        print(f'\n\n url_msg_string is {url_msg_string}')
         
     

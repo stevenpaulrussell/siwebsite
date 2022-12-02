@@ -13,16 +13,16 @@ def update_viewer_data(pobox, viewer_data):
     """viewer_data is {from_tel: card_spec} where card_spec is everything needed for play"""
     # Change pobox data_dict defintion to conform to this change
     for from_tel in pobox['cardlists']:
-        card_list = pobox[from_tel]
-        if not card_list:
+        cardlist = pobox['cardlists'][from_tel]
+        if not cardlist:
             continue    
             # In the following, there is a new card if one is needed...
         viewer_card = viewer_data.get(from_tel, {})     
         if not viewer_card or viewer_card['play_count'] > 0:  # Just initializing, or need a new card (and there is one!)
-            new_card_id, card_list = card_list[0], card_list[1:]
+            new_card_id, cardlist = cardlist[0], cardlist[1:]
 
-            old_card_id = viewer_data['card_id']
-            # Archive the old_card_id into some new data structure for each (receiver?)
+            old_card_id = viewer_data.get('card_id', None)
+            # Archive the old_card_id into some new data structure for each (receiver?).  Watch for None value
             
             new_card = get_postcard(new_card_id)
             viewer_card['card_id'] = new_card_id
@@ -33,12 +33,10 @@ def update_viewer_data(pobox, viewer_data):
     return viewer_data
         
 
-
-
 def get_viewer_data(pobox_id):
     filerviews._load_a_thing_using_key(key=f'viewer_data_{pobox_id}')
 
 def save_viewer_data(viewer_data):
-    pobox_id = viewer_data['meta']['viewer_data']
+    pobox_id = viewer_data['meta']['pobox_id']
     filerviews._save_a_thing_using_key(thing=viewer_data, key=f'viewer_data_{pobox_id}')
 

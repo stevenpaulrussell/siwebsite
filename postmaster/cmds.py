@@ -27,8 +27,8 @@ def connect_viewer(sender, to_tel):
         from_tel = sender['from_tel']
         meta = dict(version=1, pobox_id=pobox_id, key_operator=from_tel)
         recent_card = sender['conn'][to_tel]['recent_card_id']
-        card_lists = dict(from_tel=[recent_card,])
-        pobox = dict(meta=meta, card_lists=card_lists)
+        cardlist = {from_tel: [recent_card,]}               # Couldn't use dict(from_tel=..) as that made from_tel a literal
+        pobox = dict(meta=meta, cardlists=cardlist)
         # make viewer_data  
         viewer_data = dict(meta=dict(version=1, pobox_id=pobox_id))
         update_viewer_data(pobox=pobox, viewer_data=viewer_data)

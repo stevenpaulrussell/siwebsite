@@ -11,11 +11,13 @@ from filer import exceptions as filerexceptions
 def new_postcard(from_tel, to_tel, **msg):
     wip = msg['wip']
     sent_at = msg['sent_at']
-    match msg['context']:
+    match msg['context']:          # The detailed ordering requires the apparent duplication below
         case 'NewSenderFirst':
             profile_url = msg['profile_url']
             sender = create_new_sender(from_tel, profile_url)
             create_new_connection(sender, to_tel)
+            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
+            save_postcard(card)
             save_sender_and_morsel(sender)          # Save the new 'morsel' before deleting twilio's record
             delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
@@ -38,6 +40,14 @@ def new_postcard(from_tel, to_tel, **msg):
             save_pobox(pobox)
 
     save_sender_and_morsel(sender)          # Is a re-save in case context == NewSenderFirst
+
+    #
+    #    ----------> someone should call update_viewer_data
+    #
+
+
+
+
 
 
 def save_sender_and_morsel(sender):
@@ -91,7 +101,7 @@ def get_and_update_postbox(sender, to_tel):
     pobox_id =  this_conn['pobox_id']
     card_id = this_conn['recent_card_id']
     pobox = get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
-    pobox[from_tel].append(card_id)
+    pobox['cardlists'][from_tel].append(card_id)
     return pobox
 
 def make_morsel(sender):      #  Called by save_sender
@@ -116,7 +126,8 @@ def get_pobox(pobox_id):
     return filerviews._load_a_thing_using_key(key=f'pobox_{pobox_id}')
 
 def save_pobox(pobox):
-    filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox_{pobox["pobox_id"]}')
+    pobox_id = pobox['meta']['pobox_id']
+    filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox_{pobox_id}')
 
 
 def save_postcard(postcard):

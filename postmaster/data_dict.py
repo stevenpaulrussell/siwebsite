@@ -22,7 +22,7 @@ f'pobox_{pobox_id}':
         'version': -> start at 1
         'pobox_id': pobox_id
         'key_operator': from_tel              # set when viewer is first connected for (from_tel, to_tel)
-    'card_lists':
+    'cardlists':
         from_tel:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
     ...
 
