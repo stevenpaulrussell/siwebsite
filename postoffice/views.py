@@ -4,7 +4,6 @@ from django.shortcuts import render
 
 from filer import views as filerviews
 
-from postmaster.postcards import get_postcard
 
 # viewer_data and pobox are both initialized when the pobox_id is assigned.
 # As each sender is connected, update both viewer_data and pobox
@@ -40,3 +39,7 @@ def get_viewer_data(pobox_id):
 def save_viewer_data(viewer_data):
     pobox_id = viewer_data['meta']['pobox_id']
     filerviews._save_a_thing_using_key(thing=viewer_data, key=f'viewer_data_{pobox_id}')
+
+def get_postcard(card_id):
+    return filerviews._load_a_thing_using_key(key=f'card_{card_id}')
+

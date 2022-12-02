@@ -113,6 +113,8 @@ def make_morsel(sender):
         morsel[to_tel]['have_viewer'] = bool(sender['conn'][to_tel]['pobox_id'])
     return morsel
 
+
+
     
 def get_sender(from_tel):
     return filerviews._load_a_thing_using_key(key=f'sender/{from_tel}')
@@ -123,7 +125,6 @@ def save_sender(sender):
 
 def get_pobox(pobox_id):
     return filerviews._load_a_thing_using_key(key=f'pobox_{pobox_id}')
-
 def save_pobox(pobox):
     pobox_id = pobox['meta']['pobox_id']
     filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox_{pobox_id}')
@@ -132,9 +133,6 @@ def save_pobox(pobox):
 def save_postcard(postcard):
     card_id = postcard['card_id']
     filerviews._save_a_thing_using_key(thing=postcard, key=f'card_{card_id}')
-
-def get_postcard(card_id):
-    return filerviews._load_a_thing_using_key(key=f'card_{card_id}')
 
 
 def get_passkey_dictionary(from_tel):
