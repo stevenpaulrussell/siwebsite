@@ -10,11 +10,11 @@ def update_viewer_data(pobox, viewer_data):
     # Change pobox data_dict defintion to conform to this change
     for from_tel in pobox['cardlists']:
         cardlist = pobox['cardlists'][from_tel]
-        if not cardlist:
+        if not cardlist:        # No new cards to show, so on to the next sender's list
             continue    
-            # In the following, there is a new card if one is needed...
+        # There is a new card in pobox if viewer needs one
         viewer_card = viewer_data.get(from_tel, {})     
-        if not viewer_card or viewer_card['play_count'] > 0:  # Just initializing, or need a new card (and there is one!)
+        if not viewer_card or viewer_card['play_count'] > 0:  # If initializing, or current has been played
             new_card_id, cardlist = cardlist[0], cardlist[1:]
     
             old_card_id = viewer_data.get('card_id', None)
