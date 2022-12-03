@@ -31,19 +31,14 @@ def connect_viewer(sender, to_tel):
 
 
 def disconnect_from_viewer(sender, to_tel):
-    """Change sender's conn, delete from pobox, delete from viewer_data, 
-        delete pobox if empty, delete viewer_data if empty.  -> msgs to key_operator, etc??
-    """
-    # Reset {}[pobox_id] to None.   This pobox_id is the one being shrunk
-    from_tel = sender['from_tel']
-    pobox_id = sender['conn'][to_tel]['pobox_id']
-    sender['conn'][to_tel]['pobox_id'] = None
+    """Delete from sender, pobox, and viewer_data"""
+    # Reset sender...[pobox_id] to None.   
+    pobox_id, sender['conn'][to_tel]['pobox_id'] = sender['conn'][to_tel]['pobox_id'],  None
     saveget.update_sender_and_morsel(sender)    
     # Clear sender from the pobox and view_data, maybe send a message to the key_operator
-    pobox = saveget.get_pobox(pobox_id)
-    pobox['cardlists'].pop(from_tel)
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    viewer_data.pop(from_tel)
+    pobox, viewer_data = saveget.get_pobox(pobox_id), saveget.get_viewer_data(pobox_id)
+    pobox['cardlists'].pop(sender['from_tel'])
+    viewer_data.pop(sender['from_tel'])
     if pobox['cardlists'] == {}:
         saveget.delete_pobox(pobox)
         saveget.delete_viewer_data(viewer_data)
