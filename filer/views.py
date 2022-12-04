@@ -13,6 +13,11 @@ from . import exceptions
 
 # Placeholder for static file storing strings for constructing messages
 ALL_MESSAGES = {}
+legal_commands = 'help ? profile connector connect from: to:'
+completed_onboarding_message = 'Welcome to the postcarding system! To set up a viewer for postcards, or to get other instructions, \
+    please go to https://dry-sierra-55179.herokuapp.com/.'
+
+
 
 MGMT_TELEPHONE_NUMBER = 'MGMT_TELEPHONE_NUMBER'
 DEFAULT_TWILIO_NUMBER = '+18326626430'

@@ -50,9 +50,13 @@ def disconnect_from_viewer(sender, to_tel):
 
 
 def connect_requester_to_granted_pobox(request_sender, grant_sender, r_to_tel, g_to_tel):
-    pobox_id = grant_sender['conn'][g_to_tel]['pobox_id']   # This pobox_id is the one being added to.
-    request_sender['conn'][r_to_tel]['pobox_id'] = pobox_id
-    pobox = saveget.get_pobox[pobox_id]
+    """from_tel, to_tel pair determines a unique connection.  Map the request_sender connection
+    to the pobox the grant_sender from_tel, to_tel points to.  Update the pobox to store those 
+    postcards.
+    """
+    wanted_pobox_id = grant_sender['conn'][g_to_tel]['pobox_id']   # This pobox_id is the one being added to.
+    request_sender['conn'][r_to_tel]['pobox_id'] = wanted_pobox_id
+    pobox = saveget.get_pobox[wanted_pobox_id]
     pobox['cardlists'][request_sender['from_tel']] = []
     saveget.save_pobox(pobox)
     saveget.update_sender_and_morsel(request_sender)
