@@ -2,6 +2,7 @@ import os
 import json
 import time
 
+
 import saveget, postcards, connects
 
 
@@ -20,16 +21,29 @@ def interpret_one_cmd(cmd_json):
             message = f'OK, your profile image has been updated.'
         case 'cmd_general':
             message = handle_possible_cmd_general(from_tel, to_tel, sender, cmd_dict['text'])
+        case _:
+            """ Send admin an error message or in test raise exception"""
 
 def handle_possible_cmd_general(from_tel, to_tel, sender, text): 
     if text == 'connector':
-        """Change this"""
-        # po_box = connections[from_tel][to_tel]['po_box_uuid']
-        # return f'Use connector {po_box[0:4]} to make postcard connection to viewers.'    
+        passkey = connects.set_passkey(from_tel, to_tel)
+        msg = 'Your passkey is "{passkey}".  It is valid for one day.'
+        return msg
 
     if 'connect' in text and text != 'connector':
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
-        # return connect_command(sender, to_tel)
+        try:    
+            assert cmd == 'connect'
+            assert connector_literal == 'connector'
+            assert len(connector) == 4
+            cmd, request_from_tel, connector_literal, connector = [word.strip() for word in text.split(' ')]
+            request_sender = saveget.get_sender(request_from_tel)
+            r_to_tel = connects.check_passkey(request_from_tel, connector)['to_tel']      # Throws KeyError if no match
+        except (ValueError, AssertionError, KeyError):
+            return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
+        connects.disconnect_from_viewer(request_sender, to_tel)
+        connects.connect_requester_to_granted_pobox(request_sender, sender, r_to_tel, to_tel)
+        # return WHAT
 
     if 'from:' in text:
         try:    
