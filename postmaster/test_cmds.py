@@ -42,6 +42,21 @@ class TwiSim:
         sqs_message['profile_url'] = self.profile_url
         return json.dumps(sqs_message)
 
+    def newrecipient_postcard(self):
+        sqs_message = self._new_postcard_common()
+        sqs_message['context'] = 'NewRecipientFirst'
+        return json.dumps(sqs_message)
+
+    def newpostcard_noviewer(self):
+        sqs_message = self._new_postcard_common()
+        sqs_message['context'] = 'NoViewer'
+        return json.dumps(sqs_message)
+
+    def newpostcard_haveviewer(self):
+        sqs_message = self._new_postcard_common()
+        sqs_message['context'] = 'HaveViewer'
+        return json.dumps(sqs_message)
+
     
     def profile(self):
         return 'sqs dq sim'
@@ -70,11 +85,32 @@ class OneCmdTests(TestCase):
 
     def test_newsenderfirst(self):
         """ Test basic functioning using newsender_firstpostcard """
-        sender0 = TwiSim('Mr0')
-        sqs_message = sender0.newsender_firstpostcard()
+        Sender0 = TwiSim('Mr0')
+        sqs_message = Sender0.newsender_firstpostcard()
         res = cmds.interpret_one_cmd(sqs_message)
-        sender = saveget.get_sender(sender0.mobile)
-        self.assertEqual(sender['profile_url'], 'profile_Mr0')
+        sender = saveget.get_sender(Sender0.mobile)
+        self.assertEqual(sender['profile_url'], 'profile_Mr.0')
+
+    def test_using_simulation_of_two_senders(self):
+        Sender0 = TwiSim('Mr.0')
+        Sender1 = TwiSim('Ms.1')
+        # Twilio side is quiet until the sender succeeds in 'sign-up' by making wip and a profile.
+        # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
+        res0 = cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
+        res1 = cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
+        # Sender1 sends to a second twilio number without establishing any viewer
+        #    ????????? How to write this second to_tel  ?????
+        # res1 = cmds.interpret_one_cmd(Sender0.newrecipient_postcard())
+        sender1 = saveget.get_sender(Sender1.mobile)
+        self.assertEqual(sender1['profile_url'], 'profile_Ms.1')
+        self.assertFalse('I do not know how to write the second to_tel')
+
+
+
+
+
+
+        
 
         
 
