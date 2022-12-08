@@ -4,7 +4,7 @@ import json
 from django.test import TestCase
 
 from filer import views as filerviews 
-from . import cmds
+from . import cmds, saveget, postcards, connects
 
 
 
@@ -12,28 +12,35 @@ from . import cmds
 class TwiSim:
     def __init__(self, name):
         self.mobile = f'mobile_{name}'
-        self.twilnumber1 = 'twilnumber1'
-        self.profile_url = f'profile)_{name}'
+        self.twilnumber0 = f'twil0_{name}'
+        self.twilnumber1 = f'twil1_{name}'
+        self.profile_url = f'profile_{name}'
         self.url_count = 0
 
-    def _nq_cmd(self, cmd, **message):
+    def _cmd_common(self, **message):
         message['sent_at'] = time.time()
         message['from_tel'] = self.mobile
-        message['to_tel'] = self.twilnumber1
-        message['cmd'] = cmd
+        message['to_tel'] = self.twilnumber0
         return message
 
-    def make_wip(self):
+    def _make_wip(self):
         wip = dict(image_timestamp='image_timestamp', audio_timestamp='audio_timestamp')
         wip['image_url'] = f'image_url{self.url_count}'
         wip['audio_url'] = f'audio_url{self.url_count}'
         ++self.url_count
         return wip
 
-    def NewSenderFirst(self):
-        cmd = 'new_postcard'
-        message = self._nq_cmd(cmd, context='NewSenderFirst', wip=self.make_wip(), profile_url=self.profile_url)
-        return json.dumps(message)
+    def _new_postcard_common(self):
+        postcard_common = self._cmd_common()
+        postcard_common['cmd'] = 'new_postcard'
+        postcard_common['wip'] = self._make_wip()
+        return postcard_common
+
+    def newsender_firstpostcard(self):
+        sqs_message = self._new_postcard_common()
+        sqs_message['context'] = 'NewSenderFirst'
+        sqs_message['profile_url'] = self.profile_url
+        return json.dumps(sqs_message)
 
     
     def profile(self):
@@ -62,11 +69,13 @@ class OneCmdTests(TestCase):
         self.User3 = TwiSim(name='user3')
 
     def test_newsenderfirst(self):
+        """ Test basic functioning using newsender_firstpostcard """
         sender0 = TwiSim('Mr0')
-        sqs_message = sender0.NewSenderFirst()
-        print(f'debug in test line 66')
+        sqs_message = sender0.newsender_firstpostcard()
         res = cmds.interpret_one_cmd(sqs_message)
-        self.assertIsNone(res)
+        sender = saveget.get_sender(sender0.mobile)
+        self.assertEqual(sender['profile_url'], 'profile_Mr0')
+
         
 
 

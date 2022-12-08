@@ -9,7 +9,7 @@ from filer import lines
 from . import saveget
 
 
-def new_postcard(from_tel, to_tel, **msg):
+def new_postcard(from_tel, to_tel, msg):
     wip = msg['wip']
     sent_at = msg['sent_at']
     match msg['context']:          # The detailed ordering requires the apparent duplication below

@@ -12,27 +12,20 @@ def interpret_one_cmd(cmd_json):
     from_tel = cmd_dict['from_tel']
     to_tel = cmd_dict['to_tel']
     cmd = cmd_dict['cmd']
-    try:
-        sender = saveget.get_sender(from_tel)
-        sender['heard_from'] = cmd_dict['sent_at']
-    except exceptions.S3KeyNotFound:
-        if 'context' in cmd_dict and cmd_dict['context'] == 'NewSenderFirst':
-            sender = None
-        else:
-            raise
     match cmd:
         case 'new_postcard':
-            message = postcards.new_postcard(from_tel, to_tel, **cmd_dict)
+            message = postcards.new_postcard(from_tel, to_tel, cmd_dict)
         case 'profile':
+            sender = saveget.get_sender(from_tel)
             sender['profile_url'] = cmd_dict['profile_url']
             message = f'OK, your profile image has been updated.'
             saveget.save_sender(sender)
         case 'cmd_general':
-            message = handle_possible_cmd_general(from_tel, to_tel, sender, cmd_dict['text'])
+            message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
         case _:
             """ Send admin an error message or in test raise exception"""
 
-def handle_possible_cmd_general(from_tel, to_tel, sender, text): 
+def handle_possible_cmd_general(from_tel, to_tel, text): 
     if text == 'connector':
         passkey = connects.set_passkey(from_tel, to_tel)
         msg = 'Your passkey is "{passkey}".  It is valid for one day.'
@@ -40,6 +33,7 @@ def handle_possible_cmd_general(from_tel, to_tel, sender, text):
 
     if 'connect' in text and text != 'connector':
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
+        sender = saveget.get_sender(from_tel)
         try:    
             assert cmd == 'connect'
             assert connector_literal == 'connector'
@@ -51,6 +45,9 @@ def handle_possible_cmd_general(from_tel, to_tel, sender, text):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         connects.disconnect_from_viewer(request_sender, to_tel)
         connects.connect_requester_to_granted_pobox(request_sender, sender, r_to_tel, to_tel)
+        saveget.save_sender(sender)
+        saveget.save_sender(request_sender)
+
         # return WHAT
 
     if 'from:' in text:
@@ -61,7 +58,9 @@ def handle_possible_cmd_general(from_tel, to_tel, sender, text):
             if os.environ['TEST'] == 'True':
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
+        sender = saveget.get_sender(from_tel)
         sender['conn'][to_tel]['from'] = name
+        saveget.save_sender(sender)
         return f'You will now be identified to others in your sending group by {name} rather than by your sending telephone number.'
 
     if 'to:' in text and len(text.split(' '))==2:
@@ -72,8 +71,10 @@ def handle_possible_cmd_general(from_tel, to_tel, sender, text):
             if os.environ['TEST'] == 'True':
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
+        sender = saveget.get_sender(from_tel)
         former_name = sender['conn'][to_tel]['to']
         sender['conn'][to_tel]['to'] = new_name
+        saveget.save_sender(sender)
         return f'Renamed recipient {former_name} to {new_name}'
 
     else:
