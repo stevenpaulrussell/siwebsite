@@ -20,15 +20,17 @@ def interpret_one_cmd(cmd_json):
             sender['profile_url'] = cmd_dict['profile_url']
             message = f'OK, your profile image has been updated.'
             saveget.save_sender(sender)
+            return message
         case 'cmd_general':
             message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
+            return message
         case _:
             """ Send admin an error message or in test raise exception"""
 
 def handle_possible_cmd_general(from_tel, to_tel, text): 
     if text == 'connector':
         passkey = connects.set_passkey(from_tel, to_tel)
-        msg = 'Your passkey is "{passkey}".  It is valid for one day.'
+        msg = f'Your passkey is "{passkey}".  It is valid for one day.'
         return msg
 
     if 'connect' in text and text != 'connector':

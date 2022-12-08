@@ -66,8 +66,11 @@ class TwiSim:
     def set_to(self):
         return 'sqs dq sim'
 
-    def connect(self):
-        return 'sqs dq sim'
+    def connect(self, to_tel):
+        sqs_message = self._cmd_common(to_tel)
+        sqs_message['cmd'] = 'cmd_general'
+        sqs_message['text'] = 'connector'
+        return json.dumps(sqs_message)
 
     def connector(self):
         return 'sqs dq sim'
@@ -111,7 +114,7 @@ class OneCmdTests(TestCase):
         a_card_id = sender1['conn'][sender1_twilnumber0]['recent_card_id']
         a_card = saveget.get_postcard(a_card_id)
         self.assertEqual(a_card['from_tel'], Sender1.mobile)
-        
+
         # Sender0 makes a viewer.  This sets up the viewer data structure and returns the pobox_id
         # Check that, and see that pobox_id is retrieved on a re-look, and that bad values give None
         sender0 = saveget.get_sender(Sender0.mobile)
@@ -125,6 +128,14 @@ class OneCmdTests(TestCase):
         self.assertIn(Sender0.mobile, viewer_data)
 
         # Sender0 connects Sender1 to the viewer
+        # First make the connector, checking msg back
+        sender1_connector_msg_back = cmds.interpret_one_cmd(Sender1.connect('twilnumber0'))
+        sender1_connector, to_tel_used = connects.get_passkey(Sender1.mobile)
+        self.assertIn(sender1_connector, sender1_connector_msg_back)
+        self.assertEqual(to_tel_used, Sender1.twi_directory['twilnumber0'])
+
+
+
         # Sender1 sets up a to: name for a first recipient
         # Sender1 sets up a from: name for a first recipient
 
