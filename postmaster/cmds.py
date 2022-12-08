@@ -45,12 +45,13 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
             r_to_tel = connects.check_passkey(request_from_tel, connector)['to_tel']      # Throws KeyError if no match
         except (ValueError, AssertionError, KeyError):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
-        connects.disconnect_from_viewer(request_sender, to_tel)
+        if request_sender['conn'][r_to_tel]['pobox_id']:  # Requester has an existing pobox_id, so need to update pobox and viewer data.
+            connects.disconnect_from_viewer(request_sender, r_to_tel)
         connects.connect_requester_to_granted_pobox(request_sender, sender, r_to_tel, to_tel)
         saveget.save_sender(sender)
         saveget.save_sender(request_sender)
-
-        # return WHAT
+        print(f'')
+        return 'Successful connect message'
 
     if 'from:' in text:
         try:    

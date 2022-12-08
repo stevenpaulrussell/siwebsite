@@ -1,5 +1,6 @@
 import time
 import json
+import pprint
 
 from django.test import TestCase
 
@@ -81,6 +82,26 @@ class TwiSim:
         sqs_message['text'] = f'connect {requestor_from_tel} connector {passkey}'
         return json.dumps(sqs_message)
 
+def display_sender(from_tel):
+    pp = pprint.PrettyPrinter(indent=2)
+    sender = saveget.get_sender(from_tel)
+    morsel = filerviews.load_from_new_sender(from_tel)
+    print(f'\n\nsender <{from_tel}>:')
+    pp.pprint(sender)
+    print(f'\nmorsel <{from_tel}>:')
+    pp.pprint(morsel)
+
+def display_postal(pobox_id):
+    pp = pprint.PrettyPrinter(indent=2)
+    pobox = saveget.get_pobox(pobox_id)
+    viewer_data = saveget.get_viewer_data(pobox_id)
+    pp.pprint(pobox)
+    pp.pprint(viewer_data)
+
+def display_postcard(card_id):
+    pp = pprint.PrettyPrinter(indent=2)
+    postcard = saveget.get_postcard(card_id)
+    pp.pprint(postcard)
 
 
 class OneCmdTests(TestCase):
@@ -130,8 +151,8 @@ class OneCmdTests(TestCase):
         res6 = connects.connect_viewer(sender0, 'some wrong twilio number')
         self.assertEqual(pobox_id, pobox_id_again)
         self.assertIsNone(res6)
-        viewer_data = saveget.get_viewer_data(pobox_id)
-        self.assertIn(Sender0.mobile, viewer_data)
+        sender0_viewer_data = saveget.get_viewer_data(pobox_id)
+        self.assertIn(Sender0.mobile, sender0_viewer_data)
 
         # Sender0 connects Sender1 to the viewer
         # First make the connector, checking msg back
@@ -139,9 +160,14 @@ class OneCmdTests(TestCase):
         sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
         self.assertIn(sender1_passkey, sender1_connector_msg_back)
         self.assertEqual(to_tel_used, Sender1.twi_directory['twilnumber0'])
+        # visibility prints
+        print(f'\n\n')
         # Next issue the connect command and check results
-        sender0_connector_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
-        print(f'Debug test_cmds line 144:\nsender0_connector_msg_back: <{sender0_connector_msg_back}>')
+        sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
+        display_sender(Sender0.mobile)
+        display_sender(Sender1.mobile)
+
+
 
 
 

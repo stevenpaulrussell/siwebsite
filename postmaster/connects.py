@@ -34,7 +34,7 @@ def connect_viewer(sender, to_tel):
 
 def disconnect_from_viewer(sender, to_tel):
     """Delete from sender, pobox, and viewer_data"""
-    # Reset sender...[pobox_id] to None.   
+    # Reset sender...[pobox_id] to None. 
     pobox_id, sender['conn'][to_tel]['pobox_id'] = sender['conn'][to_tel]['pobox_id'],  None
     saveget.update_sender_and_morsel(sender)    
     # Clear sender from the pobox and view_data, maybe send a message to the key_operator
@@ -58,7 +58,7 @@ def connect_requester_to_granted_pobox(request_sender, grant_sender, r_to_tel, g
     """
     wanted_pobox_id = grant_sender['conn'][g_to_tel]['pobox_id']   # This pobox_id is the one being added to.
     request_sender['conn'][r_to_tel]['pobox_id'] = wanted_pobox_id
-    pobox = saveget.get_pobox[wanted_pobox_id]
+    pobox = saveget.get_pobox(wanted_pobox_id)
     pobox['cardlists'][request_sender['from_tel']] = []
     saveget.save_pobox(pobox)
     saveget.update_sender_and_morsel(request_sender)
