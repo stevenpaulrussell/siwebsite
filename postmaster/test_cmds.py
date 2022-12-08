@@ -99,10 +99,35 @@ class OneCmdTests(TestCase):
         res1 = cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
         # Sender1 sends to a second twilio number without establishing any viewer
         res2 = cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twilnumber1'))
-        twilnumber1 = Sender1.twi_directory['twilnumber1']
+        # Sender1 now sends a second card to the first twilio number
+        res3 = cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twilnumber0'))
+        # Check that all is as expected
+        sender1_twilnumber0 = Sender1.twi_directory['twilnumber0']
+        sender1_twilnumber1 = Sender1.twi_directory['twilnumber1']
         sender1 = saveget.get_sender(Sender1.mobile)
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
-        self.assertIn(twilnumber1, sender1['conn'])
+        self.assertIsNone(sender1['conn'][sender1_twilnumber0]['pobox_id'])
+        self.assertIn(sender1_twilnumber1, sender1['conn'])
+        a_card_id = sender1['conn'][sender1_twilnumber0]['recent_card_id']
+        a_card = saveget.get_postcard(a_card_id)
+        self.assertEqual(a_card['from_tel'], Sender1.mobile)
+        
+        # Sender0 makes a viewer.  This sets up the viewer data structure and returns the pobox_id
+        # Check that, and see that pobox_id is retrieved on a re-look, and that bad values give None
+        sender0 = saveget.get_sender(Sender0.mobile)
+        sender0_twilnumber0 = Sender0.twi_directory['twilnumber0']
+        pobox_id = connects.connect_viewer(sender0, sender0_twilnumber0)
+        pobox_id_again = connects.connect_viewer(sender0, sender0_twilnumber0)
+        res6 = connects.connect_viewer(sender0, 'some wrong twilio number')
+        self.assertEqual(pobox_id, pobox_id_again)
+        self.assertIsNone(res6)
+        viewer_data = saveget.get_viewer_data(pobox_id)
+        self.assertIn(Sender0.mobile, viewer_data)
+
+        # Sender0 connects Sender1 to the viewer
+        # Sender1 sets up a to: name for a first recipient
+        # Sender1 sets up a from: name for a first recipient
+
 
 
 
