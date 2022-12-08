@@ -36,11 +36,11 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
     if 'connect' in text and text != 'connector':
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
         sender = saveget.get_sender(from_tel)
+        cmd, request_from_tel, connector_literal, connector = [word.strip() for word in text.split(' ')]
         try:    
             assert cmd == 'connect'
             assert connector_literal == 'connector'
             assert len(connector) == 4
-            cmd, request_from_tel, connector_literal, connector = [word.strip() for word in text.split(' ')]
             request_sender = saveget.get_sender(request_from_tel)
             r_to_tel = connects.check_passkey(request_from_tel, connector)['to_tel']      # Throws KeyError if no match
         except (ValueError, AssertionError, KeyError):

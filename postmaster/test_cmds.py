@@ -60,22 +60,25 @@ class TwiSim:
     def profile(self):
         return 'sqs dq sim'
 
+
     def set_from(self):
         return 'sqs dq sim'
+
 
     def set_to(self):
         return 'sqs dq sim'
 
-    def connect(self):
-        sqs_message = self._cmd_common(to_tel)
+
+    def connector(self, twinumber):
+        sqs_message = self._cmd_common(twinumber)
         sqs_message['cmd'] = 'cmd_general'
         sqs_message['text'] = 'connector'
         return json.dumps(sqs_message)
 
-    def connector(self, to_tel):
-        sqs_message = self._cmd_common(to_tel)
+    def connect(self, twilnumber, requestor_from_tel, passkey):
+        sqs_message = self._cmd_common(twilnumber)
         sqs_message['cmd'] = 'cmd_general'
-        sqs_message['text'] = 'connector'
+        sqs_message['text'] = f'connect {requestor_from_tel} connector {passkey}'
         return json.dumps(sqs_message)
 
 
@@ -133,12 +136,12 @@ class OneCmdTests(TestCase):
         # Sender0 connects Sender1 to the viewer
         # First make the connector, checking msg back
         sender1_connector_msg_back = cmds.interpret_one_cmd(Sender1.connector('twilnumber0'))
-        sender1_connector, to_tel_used = connects.get_passkey(Sender1.mobile)
-        self.assertIn(sender1_connector, sender1_connector_msg_back)
+        sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+        self.assertIn(sender1_passkey, sender1_connector_msg_back)
         self.assertEqual(to_tel_used, Sender1.twi_directory['twilnumber0'])
         # Next issue the connect command and check results
-        #sender0_connector_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0'))
-    
+        sender0_connector_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
+        print(f'Debug test_cmds line 144:\nsender0_connector_msg_back: <{sender0_connector_msg_back}>')
 
 
 
