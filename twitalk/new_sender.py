@@ -8,7 +8,7 @@ from .free_tier import mms_to_free_tier, recorder_to_free_tier
 # Processing of mms and voice call for new senders, setting them up including the profile image.
 def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
     from_tel_msg = None
-    expect = filerviews.load_from_new_sender(from_tel)   # Postmaster will re-write the new_sender block
+    expect = filerviews.load_from_new_sender(from_tel)   
     wip = filerviews.load_wip(from_tel, to_tel)
     msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp)
 
@@ -18,8 +18,8 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
         case 'new_sender_ready':    # Handle as for free_tier
             from_tel_msg =  mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel={})
 
-        case 'image':
-            # The caller, twitalk.views, checks media type allowing only None or image
+        case None:
+            # New sender case.  New sender will be stored if image recvd with no text. Otherwise, just return instructions
             if image_url and not text:
                 wip.update(dict(image_url=image_url, image_timestamp=timestamp))   
                 filerviews.save_wip(from_tel, to_tel, wip)

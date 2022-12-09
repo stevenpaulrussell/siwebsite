@@ -63,7 +63,7 @@ def load_from_new_sender(from_tel):
     try:
         return  _load_a_thing_using_key(f'new_sender/{from_tel}')
     except exceptions.S3KeyNotFound:
-        return 'image'
+        return None
 
 def load_wip(from_tel, to_tel):
     try:

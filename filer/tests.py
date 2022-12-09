@@ -36,7 +36,7 @@ class FilerViewS3FunctionsWork(TestCase):
        
     def test_load_from_new_sender_returns_image_on_missing_key(self):
         res = views.load_from_new_sender(self.new_from_tel)
-        self.assertEqual(res, 'image')
+        self.assertIsNone(res)
 
     def test_load_wip_returns_empty_dict_on_missing_key(self):
         res = views.load_wip(self.new_from_tel, self.new_to_tel)

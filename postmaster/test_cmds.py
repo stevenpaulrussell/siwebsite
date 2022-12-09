@@ -166,7 +166,7 @@ class OneCmdTests(TestCase):
         sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
         display_sender(Sender0.mobile)
         display_sender(Sender1.mobile)
-        self.assertFalse('Have done with to-do in last commit msg:  Still need profile, from, to, and morsel is not right!.')
+        self.assertFalse('Still need profile, from, to.')
 
 
 
