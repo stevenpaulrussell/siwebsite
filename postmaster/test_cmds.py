@@ -85,7 +85,7 @@ class TwiSim:
 def display_sender(from_tel):
     pp = pprint.PrettyPrinter(indent=2)
     sender = saveget.get_sender(from_tel)
-    morsel = filerviews.load_from_new_sender(from_tel)
+    morsel = filerviews.load_from_free_tier(from_tel)
     print(f'\n\nsender <{from_tel}>:')
     pp.pprint(sender)
     print(f'\nmorsel <{from_tel}>:')
