@@ -19,7 +19,7 @@ def interpret_one_cmd(cmd_json):
             sender = saveget.get_sender(from_tel)
             sender['profile_url'] = cmd_dict['profile_url']
             message = f'OK, your profile image has been updated.'
-            saveget.save_sender(sender)
+            saveget.update_sender_and_morsel(sender)
             return message
         case 'cmd_general':
             message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
@@ -48,8 +48,9 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
         if request_sender['conn'][r_to_tel]['pobox_id']:  # Requester has an existing pobox_id, so need to update pobox and viewer data.
             connects.disconnect_from_viewer(request_sender, r_to_tel)
         connects.connect_requester_to_granted_pobox(request_sender, sender, r_to_tel, to_tel)
-        saveget.save_sender(sender)
-        saveget.save_sender(request_sender)
+        saveget.update_sender_and_morsel(sender)
+        saveget.update_sender_and_morsel(request_sender)
+        
         print(f'')
         return 'Successful connect message'
 
@@ -63,7 +64,7 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         sender = saveget.get_sender(from_tel)
         sender['conn'][to_tel]['from'] = name
-        saveget.save_sender(sender)
+        saveget.update_sender_and_morsel(sender)
         return f'You will now be identified to others in your sending group by {name} rather than by your sending telephone number.'
 
     if 'to:' in text and len(text.split(' '))==2:
@@ -77,7 +78,7 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
         sender = saveget.get_sender(from_tel)
         former_name = sender['conn'][to_tel]['to']
         sender['conn'][to_tel]['to'] = new_name
-        saveget.save_sender(sender)
+        saveget.update_sender_and_morsel(sender)
         return f'Renamed recipient {former_name} to {new_name}'
 
     else:
