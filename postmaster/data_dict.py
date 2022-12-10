@@ -5,11 +5,12 @@ f'sender/{from_tel}':
     'version': -> start at 1
     'from_tel' -> from_tel              # Serves as ID.  Make a uuid for the sender??
     'profile_url': ->
+    'from': -> default to from_tel derivation, change by text command
     'heard_from': -> time.time() of last sms, mms, or twilio
     'conn':
         to_tel: 
-            'from': -> -> default to from_tel, change by text command        # Used by twilio to customize sms to sender
-            'to': ->  default to to_tel, change by text command               # Used by twilio to customize sms to sender
+            'from':  -> default to {from_tel}['from'], change by text command        # Used by twilio to customize sms to sender
+            'to': ->  default to 'kith or kin', change by text command               # Used by twilio to customize sms to sender
             'pobox_id': -> pobox_id  or None                        # None until viewer is connected for (from_tel, to_tel). 
             'recent_card_id': -> card_id
             'recent_card_when': -> time_stamp

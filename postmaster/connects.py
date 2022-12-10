@@ -33,7 +33,9 @@ def connect_viewer(sender, to_tel):
 
 
 def disconnect_from_viewer(sender, to_tel):
-    """Delete from sender, pobox, and viewer_data"""
+    """Delete from sender, pobox, and viewer_data, ... if there is a pobox"""
+    if not sender['conn'][to_tel]['pobox_id']:
+        return
     # Reset sender...[pobox_id] to None. 
     pobox_id, sender['conn'][to_tel]['pobox_id'] = sender['conn'][to_tel]['pobox_id'],  None
     saveget.update_sender_and_morsel(sender)    
@@ -51,17 +53,17 @@ def disconnect_from_viewer(sender, to_tel):
     key_operator = pobox['meta']['key_operator']
 
 
-def connect_requester_to_granted_pobox(request_sender, grant_sender, r_to_tel, g_to_tel):
+def connect_joiner_to_lead_sender_pobox(joiner, lead_sender, r_to_tel, g_to_tel):
     """from_tel, to_tel pair determines a unique connection.  Map the request_sender connection
-    to the pobox the grant_sender from_tel, to_tel points to.  Update the pobox to store those 
+    to the pobox the lead_sender from_tel, to_tel points to.  Update the pobox to store those 
     postcards.
     """
-    wanted_pobox_id = grant_sender['conn'][g_to_tel]['pobox_id']   # This pobox_id is the one being added to.
-    request_sender['conn'][r_to_tel]['pobox_id'] = wanted_pobox_id
+    wanted_pobox_id = lead_sender['conn'][g_to_tel]['pobox_id']   # This pobox_id is the one being added to.
+    joiner['conn'][r_to_tel]['pobox_id'] = wanted_pobox_id
     pobox = saveget.get_pobox(wanted_pobox_id)
-    pobox['cardlists'][request_sender['from_tel']] = []
+    pobox['cardlists'][joiner['from_tel']] = []
     saveget.save_pobox(pobox)
-    saveget.update_sender_and_morsel(request_sender)
+    saveget.update_sender_and_morsel(joiner)
 
 
 def check_passkey(from_tel, possible_key):

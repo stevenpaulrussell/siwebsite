@@ -35,21 +35,20 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
 
     if 'connect' in text and text != 'connector':
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
-        sender = saveget.get_sender(from_tel)
-        cmd, request_from_tel, connector_literal, connector = [word.strip() for word in text.split(' ')]
+        lead_sender = saveget.get_sender(from_tel)
+        cmd, joiner_from_tel, connector_literal, passkey = [word.strip() for word in text.split(' ')]
         try:    
             assert cmd == 'connect'
             assert connector_literal == 'connector'
-            assert len(connector) == 4
-            request_sender = saveget.get_sender(request_from_tel)
-            r_to_tel = connects.check_passkey(request_from_tel, connector)['to_tel']      # Throws KeyError if no match
+            assert len(passkey) == 4
+            joiner = saveget.get_sender(joiner_from_tel)
+            joiner_to_tel = connects.check_passkey(joiner_from_tel, passkey)['to_tel']      # Throws KeyError if no match
         except (ValueError, AssertionError, KeyError):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
-        if request_sender['conn'][r_to_tel]['pobox_id']:  # Requester has an existing pobox_id, so need to update pobox and viewer data.
-            connects.disconnect_from_viewer(request_sender, r_to_tel)
-        connects.connect_requester_to_granted_pobox(request_sender, sender, r_to_tel, to_tel)
-        saveget.update_sender_and_morsel(sender)
-        saveget.update_sender_and_morsel(request_sender)
+        connects.disconnect_from_viewer(joiner, joiner_to_tel)
+        connects.connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel)
+        saveget.update_sender_and_morsel(lead_sender)
+        saveget.update_sender_and_morsel(joiner)
         
         print(f'')
         return 'Successful connect message'
@@ -63,7 +62,12 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         sender = saveget.get_sender(from_tel)
-        sender['conn'][to_tel]['from'] = name
+        if sender['from'] == postcards.create_default_using_from_tel(from_tel):      # Had been using the default name, so change all
+            sender['from'] = name
+            for some_to_tel in sender['conn']:
+                sender['conn'][some_to_tel] = name
+        else:
+            sender['conn'][to_tel]['from'] = name
         saveget.update_sender_and_morsel(sender)
         return f'You will now be identified to others in your sending group by {name} rather than by your sending telephone number.'
 

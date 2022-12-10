@@ -31,7 +31,7 @@ class PostcardProcessing(TestCase):
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
         postcards.create_new_connection(sender, self.twilio_phone_number)
         morsel = saveget.make_morsel(sender)
-        self.assertEqual(morsel[self.twilio_phone_number]['from'], 'from_tel derived')
+        self.assertEqual(morsel[self.twilio_phone_number]['from'], 'm b e r')
         self.assertEqual(morsel[self.twilio_phone_number]['to'], 'kith or kin')
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
         
@@ -40,7 +40,7 @@ class PostcardProcessing(TestCase):
         postcards.create_new_connection(sender, self.twilio_phone_number)
         sender['conn'][self.twilio_phone_number]['pobox_id'] = 'postbox_123'
         morsel = saveget.make_morsel(sender)
-        self.assertEqual(morsel[self.twilio_phone_number]['from'], 'from_tel derived')
+        self.assertEqual(morsel[self.twilio_phone_number]['from'], 'm b e r')
         self.assertEqual(morsel[self.twilio_phone_number]['to'], 'kith or kin')
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], True)
     

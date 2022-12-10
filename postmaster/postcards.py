@@ -45,21 +45,25 @@ def new_postcard(from_tel, to_tel, msg):
 
 
 def create_new_sender(from_tel, profile_url):
-    return dict(
+    sender = dict(
         version = 1,
         from_tel = from_tel,
         profile_url = profile_url,
-        name = 'from_tel derived',                       # Change by <from: name> command
         heard_from = time.time(),
         conn = {}
     )
+    sender['from'] =  create_default_using_from_tel(from_tel)        # Change by <from: name> command
+    return sender
+
+def create_default_using_from_tel(from_tel):
+    return f'{from_tel[-4]} {from_tel[-3]} {from_tel[-2]} {from_tel[-1]}' 
 
 def create_new_connection(sender, to_tel):
     from_tel = sender['from_tel']
     conn = sender['conn']
     conn[to_tel] = {}
     conn[to_tel]['to'] =  'kith or kin'                 # Used by twilio to customize sms to sender
-    conn[to_tel]['from'] = 'from_tel derived'              
+    conn[to_tel]['from'] = sender['from']               # Change by <from: name> command, allows varying from depending on recipient
     conn[to_tel]['pobox_id'] = None                     # None until viewer is connected for (from_tel, to_tel). 
     msg = 'Sender {from_tel} using new to_tel {to_tel}.'
     new_conn_msg = lines.line(msg, from_tel=from_tel, to_tel=to_tel)

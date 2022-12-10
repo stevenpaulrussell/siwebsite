@@ -18,6 +18,7 @@ class TwiSim:
         self.url_count = 0
 
     def _cmd_common(self, twinumber, **message):
+        message['cmd'] = 'cmd_general'
         message['sent_at'] = time.time()
         message['from_tel'] = self.mobile
         message['to_tel'] = self.twi_directory[twinumber]
@@ -58,29 +59,32 @@ class TwiSim:
         return json.dumps(sqs_message)
 
     
-    def profile(self):
-        return 'sqs dq sim'
+    def profile(self, twinumber, profile_url):
+        sqs_message = self._cmd_common(twinumber)
+        sqs_message['text'] = 'profile'
+        sqs_message['profile_url'] = profile_url
+        return json.dumps(sqs_message)
 
+    def set_from(self, twinumber, some_name):
+        sqs_message = self._cmd_common(twinumber)
+        sqs_message['text'] = f'from: {some_name}'
+        return json.dumps(sqs_message)
 
-    def set_from(self):
-        return 'sqs dq sim'
-
-
-    def set_to(self):
-        return 'sqs dq sim'
-
+    def set_to(self, twinumber, some_name):
+        sqs_message = self._cmd_common(twinumber)
+        sqs_message['text'] = f'to: {some_name}'
+        return json.dumps(sqs_message)
 
     def connector(self, twinumber):
         sqs_message = self._cmd_common(twinumber)
-        sqs_message['cmd'] = 'cmd_general'
         sqs_message['text'] = 'connector'
         return json.dumps(sqs_message)
 
     def connect(self, twilnumber, requestor_from_tel, passkey):
         sqs_message = self._cmd_common(twilnumber)
-        sqs_message['cmd'] = 'cmd_general'
         sqs_message['text'] = f'connect {requestor_from_tel} connector {passkey}'
         return json.dumps(sqs_message)
+
 
 def display_sender(from_tel):
     pp = pprint.PrettyPrinter(indent=2)
