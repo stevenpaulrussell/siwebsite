@@ -65,7 +65,7 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
         if sender['from'] == postcards.create_default_using_from_tel(from_tel):      # Had been using the default name, so change all
             sender['from'] = name
             for some_to_tel in sender['conn']:
-                sender['conn'][some_to_tel] = name
+                sender['conn'][some_to_tel]['from'] = name
         else:
             sender['conn'][to_tel]['from'] = name
         saveget.update_sender_and_morsel(sender)

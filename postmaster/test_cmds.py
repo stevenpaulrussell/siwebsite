@@ -59,9 +59,9 @@ class TwiSim:
         return json.dumps(sqs_message)
 
     
-    def profile(self, twinumber, profile_url):
+    def set_profile(self, twinumber, profile_url):
         sqs_message = self._cmd_common(twinumber)
-        sqs_message['text'] = 'profile'
+        sqs_message['cmd'] = 'profile'
         sqs_message['profile_url'] = profile_url
         return json.dumps(sqs_message)
 
@@ -99,12 +99,15 @@ def display_postal(pobox_id):
     pp = pprint.PrettyPrinter(indent=2)
     pobox = saveget.get_pobox(pobox_id)
     viewer_data = saveget.get_viewer_data(pobox_id)
+    print(f'\n\pobox <{pobox_id}>:')
     pp.pprint(pobox)
+    print(f'\n\viewer_data <{pobox_id}>:')
     pp.pprint(viewer_data)
 
 def display_postcard(card_id):
     pp = pprint.PrettyPrinter(indent=2)
     postcard = saveget.get_postcard(card_id)
+    print(f'\n\postcard <{card_id}>:')
     pp.pprint(postcard)
 
 
@@ -129,12 +132,12 @@ class OneCmdTests(TestCase):
         Sender1 = TwiSim('Ms1')
         # Twilio side is quiet until the sender succeeds in 'sign-up' by making wip and a profile.
         # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
-        res0 = cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
-        res1 = cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
+        cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
+        cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
         # Sender1 sends to a second twilio number without establishing any viewer
-        res2 = cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twilnumber1'))
+        cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twilnumber1'))
         # Sender1 now sends a second card to the first twilio number
-        res3 = cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twilnumber0'))
+        cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twilnumber0'))
         # Check that all is as expected
         sender1_twilnumber0 = Sender1.twi_directory['twilnumber0']
         sender1_twilnumber1 = Sender1.twi_directory['twilnumber1']
@@ -164,29 +167,18 @@ class OneCmdTests(TestCase):
         sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
         self.assertIn(sender1_passkey, sender1_connector_msg_back)
         self.assertEqual(to_tel_used, Sender1.twi_directory['twilnumber0'])
-        # visibility prints
-        print(f'\n\n')
-        # Next issue the connect command and check results
+        # Issue the connect command and inspect the results
         sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
-        display_sender(Sender0.mobile)
-        display_sender(Sender1.mobile)
-        self.assertFalse('Still need profile, from, to.')
-
-
-
-
+        # display_sender(Sender0.mobile)
+        # display_sender(Sender1.mobile)
         # Sender1 sets up a to: name for a first recipient
-        # Sender1 sets up a from: name for a first recipient
-
-
-
-
-
-
-
-        
-
-        
-
-
-        
+        res0 = cmds.interpret_one_cmd(Sender1.set_to('twilnumber0', 'grammie'))
+        self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
+        # Sender1 sets up a from: name for himself
+        res1 = cmds.interpret_one_cmd(Sender1.set_from('twilnumber0', 'sonny'))
+        self.assertIn(' identified to others in your sending group by sonny ', res1)
+        display_sender(Sender1.mobile)
+        # Sender1 changes its profile
+        res2 = cmds.interpret_one_cmd(Sender1.set_profile('twilnumber0', 'new-profile-url'))
+        self.assertEqual(res2, 'OK, your profile image has been updated.')
+        display_sender(Sender1.mobile)
