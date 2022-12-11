@@ -212,7 +212,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         key_values = self.User1.set_blank_recorder_key_values_from_view() 
         from_tel_msg = recorder_to_free_tier(**key_values, free_tier_morsel={})
         admin_list, cmd_list = get_all_sqs()
-        self.assertIn('free_tier recording announcement OK image', from_tel_msg)
+        self.assertIn('Tell your story about that image', from_tel_msg)
         self.assertEqual(admin_list, [])
         self.assertEqual(cmd_list, [])
 

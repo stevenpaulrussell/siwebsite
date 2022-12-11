@@ -169,16 +169,14 @@ class OneCmdTests(TestCase):
         self.assertEqual(to_tel_used, Sender1.twi_directory['twilnumber0'])
         # Issue the connect command and inspect the results
         sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
-        # display_sender(Sender0.mobile)
-        # display_sender(Sender1.mobile)
         # Sender1 sets up a to: name for a first recipient
         res0 = cmds.interpret_one_cmd(Sender1.set_to('twilnumber0', 'grammie'))
         self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
         # Sender1 sets up a from: name for himself
         res1 = cmds.interpret_one_cmd(Sender1.set_from('twilnumber0', 'sonny'))
         self.assertIn(' identified to others in your sending group by sonny ', res1)
-        display_sender(Sender1.mobile)
         # Sender1 changes its profile
         res2 = cmds.interpret_one_cmd(Sender1.set_profile('twilnumber0', 'new-profile-url'))
         self.assertEqual(res2, 'OK, your profile image has been updated.')
         display_sender(Sender1.mobile)
+        display_postal(pobox_id)

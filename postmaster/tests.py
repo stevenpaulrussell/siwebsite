@@ -42,7 +42,7 @@ class PostcardProcessing(TestCase):
         morsel = saveget.make_morsel(sender)
         self.assertEqual(morsel[self.twilio_phone_number]['from'], 'm b e r')
         self.assertEqual(morsel[self.twilio_phone_number]['to'], 'kith or kin')
-        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], True)
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
     
     def test_create_postcard_update_sender(self):
         test_time = time.time()
@@ -127,7 +127,7 @@ class NewPostcardCases(TestCase):
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
         self.assertIn(sender['conn'][self.twilio_phone_number]['pobox_id'], url_msg_string)
         self.assertIn(self.twilio_phone_number, morsel)
-        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], True)
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
         
     def test_new_postcard_connect_viewer(self):
         # Setup and connect a sender to a viewer

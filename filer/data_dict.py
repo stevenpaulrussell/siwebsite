@@ -7,7 +7,7 @@ f'free_tier/{from_tel}':                # These are written by postmaster, read 
     f'{to_tel}':  
         'from': -> sender name if key 'from' is present     # Use to customize sms to sender
         'to': -> recipient name if key is present           # Use to customize sms to sender
-        'have_viewer': -> True or False                     # Senders without <have_viewer> get cleared in 6 days (?)
+        'have_viewer': -> False or 'HaveViewer'             # Senders without <have_viewer> get cleared in 6 days (?)
 
 
 f'new_sender/{from_tel}':               # Written and read, by twitalk and and deleted by postmaster

@@ -14,7 +14,7 @@ def make_morsel(sender):            #  This separated from update_sender_and_mor
         morsel[to_tel] = {}
         morsel[to_tel]['from'] = sender['conn'][to_tel]['from']
         morsel[to_tel]['to'] = sender['conn'][to_tel]['to']
-        morsel[to_tel]['have_viewer'] = bool(sender['conn'][to_tel]['pobox_id'])
+        morsel[to_tel]['have_viewer'] = 'HaveViewer' if sender['conn'][to_tel]['pobox_id'] else False
     return morsel
 
 
