@@ -1,3 +1,6 @@
+import time
+import uuid
+
 from django.http import HttpResponse
 
 from filer import views as filerviews
@@ -9,10 +12,11 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
     """Provide something to sender immediately.  Intend to move this to Twilio jscript.  Minimal state lookup"""
     msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp, text=text)
     from_tel_msg = None
-    if text == 'help':
+    if 'help' in text:      # Send help no matter what
         from_tel_msg = lines.line('Free tier help: Link to instructions', **msg_keys)
-    elif image_url:
-        if not text:
+        return from_tel_msg
+    if image_url:  # Either a postcard image or a profile image. Nothing else is valid
+        if not text:        
             wip = filerviews.load_wip(from_tel, to_tel)
             wip.update(dict(image_url=image_url, image_timestamp=timestamp))  
             filerviews.save_wip(from_tel, to_tel, wip)
@@ -21,13 +25,19 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
             filerviews.nq_cmd(from_tel, to_tel, cmd='profile', profile_url=image_url)
             from_tel_msg = lines.line('Your profile will be updated shortly, and you will be notified.', **msg_keys)
         else:
-            msg = 'Free tier image with unimplemented command <{text}> received.'
+            msg = 'Free tier, could not interpret command <{text}> with image {image_url}.'
             from_tel_msg = lines.line(msg, **msg_keys)
             filerviews.nq_admin_message(msg)
-    else:  
-        assert(text and not image_url)
-        filerviews.nq_cmd(from_tel, to_tel, cmd='cmd_general', text=text)
-        from_tel_msg = lines.line('Your command <{text}> is queued for processing... you will hear back!', **msg_keys)
+        return from_tel_msg
+    if text == 'connector' and not image_url:         
+        passkey = str(uuid.uuid4())[0:4]
+        expire = time.time() + 24*60*60
+        filerviews.nq_cmd(from_tel, to_tel, cmd='connector', passkey=passkey, expire=expire)
+        from_tel_msg = lines.line(f'Your passkey is {passkey}, valid in a few minutes, lasting for a day!') 
+        return from_tel_msg
+    assert(text and not image_url)
+    filerviews.nq_cmd(from_tel, to_tel, cmd='cmd_general', text=text)
+    from_tel_msg = lines.line('Your command <{text}> is queued for processing... you will hear back!', **msg_keys)
     return from_tel_msg
 
 

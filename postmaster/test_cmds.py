@@ -1,4 +1,5 @@
 import time
+import uuid
 import json
 import pprint
 
@@ -77,7 +78,9 @@ class TwiSim:
 
     def connector(self, twinumber):
         sqs_message = self._cmd_common(twinumber)
-        sqs_message['text'] = 'connector'
+        sqs_message['cmd'] = 'connector'
+        sqs_message['passkey'] = str(uuid.uuid4())[0:4]
+        sqs_message['expire'] = time.time() + 24*60*60
         return json.dumps(sqs_message)
 
     def connect(self, twilnumber, requestor_from_tel, passkey):
@@ -99,9 +102,9 @@ def display_postal(pobox_id):
     pp = pprint.PrettyPrinter(indent=2)
     pobox = saveget.get_pobox(pobox_id)
     viewer_data = saveget.get_viewer_data(pobox_id)
-    print(f'\n\pobox <{pobox_id}>:')
+    print(f'\n\npobox <{pobox_id}>:')
     pp.pprint(pobox)
-    print(f'\n\viewer_data <{pobox_id}>:')
+    print(f'\nviewer_data <{pobox_id}>:')
     pp.pprint(viewer_data)
 
 def display_postcard(card_id):
@@ -149,7 +152,7 @@ class OneCmdTests(TestCase):
         a_card = saveget.get_postcard(a_card_id)
         self.assertEqual(a_card['from_tel'], Sender1.mobile)
 
-        # Sender0 makes a viewer.  This sets up the viewer data structure and returns the pobox_id
+        # Sender0 makes a viewer.  This sets up the pobox, the viewer_data, putting a card in viewer_data, returning pobox_id
         # Check that, and see that pobox_id is retrieved on a re-look, and that bad values give None
         sender0 = saveget.get_sender(Sender0.mobile)
         sender0_twilnumber0 = Sender0.twi_directory['twilnumber0']
@@ -161,14 +164,35 @@ class OneCmdTests(TestCase):
         sender0_viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertIn(Sender0.mobile, sender0_viewer_data)
 
-        # Sender0 connects Sender1 to the viewer
+        # Sender0 connects Sender1 to the viewer:
+
         # First make the connector, checking msg back
-        sender1_connector_msg_back = cmds.interpret_one_cmd(Sender1.connector('twilnumber0'))
+        cmds.interpret_one_cmd(Sender1.connector('twilnumber0'))
         sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
-        self.assertIn(sender1_passkey, sender1_connector_msg_back)
         self.assertEqual(to_tel_used, Sender1.twi_directory['twilnumber0'])
+
         # Issue the connect command and inspect the results
         sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twilnumber0', Sender1.mobile, sender1_passkey))
+        display_postal(pobox_id)
+
+
+
+
+
+
+
+        # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
+        Sender1.newpostcard_haveviewer('twilnumber0')
+        display_postal(pobox_id)
+
+
+    # -----------> postcard not showing up?
+        self.assertFalse('I do not understand why this did not update the pobox.  Also, allow labeling of print from call for clarity')
+
+
+
+
+
         # Sender1 sets up a to: name for a first recipient
         res0 = cmds.interpret_one_cmd(Sender1.set_to('twilnumber0', 'grammie'))
         self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
@@ -178,5 +202,8 @@ class OneCmdTests(TestCase):
         # Sender1 changes its profile
         res2 = cmds.interpret_one_cmd(Sender1.set_profile('twilnumber0', 'new-profile-url'))
         self.assertEqual(res2, 'OK, your profile image has been updated.')
+        display_sender(Sender0.mobile)
         display_sender(Sender1.mobile)
         display_postal(pobox_id)
+
+        # Sender1 now sends a card to the new connexction

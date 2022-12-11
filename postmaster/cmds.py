@@ -21,6 +21,9 @@ def interpret_one_cmd(cmd_json):
             message = f'OK, your profile image has been updated.'
             saveget.update_sender_and_morsel(sender)
             return message
+        case 'connector':
+            current_key = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
+            saveget.save_passkey_dictionary(current_key)
         case 'cmd_general':
             message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
             return message
@@ -28,11 +31,6 @@ def interpret_one_cmd(cmd_json):
             """ Send admin an error message or in test raise exception"""
 
 def handle_possible_cmd_general(from_tel, to_tel, text): 
-    if text == 'connector':
-        passkey = connects.set_passkey(from_tel, to_tel)
-        msg = f'Your passkey is "{passkey}".  It is valid for one day.'
-        return msg
-
     if 'connect' in text and text != 'connector':
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
         lead_sender = saveget.get_sender(from_tel)
