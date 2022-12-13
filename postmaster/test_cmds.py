@@ -154,15 +154,17 @@ class OneCmdTests(TestCase):
         cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
         # Sender1 sends a second card to the first twilio number
         cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
+        sender0 = saveget.get_sender(Sender0.mobile)
         sender1 = saveget.get_sender(Sender1.mobile)
+        sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
 
         # Check that all is as expected
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
         self.assertIsNone(sender1['conn'][sender1_twil0]['pobox_id'])
         self.assertIsNone(sender1['conn'][sender1_twil1]['pobox_id'])
-        a_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
-        a_card = saveget.get_postcard(a_card_id)
-        self.assertEqual(a_card['from_tel'], Sender1.mobile)
+        sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
+        sender1_card = saveget.get_postcard(sender1_card_id)
+        self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
         display_sender(Sender0.mobile, 'sender0 before setting any viewer')
         display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
@@ -180,63 +182,59 @@ class OneCmdTests(TestCase):
 
         # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
         # The pobox is updated on each new card, but viewer_data updates only on creation or on some viewer refresh
-        sender0_second_card_response = cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
+        cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
         sender0 = saveget.get_sender(Sender0.mobile)
         sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
-
-
+        pobox = saveget.get_pobox(pobox_id)
+        self.assertNotEqual(sender0_first_card_id, sender0_second_card_id)
+        self.assertIn(sender0_first_card_id, pobox['cardlists'][Sender0.mobile])
+        self.assertIn(sender0_second_card_id, pobox['cardlists'][Sender0.mobile])
         display_sender(Sender0.mobile, f'sender0 after setting up a viewer and sending a second card')
         display_postal(pobox_id, f'pobox after sender0 sent that second card')
 
+        # Sender0 connects Sender1 to the viewer:
+        # First make the connector, checking msg back
+        cmds.interpret_one_cmd(Sender1.connector('twil0'))
+        sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+        self.assertEqual(to_tel_used, sender1_twil0)
+        self.assertEqual(sender1['conn'][connects]['pobox_id'], None)        # sender1 set no viewer, and sender0 hasn't issued the connect
+
+        # Issue the connect command and inspect the results
+        sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
+        sender1 = saveget.get_sender(Sender1.mobile)
+        self.assertEqual(sender0_msg_back, 'Successful connect message')
+        self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], pobox_id)    # Now, sender1 has a pobox_id associated with the connection
+        self.assertEqual(sender1['conn'][connects]['pobox_id'], sender0['conn'][sender0_twil0]['pobox_id'])
+
+        display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox')
+        display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox')
+        display_postal(pobox_id, 'postbox and view_data after sender0 connects sender1. sender1 has not yet sent a card.')
+
+        # sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
+        Sender1.newpostcard_haveviewer('twil0')
+        sender1 = saveget.get_sender(Sender1.mobile)
+        sender1_recent_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
+        pobox = saveget.get_pobox(pobox_id)
+        self.assertIn(sender1_recent_card_id, pobox['cardlists'][Sender1.mobile])
+        # This display wanting to debug: postcard seems to be missing from the pobox!
+        display_sender(Sender1.mobile, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
+        display_postal(pobox_id, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
 
 
 
 
 
+        # # Sender1 sets up a to: name for a first recipient
+        # res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
+        # self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
+        # # Sender1 sets up a from: name for himself
+        # res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
+        # self.assertIn(' identified to others in your sending group by sonny ', res1)
+        # # Sender1 changes its profile
+        # res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
+        # self.assertEqual(res2, 'OK, your profile image has been updated.')
+        # display_sender(Sender0.mobile)
+        # display_sender(Sender1.mobile)
+        # display_postal(pobox_id)
 
-        # # Sender0 connects Sender1 to the viewer:
-
-        # # First make the connector, checking msg back
-        # cmds.interpret_one_cmd(Sender1.connector('twil0'))
-        # sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
-        # self.assertEqual(to_tel_used, Sender1.twi_directory['twil0'])
-        # self.assertEqual(sender1['conn'][to_tel_used]['pobox_id'], None)        # sender1 set no viewer, and sender0 hasn't issued the connect
-
-        # # Issue the connect command and inspect the results
-        # sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
-        # sender1 = saveget.get_sender(Sender1.mobile)
-        # self.assertEqual(sender0_msg_back, 'Successful connect message')
-        # self.assertEqual(sender1['conn'][to_tel_used]['pobox_id'], pobox_id)    # Now, sender1 has a pobox_id associated with the connection
-        # self.assertEqual(sender1['conn'][to_tel_used]['pobox_id'], sender0['conn'][sender0_twil0]['pobox_id'])
-
-        # display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox')
-        # display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox')
-        # display_postal(pobox_id, 'postbox and view_data after sender0 connects sender1. sender1 has not yet sent a card.')
-
-        # # sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-        # Sender1.newpostcard_haveviewer('twil0')
-        # sender1 = saveget.get_sender(Sender1.mobile)
-        # sender1_recent_card_id = sender1['conn'][to_tel_used]['recent_card_id']
-        # print(f'debug line 217 test_cmds sender1_recent_card_id: {sender1_recent_card_id}')
-        # # This display wanting to debug: postcard seems to be missing from the pobox!
-        # display_sender(Sender1.mobile, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
-        # display_postal(pobox_id, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
-
-
-
-
-
-        # # # Sender1 sets up a to: name for a first recipient
-        # # res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
-        # # self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
-        # # # Sender1 sets up a from: name for himself
-        # # res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
-        # # self.assertIn(' identified to others in your sending group by sonny ', res1)
-        # # # Sender1 changes its profile
-        # # res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
-        # # self.assertEqual(res2, 'OK, your profile image has been updated.')
-        # # display_sender(Sender0.mobile)
-        # # display_sender(Sender1.mobile)
-        # # display_postal(pobox_id)
-
-        # # # Sender1 now sends a card to the new connexction
+        # # Sender1 now sends a card to the new connexction
