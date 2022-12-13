@@ -227,7 +227,10 @@ class OneCmdTests(TestCase):
         sender1 = saveget.get_sender(Sender1.mobile)
         sender1_recent_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         pobox = saveget.get_pobox(pobox_id)
+        viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertEqual(pobox['cardlists'][Sender1.mobile], [sender1_recent_card_id])
+        self.assertIn(Sender0.mobile, viewer_data)
+        self.assertIn(Sender1.mobile, viewer_data)
         display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
 
 
