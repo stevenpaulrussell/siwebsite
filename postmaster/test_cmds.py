@@ -130,13 +130,13 @@ class OneCmdTests(TestCase):
         self.User2 = TwiSim(name='user2')
         self.User3 = TwiSim(name='user3')
 
-    # def test_newsenderfirst(self):
-    #     """ Test basic functioning using newsender_firstpostcard """
-    #     Sender0 = TwiSim('Mr0')
-    #     sqs_message = Sender0.newsender_firstpostcard()
-    #     res = cmds.interpret_one_cmd(sqs_message)
-    #     sender = saveget.get_sender(Sender0.mobile)
-    #     self.assertEqual(sender['profile_url'], 'profile_Mr0')
+    def test_newsenderfirst(self):
+        """ Test basic functioning using newsender_firstpostcard """
+        Sender0 = TwiSim('Mr0')
+        sqs_message = Sender0.newsender_firstpostcard()
+        res = cmds.interpret_one_cmd(sqs_message)
+        sender = saveget.get_sender(Sender0.mobile)
+        self.assertEqual(sender['profile_url'], 'profile_Mr0')
 
     def test_using_simulation_of_two_senders(self):
         # Remember useful constants
@@ -206,42 +206,28 @@ class OneCmdTests(TestCase):
         self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], pobox_id)    # Now, sender1 has a pobox_id associated with the connection
         self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], sender0['conn'][sender0_twil0]['pobox_id'])
 
-        display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox')
-        display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox')
+        display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox --- no change to sender0')
+        display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox. Note the change to pobox_id')
         display_postal(pobox_id, 'postbox and view_data after sender0 connects sender1. sender1 has not yet sent a card.')
 
-        # sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-        print(f'\n---->DEBUG line 216 test_cmds, Sender1 about to send a card to twil0\n')
+        # Sender1 sets up a to: name for a first recipient
+        res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
+        self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
+        # Sender1 sets up a from: name for himself
+        res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
+        self.assertIn(' identified to others in your sending group by sonny ', res1)
+        # Sender1 changes its profile
+        res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
+        self.assertEqual(res2, 'OK, your profile image has been updated.')
+        display_sender(Sender1.mobile, 'sender1 after setting from: and to: names, and changing profile.')
+        display_postal(pobox_id, 'pobox shows no change from sender1 setting to, from, and profile. Profile changes with new card.')
+
+        # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
         cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
         sender1 = saveget.get_sender(Sender1.mobile)
         sender1_recent_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         pobox = saveget.get_pobox(pobox_id)
+        self.assertEqual(pobox['cardlists'][Sender1.mobile], [sender1_recent_card_id])
+        display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
 
 
-        self.assertIn(sender1_recent_card_id, pobox['cardlists'][Sender1.mobile])
-
-
-
-
-        # This display wanting to debug: postcard seems to be missing from the pobox!
-        display_sender(Sender1.mobile, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
-        display_postal(pobox_id, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
-
-
-
-
-
-        # # Sender1 sets up a to: name for a first recipient
-        # res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
-        # self.assertEqual(res0, 'Renamed recipient kith or kin to grammie')
-        # # Sender1 sets up a from: name for himself
-        # res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
-        # self.assertIn(' identified to others in your sending group by sonny ', res1)
-        # # Sender1 changes its profile
-        # res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
-        # self.assertEqual(res2, 'OK, your profile image has been updated.')
-        # display_sender(Sender0.mobile)
-        # display_sender(Sender1.mobile)
-        # display_postal(pobox_id)
-
-        # # Sender1 now sends a card to the new connexction
