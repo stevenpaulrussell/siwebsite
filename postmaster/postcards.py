@@ -12,6 +12,7 @@ from . import saveget
 def new_postcard(from_tel, to_tel, msg):
     wip = msg['wip']
     sent_at = msg['sent_at']
+    print(f'=========> new_postcard from_tel {from_tel}  to_tel {to_tel}  context {msg["context"]}')
     match msg['context']:          # The detailed ordering requires the apparent duplication below
         case 'NewSenderFirst':
             profile_url = msg['profile_url']
@@ -35,8 +36,8 @@ def new_postcard(from_tel, to_tel, msg):
             """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
             sender = saveget.get_sender(from_tel)
             card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            saveget.save_postcard(card)
             pobox = get_and_update_postbox(sender, to_tel)
+            saveget.save_postcard(card)
             saveget.save_pobox(pobox)
 
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
@@ -92,6 +93,8 @@ def get_and_update_postbox(sender, to_tel):
     from_tel = sender['from_tel']
     pobox_id =  sender['conn'][to_tel]['pobox_id']
     card_id = sender['conn'][to_tel]['recent_card_id']
+    print(f'\nDebug line 95 postcards.py, from_tel {from_tel} to_tel {to_tel}')
+    print(f'Debug line 96 postcards.py, card_id {card_id} pobox_id {pobox_id}\n')
     pobox = saveget.get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
     pobox['cardlists'][from_tel].append(card_id)
     return pobox

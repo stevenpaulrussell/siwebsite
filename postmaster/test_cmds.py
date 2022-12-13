@@ -197,25 +197,32 @@ class OneCmdTests(TestCase):
         cmds.interpret_one_cmd(Sender1.connector('twil0'))
         sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
         self.assertEqual(to_tel_used, sender1_twil0)
-        self.assertEqual(sender1['conn'][connects]['pobox_id'], None)        # sender1 set no viewer, and sender0 hasn't issued the connect
+        self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], None)        # sender1 set no viewer, and sender0 hasn't issued the connect
 
         # Issue the connect command and inspect the results
         sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
         sender1 = saveget.get_sender(Sender1.mobile)
         self.assertEqual(sender0_msg_back, 'Successful connect message')
         self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], pobox_id)    # Now, sender1 has a pobox_id associated with the connection
-        self.assertEqual(sender1['conn'][connects]['pobox_id'], sender0['conn'][sender0_twil0]['pobox_id'])
+        self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], sender0['conn'][sender0_twil0]['pobox_id'])
 
         display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox')
         display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox')
         display_postal(pobox_id, 'postbox and view_data after sender0 connects sender1. sender1 has not yet sent a card.')
 
         # sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-        Sender1.newpostcard_haveviewer('twil0')
+        print(f'\n---->DEBUG line 216 test_cmds, Sender1 about to send a card to twil0\n')
+        cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
         sender1 = saveget.get_sender(Sender1.mobile)
         sender1_recent_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         pobox = saveget.get_pobox(pobox_id)
+
+
         self.assertIn(sender1_recent_card_id, pobox['cardlists'][Sender1.mobile])
+
+
+
+
         # This display wanting to debug: postcard seems to be missing from the pobox!
         display_sender(Sender1.mobile, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
         display_postal(pobox_id, f'sender1 just sent a card.  Does the pobox show recent card {sender1_recent_card_id} ??')
