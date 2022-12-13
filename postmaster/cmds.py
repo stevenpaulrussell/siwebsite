@@ -43,6 +43,7 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
             joiner_to_tel = connects.check_passkey(joiner_from_tel, passkey)['to_tel']      # Throws KeyError if no match
         except (ValueError, AssertionError, KeyError):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
+        print(f'\n\ndebug in cmds.handle...connect: joiner_from_tel  <{joiner_from_tel}>  joiner_to_tel: <{joiner_to_tel}> \n\n')
         connects.disconnect_from_viewer(joiner, joiner_to_tel)
         connects.connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel)
         saveget.update_sender_and_morsel(lead_sender)
