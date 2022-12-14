@@ -50,10 +50,9 @@ class PostcardProcessing(TestCase):
         postcards.create_new_connection(sender, self.twilio_phone_number)
         wip = dict(image_timestamp=test_time - 1, image_url='image_url',
                     audio_timestamp=test_time - 1, audio_url='audio_url')
-        card = postcards.create_postcard_update_sender(sender, from_tel=self.sender_mobile_number,
+        card_id = postcards.create_postcard_update_sender(sender, from_tel=self.sender_mobile_number,
                             to_tel=self.twilio_phone_number, wip=wip, sent_at=test_time)
-        self.assertEqual(card['card_id'], sender['conn'][self.twilio_phone_number]['recent_card_id'])
-        self.assertEqual(card['sent_at'], test_time)
+        self.assertEqual(card_id, sender['conn'][self.twilio_phone_number]['recent_card_id'])
 
 # class HelperFunctionTests(TestCase):
 #     def setUp(self):

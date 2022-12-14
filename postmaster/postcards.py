@@ -6,7 +6,7 @@ import uuid
 from filer import views as filerviews
 from filer import lines
 
-from postoffice.views import update_viewer_data
+from postoffice.views import update_viewer_data, update_pobox_new_card
 
 from . import saveget
 
@@ -19,33 +19,25 @@ def new_postcard(from_tel, to_tel, msg):
             profile_url = msg['profile_url']
             sender = create_new_sender(from_tel, profile_url)
             create_new_connection(sender, to_tel)
-            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            saveget.save_postcard(card)
-
+            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
+            
         case 'NewRecipientFirst':
             sender = saveget.get_sender(from_tel)
             create_new_connection(sender, to_tel)
-            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            saveget.save_postcard(card)
+            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
 
         case 'NoViewer':
             sender = saveget.get_sender(from_tel)
-            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            saveget.save_postcard(card)
+            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
 
         case 'HaveViewer':
             """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
             sender = saveget.get_sender(from_tel)
-            card = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            pobox = get_and_update_postbox(sender, to_tel)
-            saveget.save_postcard(card)
-            saveget.save_pobox(pobox)
-            viewer_data = saveget.get_viewer_data(pobox['meta']['pobox_id'])
-            update_viewer_data(pobox, viewer_data)
-            saveget.save_viewer_data(viewer_data)
+            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
+            pobox_id = sender['conn'][to_tel]['pobox_id']
+            update_pobox_new_card(from_tel, to_tel, pobox_id, card_id)
 
-
-    saveget.update_sender_and_morsel(sender)    # pobox_id is set
+    saveget.update_sender_and_morsel(sender)    
     if msg['context'] == 'NewSenderFirst':
         saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
@@ -92,12 +84,6 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
     this_conn = sender['conn'][to_tel]
     this_conn['recent_card_id'] = card_id
     this_conn['recent_card_when'] = sent_at
-    return card
+    saveget.save_postcard(card)
+    return card_id
 
-def get_and_update_postbox(sender, to_tel):
-    from_tel = sender['from_tel']
-    pobox_id =  sender['conn'][to_tel]['pobox_id']
-    card_id = sender['conn'][to_tel]['recent_card_id']
-    pobox = saveget.get_pobox(pobox_id)    # pobox is created when a viewer is first made. pobox_id is found in sender.
-    pobox['cardlists'][from_tel].append(card_id)
-    return pobox
