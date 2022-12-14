@@ -27,6 +27,6 @@ def update_viewer_data(pobox, viewer_data):
             viewer_card['image_url'] = new_card['image_url']
             viewer_card['audio_url'] = new_card['audio_url']
             viewer_data[from_tel] = viewer_card
-    return viewer_data
+#    return viewer_data
         
 

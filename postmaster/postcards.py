@@ -6,6 +6,8 @@ import uuid
 from filer import views as filerviews
 from filer import lines
 
+from postoffice.views import update_viewer_data
+
 from . import saveget
 
 
@@ -38,6 +40,10 @@ def new_postcard(from_tel, to_tel, msg):
             pobox = get_and_update_postbox(sender, to_tel)
             saveget.save_postcard(card)
             saveget.save_pobox(pobox)
+            viewer_data = saveget.get_viewer_data(pobox['meta']['pobox_id'])
+            update_viewer_data(pobox, viewer_data)
+            saveget.save_viewer_data(viewer_data)
+
 
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
     if msg['context'] == 'NewSenderFirst':
