@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2> Your Connection Setup: </h2>
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type='submit' value="Then, click here to reach your viewer." />
+        </form>
+    <p>Expect some delay... running cloud free tier!  Bookmark the viewer web page when it comes up.  The URL is long and unguessable to give some privacy. 
+        But you can always get to the viwer page by coming here and following the same steps.
+    </p>
+{% endblock content %}

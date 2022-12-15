@@ -1,0 +1,91 @@
+<html>
+<header>
+    <title>Display from "read.html". </title>
+    <style>
+        body, html {
+            height: 100%;
+            background-color: black;
+        }
+        p {color:white} 
+        img {
+            border: 5px solid lightgray;
+            border-radius: 30px;
+            padding: 3px 3px 3px 3px;
+            margin: 25px 25px 25px 25px;
+            height: auto;
+            width: 20%;
+        }
+        .profile_image0 {
+            border: 10px solid chartreuse;
+        }
+        .postcard_image {
+            border: 1px solid black;
+            border-radius: 1px;
+            padding: 0px 0px 0px 0px;
+            margin: 0px 0px 0px 0px;
+            position: absolute;
+            height: 100%;
+            width: auto;
+        }
+        .postcard_image_null {
+            border: 1px solid black;
+            border-radius: 1px;
+            padding: 0px 0px 0px 0px;
+            margin: 0px 0px 0px 0px;
+            position: absolute;
+            height: 0%;
+            width: 0%;
+        }
+        
+    </style>
+</header>
+<body onload="set_auto_refresh_watchdog()">
+    <img 
+        id="postcard_image_here"
+        class="postcard_image_null"
+    />
+    {% for from_tel, a_card in data_items.items %} 
+        <audio id='{{a_card.postcard_audio_id}}'  onplay="profile_clicked('{{from_tel}}')" onended="play_ended('{{from_tel}}')">
+            <source src="{{a_card.card_audio_url}}" />
+        </audio>
+        <img 
+            id="{{from_tel}}"
+            class="profile_image{{a_card.times_played}}"
+            postcard_audio_id="{{a_card.postcard_audio_id}}"
+            src="{{a_card.profile_photo_url}}"
+            profile_image="{{a_card.profile_photo_url}}"
+            postcard_image_url="{{a_card.card_image_url}}"
+            times_played="{{a_card.times_played}}"
+            played_it_url="{{a_card.played_this_card}}"
+            onClick="document.getElementById('{{a_card.postcard_audio_id}}').play()"
+        />
+        {% endfor %}
+        <script>
+            const profile_clicked = function(postcard_sender) {
+                my_postcard = document.getElementById(postcard_sender);
+                my_postcard.watchdog_for_play_fail = setTimeout(watchdog_reloads, 60*1000, 'Timeout before play_ended.');
+                viewer = document.getElementById("postcard_image_here")
+                viewer.src = my_postcard.getAttribute('postcard_image_url');
+                viewer.className = "postcard_image"
+                const played_it_url = my_postcard.getAttribute('played_it_url');
+                fetch(played_it_url)
+                    .then(response => console.log('Did the fetch of played_it_url and got', response.status));
+            }
+            const play_ended = function(postcard_sender) {
+                console.log('In play_ended!');
+                my_postcard = document.getElementById(postcard_sender);
+                watchdog_for_play_fail = my_postcard.getAttribute('watchdog_for_play_fail');
+                clearTimeout(watchdog_for_play_fail);
+                document.location.reload();
+            }
+            const watchdog_reloads = function(reason) {
+                console.log('In watchdog_reloads!', reason);
+                document.location.reload();
+                return false;
+            }
+            const set_auto_refresh_watchdog = function() {
+                setTimeout(watchdog_reloads, 3600*1000, 'Looking for new postcards.');
+            }
+        </script>
+</body>
+</html>

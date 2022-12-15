@@ -1,0 +1,16 @@
+{% load static %}
+
+<html>
+<header>
+    <title>Instructions for this early "manual" version</title>
+</header>
+<body>
+        <header>
+            <h3><a href="{% url 'home' %}"> Return to instructions page</a></h4>
+        </header>
+        <div>
+            {% block content %}
+            {% endblock content %}
+        </div>
+</body>
+</html>
