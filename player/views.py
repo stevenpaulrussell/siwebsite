@@ -6,10 +6,12 @@ import requests
 import json
 import os
 
+from postoffice import cmdline
+
 from .forms import ConnectionsForm
 
 
-data_source = os.environ['POSTBOX_DATA_SOURCE']
+# data_source = os.environ['POSTBOX_DATA_SOURCE']
 
 def get_po_box_uuid(from_tel, connector):
     po_box_uuid_response = requests.get(f'{data_source}/connect/{from_tel}/{connector}')
@@ -45,25 +47,18 @@ def make_connection_view(request):
 
 
 def show_postcards_view(request, po_box_uuid, test_id=None):
-    po_box_data = get_po_box_data(po_box_uuid)
-    my_desk = po_box_data['my_desk']
-    version =  po_box_data['version']
+    # po_box_data = get_po_box_data(po_box_uuid)
+    # my_desk = po_box_data['my_desk']
+    # version =  po_box_data['version']
+    my_desk = cmdline.make_playable_viewer_data()
+    print(f'==============>\]n\n{my_desk}\n\n<==============')
     data_items = {}
     for from_tel, one_card_spec in my_desk.items():
-        card_uuid = one_card_spec['card_uuid']
+        card_uuid = one_card_spec['card_id']
         one_card_spec['postcard_audio_id'] = f'{from_tel} audio'
-        one_card_spec['played_this_card'] = f'{data_source}/played/{card_uuid}'
+        one_card_spec['played_this_card'] = f'/played/{card_uuid}'
         data_items[from_tel] = one_card_spec
-    if test_id=='A':
-        return render(request, 'testA.html', {'data_items': data_items, 'version': version})
-    if test_id=='B':
-        return render(request, 'testB.html', {'data_items': data_items, 'version': version})
-    if test_id=='C':
-        return render(request, 'testC.html', {'data_items': data_items, 'version': version})
-    if test_id=='D':
-        return render(request, 'testD.html', {'data_items': data_items, 'version': version})
-    # else !
-    return render(request, 'read.html', {'data_items': data_items, 'version': version})
+    return render(request, 'read.html', {'data_items': data_items})
 
 
 

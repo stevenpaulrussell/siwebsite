@@ -23,7 +23,8 @@ def make_playable_viewer_data():
     return viewer_data
 
 
-
+def played_this_card(card_id):
+    pass
 
 
 
