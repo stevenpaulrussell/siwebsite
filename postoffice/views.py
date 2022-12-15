@@ -15,6 +15,15 @@ def update_pobox_new_card(from_tel, to_tel, pobox_id, card_id):
     saveget.save_viewer_data(viewer_data)
 
 
+def played_it(pobox_id, card_id):
+    pobox = saveget.get_pobox(pobox_id)
+    viewer_data = saveget.get_viewer_data(pobox_id)
+    card = saveget.get_postcard[card_id]
+    from_tel = card['from_tel']
+    card['play_count'] += 1
+    viewer_data[from_tel]['play_count'] += 1
+    update_viewer_data(pobox, viewer_data)
+
 
 def update_viewer_data(pobox, viewer_data):              
     """viewer_data is {from_tel: card_spec} where card_spec is everything needed for play"""
@@ -27,7 +36,7 @@ def update_viewer_data(pobox, viewer_data):
         viewer_card = viewer_data.get(from_tel, {})     
         if not viewer_card or viewer_card['play_count'] > 0:  # If initializing, or current has been played
             new_card_id, cardlist = cardlist[0], cardlist[1:]
-    
+
             old_card_id = viewer_data.get('card_id', None)
             # Archive the old_card_id into some new data structure for each (receiver?).  Watch for None value
             
