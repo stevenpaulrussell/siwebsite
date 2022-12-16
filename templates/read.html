@@ -40,24 +40,25 @@
     </style>
 </header>
 <body onload="set_auto_refresh_watchdog()">
+    <link rel="icon" href="data:;base64,=">
     <img 
         id="postcard_image_here"
         class="postcard_image_null"
     />
     {% for from_tel, a_card in data_items.items %} 
-        <audio id='{{a_card.postcard_audio_id}}'  onplay="profile_clicked('{{from_tel}}')" onended="play_ended('{{from_tel}}')">
-            <source src="{{a_card.card_audio_url}}" />
+        <audio id='{{a_card.audio_id}}'  onplay="profile_clicked('{{from_tel}}')" onended="play_ended('{{from_tel}}')">
+            <source src="{{a_card.audio_url}}" />
         </audio>
         <img 
             id="{{from_tel}}"
             class="profile_image{{a_card.times_played}}"
-            postcard_audio_id="{{a_card.postcard_audio_id}}"
-            src="{{a_card.profile_photo_url}}"
-            profile_image="{{a_card.profile_photo_url}}"
-            postcard_image_url="{{a_card.card_image_url}}"
+            postcard_audio_id="{{a_card.audio_id}}"
+            src="{{a_card.profile_url}}"
+            profile_image="{{a_card.profile_url}}"
+            postcard_image_url="{{a_card.image_url}}"
             times_played="{{a_card.times_played}}"
             played_it_url="{{a_card.played_this_card}}"
-            onClick="document.getElementById('{{a_card.postcard_audio_id}}').play()"
+            onClick="document.getElementById('{{a_card.audio_id}}').play()"
         />
         {% endfor %}
         <script>

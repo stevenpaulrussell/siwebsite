@@ -54,7 +54,7 @@ f'viewer_data_{pobox_id}':
         'version': -> 1
         'pobox_id': pobox_id
     from_tel:
-        'card_uuid': -> 
+        'card_id': -> 
         'play_count' -> 
         'profile_url': -> 
         'image_url': -> 

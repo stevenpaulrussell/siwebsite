@@ -5,6 +5,7 @@ audio2 = "https://api.twilio.com/2010-04-01/Accounts/AC976ed9a0260acd7d8c05fd6a0
 img3 = "https://api.twilio.com/2010-04-01/Accounts/AC976ed9a0260acd7d8c05fd6a013bcecf/Messages/MM1bbb4ad2a748f5c91145730bb1814bb6/Media/ME2a2ad0d70f188d079fb7bfebd28e0af0"
 audio3 = "https://api.twilio.com/2010-04-01/Accounts/AC976ed9a0260acd7d8c05fd6a013bcecf/Recordings/RE57fb3bc1c0b5776098ac78d450b1dd40.mp3"
 
+from django.http.response import HttpResponse
 
 from filer import views as filerviews 
 
@@ -15,7 +16,6 @@ def make_playable_viewer_data():
     filerviews.clear_the_read_bucket()
     filerviews.clear_the_sqs_queue_TEST_SQS()
     viewer_data = test_cmds.make_two_sender_viewer_data()
-    viewer_data.pop('meta')
     for from_tel in viewer_data:
         viewer_data[from_tel]['profile_url'] = img2    
         viewer_data[from_tel]['image_url'] = img1      
@@ -23,8 +23,9 @@ def make_playable_viewer_data():
     return viewer_data
 
 
-def played_this_card(card_id):
-    pass
+def played_this_card(request, card_id):
+    print(f'\npostoffice cmdline got played_this_card for card_id:\n{card_id}\n')
+    return HttpResponse()
 
 
 
