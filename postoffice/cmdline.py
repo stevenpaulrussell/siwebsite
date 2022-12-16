@@ -6,6 +6,7 @@ img3 = "https://api.twilio.com/2010-04-01/Accounts/AC976ed9a0260acd7d8c05fd6a013
 audio3 = "https://api.twilio.com/2010-04-01/Accounts/AC976ed9a0260acd7d8c05fd6a013bcecf/Recordings/RE57fb3bc1c0b5776098ac78d450b1dd40.mp3"
 
 import json
+import os
 
 from django.http.response import HttpResponse
 
@@ -14,20 +15,11 @@ from filer import views as filerviews
 from postmaster import test_cmds
 
 
-def make_playable_viewer_data():
-    """This one is called directly"""
-    filerviews.clear_the_read_bucket()
-    filerviews.clear_the_sqs_queue_TEST_SQS()
-    viewer_data = test_cmds.make_two_sender_viewer_data()
-    for from_tel in viewer_data:
-        viewer_data[from_tel]['profile_url'] = img2    
-        viewer_data[from_tel]['image_url'] = img1      
-        viewer_data[from_tel]['audio_url'] = audio1     
-    return viewer_data
-
 
 def return_playable_viewer_data(request, pobox_id):
     """This one is called via HTTP"""
+    if not os.environ['TEST']:
+        raise EnvironmentError
     filerviews.clear_the_read_bucket()
     filerviews.clear_the_sqs_queue_TEST_SQS()
     viewer_data = test_cmds.make_two_sender_viewer_data()
