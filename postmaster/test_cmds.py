@@ -259,5 +259,4 @@ def make_two_sender_viewer_data():
     # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
     cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
     viewer_data = saveget.get_viewer_data(pobox_id)
-    display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
     return viewer_data

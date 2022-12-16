@@ -12,7 +12,7 @@ data_source = os.environ['POSTBOX_DATA_SOURCE']
 
 
 def show_postcards_view(request, pobox_id):
-    view_data = requests.get(f'{data_source}/viewer_data/pobox_id').json()  
+    view_data = requests.get(f'{data_source}/viewer_data/{pobox_id}').json()  
     version = view_data['meta']['version']
     view_data.pop('meta')
     for from_tel, one_card_spec in view_data.items():
@@ -21,24 +21,21 @@ def show_postcards_view(request, pobox_id):
     return render(request, 'read.html', {'data_items': view_data, 'version': version})
 
 
-def make_connection_view(request):
+def get_a_pobox_id(request):
     if request.method == 'POST':
         form = ConnectionsForm(request.POST)
         if form.is_valid():
             from_tel = form.cleaned_data['from_tel']
-            connector = form.cleaned_data['connector']
-            pobox_id = get_pobox_id(from_tel, connector)
-            return HttpResponseRedirect(f'postbox/{pobox_id}')
+            passkey = form.cleaned_data['passkey']
+            pobox_id_response = requests.get(f'{data_source}/validate_passkey/{from_tel}/{passkey}')
+            pobox_id = pobox_id_response.json()
+            if pobox_id:
+                return HttpResponseRedirect(f'postbox/{pobox_id}')
+            else:
+                return render(request, 'to_connect.html', {'form': form})
     else:
         form = ConnectionsForm()
         return render(request, 'to_connect.html', {'form': form})
-
-def get_pobox_id(from_tel, connector):
-    pobox_id_response = requests.get(f'{data_source}/connect/{from_tel}/{connector}')
-    try:
-        return pobox_id_response.json()
-    except json.JSONDecodeError:
-        return None
 
 
 def instructions_view(request):

@@ -15,21 +15,25 @@ from filer import views as filerviews
 from postmaster import test_cmds
 
 
+def validate_passkey(response, from_tel, passkey):
+    if 'test' in from_tel.lower() or 'test' in passkey.lower():
+        return HttpResponse(content=json.dumps('test_pobox'))
+    else:
+        return HttpResponse(content=json.dumps(None))
+
 
 def return_playable_viewer_data(request, pobox_id):
-    """This one is called via HTTP"""
-    if not os.environ['TEST']:
-        raise EnvironmentError
-    filerviews.clear_the_read_bucket()
-    filerviews.clear_the_sqs_queue_TEST_SQS()
-    viewer_data = test_cmds.make_two_sender_viewer_data()
-    for from_tel in viewer_data:
-        viewer_data[from_tel]['profile_url'] = img2    
-        viewer_data[from_tel]['image_url'] = img1      
-        viewer_data[from_tel]['audio_url'] = audio1     
-    return HttpResponse(content = json.dumps(viewer_data))
-
-
+    if pobox_id == 'test_pobox':    
+        if not os.environ['TEST']:
+            raise EnvironmentError
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        viewer_data = test_cmds.make_two_sender_viewer_data()
+        for from_tel in viewer_data:
+            viewer_data[from_tel]['profile_url'] = img2    
+            viewer_data[from_tel]['image_url'] = img1      
+            viewer_data[from_tel]['audio_url'] = audio1     
+        return HttpResponse(content = json.dumps(viewer_data))
 
 
 def played_this_card(request, card_id):
