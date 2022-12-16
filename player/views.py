@@ -1,17 +1,16 @@
-from django.shortcuts import render
-
-from django.http.response import HttpResponseRedirect
-
 import requests
 import json
 import os
+
+from django.shortcuts import render
+from django.http.response import HttpResponseRedirect
 
 from postoffice import cmdline
 
 from .forms import ConnectionsForm
 
 
-# data_source = os.environ['POSTBOX_DATA_SOURCE']
+#data_source = os.environ['POSTBOX_DATA_SOURCE']
 
 def get_pobox_id(from_tel, connector):
     pobox_id_response = requests.get(f'{data_source}/connect/{from_tel}/{connector}')
@@ -40,6 +39,7 @@ def make_connection_view(request):
 
 def show_postcards_view(request, pobox_id):
     view_data = cmdline.make_playable_viewer_data()   # replaces the GET from a different web address
+    view_data = requests.get('/viewer_data/some_postbox_id')   # replaces the GET from a different web address
     version = view_data['meta']['version']
     view_data.pop('meta')
     for from_tel, one_card_spec in view_data.items():
