@@ -12,7 +12,7 @@ from django.http.response import HttpResponse
 
 from filer import views as filerviews 
 
-from postmaster import test_cmds
+from postoffice import test_cmds
 
 
 def validate_passkey(response, from_tel, passkey):

@@ -4,7 +4,7 @@ import uuid
 
 from . import postcards, saveget
 
-from postoffice.views import update_viewer_data 
+from postbox.views import update_viewer_data 
 
 
 def connect_viewer(sender, to_tel):

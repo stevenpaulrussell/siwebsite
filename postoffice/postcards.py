@@ -6,7 +6,7 @@ import uuid
 from filer import views as filerviews
 from filer import lines
 
-from postoffice.views import update_viewer_data, update_pobox_new_card
+from postbox.views import update_viewer_data, update_pobox_new_card
 
 from . import saveget
 
