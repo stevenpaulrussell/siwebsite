@@ -6,9 +6,13 @@ import time
 from . import saveget, postcards, connects
 from filer import exceptions
 
+def dq_and_do_one_cmd():
+    cmd_dict = saveget.get_one_sqs_cmd()
+    if not cmd_dict:
+        return
+    interpret_one_cmd(cmd_dict)
 
-def interpret_one_cmd(cmd_json):
-    cmd_dict = json.loads(cmd_json)
+def interpret_one_cmd(cmd_dict):
     from_tel = cmd_dict['from_tel']
     to_tel = cmd_dict['to_tel']
     cmd = cmd_dict['cmd']

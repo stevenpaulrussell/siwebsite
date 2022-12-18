@@ -1,6 +1,5 @@
 import time
 import uuid
-import json
 import pprint
 
 
@@ -8,8 +7,6 @@ from django.test import TestCase
 
 from filer import views as filerviews 
 from . import cmds, saveget, postcards, connects
-
-
 
 
 class TwiSim:
@@ -43,51 +40,51 @@ class TwiSim:
         sqs_message = self._new_postcard_common(twinumber)
         sqs_message['context'] = 'NewSenderFirst'
         sqs_message['profile_url'] = self.profile_url
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def newrecipient_postcard(self, twinumber='twil0'):
         sqs_message = self._new_postcard_common(twinumber)
         sqs_message['context'] = 'NewRecipientFirst'
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def newpostcard_noviewer(self, twinumber='twil0'):
         sqs_message = self._new_postcard_common(twinumber)
         sqs_message['context'] = 'NoViewer'
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def newpostcard_haveviewer(self, twinumber='twil0'):
         sqs_message = self._new_postcard_common(twinumber)
         sqs_message['context'] = 'HaveViewer'
-        return json.dumps(sqs_message)
+        return sqs_message
 
     
     def set_profile(self, twinumber, profile_url):
         sqs_message = self._cmd_common(twinumber)
         sqs_message['cmd'] = 'profile'
         sqs_message['profile_url'] = profile_url
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def set_from(self, twinumber, some_name):
         sqs_message = self._cmd_common(twinumber)
         sqs_message['text'] = f'from: {some_name}'
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def set_to(self, twinumber, some_name):
         sqs_message = self._cmd_common(twinumber)
         sqs_message['text'] = f'to: {some_name}'
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def connector(self, twinumber):
         sqs_message = self._cmd_common(twinumber)
         sqs_message['cmd'] = 'connector'
         sqs_message['passkey'] = str(uuid.uuid4())[0:4]
         sqs_message['expire'] = time.time() + 24*60*60
-        return json.dumps(sqs_message)
+        return sqs_message
 
     def connect(self, twilnumber, requestor_from_tel, passkey):
         sqs_message = self._cmd_common(twilnumber)
         sqs_message['text'] = f'connect {requestor_from_tel} connector {passkey}'
-        return json.dumps(sqs_message)
+        return sqs_message
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -131,11 +128,20 @@ class OneCmdTests(TestCase):
         """ Test basic functioning using newsender_firstpostcard """
         Sender0 = TwiSim('Mr0')
         sqs_message = Sender0.newsender_firstpostcard()
-        res = cmds.interpret_one_cmd(sqs_message)
+        cmds.interpret_one_cmd(sqs_message)
         sender = saveget.get_sender(Sender0.mobile)
         self.assertEqual(sender['profile_url'], 'profile_Mr0')
 
-    def test_using_simulation_of_two_senders(self):
+    def test__dq_and_do_one_cmd(self):
+        Sender0 = TwiSim('Mr0')
+        sqs_message = Sender0.newsender_firstpostcard()
+        saveget._test_send_an_sqs_cmd(sqs_message)
+        cmds.dq_and_do_one_cmd()
+        sender = saveget.get_sender(Sender0.mobile)
+        self.assertEqual(sender['profile_url'], 'profile_Mr0')
+       
+
+    def xtest_using_simulation_of_two_senders(self):
         # Remember useful constants
         Sender0 = TwiSim('Mr0')
         Sender1 = TwiSim('Ms1')

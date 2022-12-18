@@ -135,7 +135,6 @@ def nq_postcard(from_tel, to_tel, **message):
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
 
-
 # SQS Utility functions
 def send_an_sqs_message(message, QueueUrl):
     json_message = json.dumps(message)
