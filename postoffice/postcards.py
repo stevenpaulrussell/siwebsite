@@ -6,7 +6,7 @@ import uuid
 from filer import views as filerviews
 from filer import lines
 
-from postbox.views import update_viewer_data, update_pobox_new_card
+from postbox.views import update_pobox_new_card
 
 from . import saveget
 
@@ -76,6 +76,7 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
         from_tel = from_tel,
         to_tel = to_tel,
         sent_at = sent_at,    
+        recent_play = None,
         image_url = wip['image_url'],
         audio_url = wip['audio_url'],
         profile_url = sender['profile_url']       #  Viewer may see something different, but saving current profile with each card

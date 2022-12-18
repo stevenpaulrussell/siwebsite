@@ -1,8 +1,8 @@
 from django.urls import path
 
 from postbox.cmdline import played_this_card                 # These urlpatterns move when viewer is separated
-from postbox.cmdline import return_playable_viewer_data      # These urlpatterns move when viewer is separated
-from postbox.cmdline import validate_passkey                 # These urlpatterns move when viewer is separated
+from postbox.views import return_playable_viewer_data      # These urlpatterns move when viewer is separated
+from postbox.views import validate_passkey                 # These urlpatterns move when viewer is separated
 
 from .views import instructions_view, get_a_pobox_id, show_postcards_view
 

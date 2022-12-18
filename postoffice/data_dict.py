@@ -23,6 +23,7 @@ f'pobox_{pobox_id}':
         'version': -> start at 1
         'pobox_id': pobox_id
         'key_operator': from_tel              # set when viewer is first connected for (from_tel, to_tel)
+        'heard_from': -> time.time() of last postbox.played_it or return_playable_viewer_data
     'cardlists':
         from_tel:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
     ...
@@ -35,7 +36,8 @@ f'card_{postcard_id}':
     'plays':  -> default 0, then updated from Recently_Played_Cards_V1 when archived  ---> change this?                                  
     'from_tel':
     'to_tel': 
-    'sent_at': -> time.time() when made and stored in S3 and referenced in post_office     
+    'sent_at': -> time.time() when made and stored in S3 and referenced in post_office  
+    'recent_play': -> time.time() when last played
     'image_url': 
     'audio_url': 
     'profile_url': ->        at time postcard was made!  Viewer may see something different
