@@ -27,7 +27,7 @@ def interpret_one_cmd(cmd_dict):
             message = f'OK, your profile image has been updated.'
             saveget.update_sender_and_morsel(sender)
             return message
-        case 'connector':
+        case 'passkey':
             current_key = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
             saveget.save_passkey_dictionary(current_key)
         case 'cmd_general':
@@ -37,13 +37,13 @@ def interpret_one_cmd(cmd_dict):
             """ Send admin an error message or in test raise exception"""
 
 def handle_possible_cmd_general(from_tel, to_tel, text): 
-    if 'connect' in text and text != 'connector':
+    if 'connect' in text:
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
         lead_sender = saveget.get_sender(from_tel)
-        cmd, joiner_from_tel, connector_literal, passkey = [word.strip() for word in text.split(' ')]
+        cmd, joiner_from_tel, passkey_literal, passkey = [word.strip() for word in text.split(' ')]
         try:    
             assert cmd == 'connect'
-            assert connector_literal == 'connector'
+            assert passkey_literal == 'passkey'
             assert len(passkey) == 4
             joiner = saveget.get_sender(joiner_from_tel)
             joiner_to_tel = connects.check_passkey(joiner_from_tel, passkey)['to_tel']      # Throws KeyError if no match

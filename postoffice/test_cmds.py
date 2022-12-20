@@ -76,16 +76,16 @@ class TwiSim:
         sqs_message['text'] = f'to: {some_name}'
         return sqs_message
 
-    def connector(self, twinumber):
+    def passkey(self, twinumber):
         sqs_message = self._cmd_common(twinumber)
-        sqs_message['cmd'] = 'connector'
+        sqs_message['cmd'] = 'passkey'
         sqs_message['passkey'] = str(uuid.uuid4())[0:4]
         sqs_message['expire'] = time.time() + 24*60*60
         return sqs_message
 
     def connect(self, twilnumber, requestor_from_tel, passkey):
         sqs_message = self._cmd_common(twilnumber)
-        sqs_message['text'] = f'connect {requestor_from_tel} connector {passkey}'
+        sqs_message['text'] = f'connect {requestor_from_tel} passkey {passkey}'
         return sqs_message
 
 pp = pprint.PrettyPrinter(indent=2)
@@ -198,8 +198,8 @@ class OneCmdTests(TestCase):
         display_postal(pobox_id, f'pobox after sender0 sent that second card')
 
         # Sender0 connects Sender1 to the viewer:
-        # First make the connector, checking msg back
-        cmds.interpret_one_cmd(Sender1.connector('twil0'))
+        # First make the passkey, checking msg back
+        cmds.interpret_one_cmd(Sender1.passkey('twil0'))
         sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
         self.assertEqual(to_tel_used, sender1_twil0)
         self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], None)        # sender1 set no viewer, and sender0 hasn't issued the connect
@@ -258,7 +258,7 @@ def make_two_sender_viewer_data():
     cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
 
     # Sender0 connects Sender1 to the viewer:
-    cmds.interpret_one_cmd(Sender1.connector('twil0'))
+    cmds.interpret_one_cmd(Sender1.passkey('twil0'))
     sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
     # Issue the connect command and inspect the results
     sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
