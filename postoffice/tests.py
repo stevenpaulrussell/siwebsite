@@ -4,7 +4,9 @@ from django.test import TestCase
 
 from filer import views as filerviews 
 from twitalk.tests import SiWebCarepostUser
-from . import postcards, connects, saveget
+from saveget import saveget
+
+from . import postcards, connects
 
 
 class PostcardProcessing(TestCase):
@@ -143,7 +145,8 @@ class NewPostcardCases(TestCase):
         viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertIn(self.sender_mobile_number, cardlists)
         self.assertEqual(len(cardlists[self.sender_mobile_number]), 1)
-        self.assertIn(self.sender_mobile_number, viewer_data)
+        self.assertIn('meta', viewer_data)    # viewer_data not updated until pobox is called!
+        self.assertNotIn(self.sender_mobile_number, viewer_data)    # viewer_data not updated until pobox is called!
 
     def test_new_postcard_HaveViewer(self):
         # Setup and connect a sender to a viewer
@@ -163,9 +166,8 @@ class NewPostcardCases(TestCase):
         viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertIn(self.sender_mobile_number, cardlists)
         self.assertEqual(len(cardlists[self.sender_mobile_number]), 2)
-        self.assertIn(self.sender_mobile_number, viewer_data)
-        self.assertEqual(cardlists[self.sender_mobile_number][0], viewer_data[self.sender_mobile_number]['card_id'])
-        self.assertEqual(viewer_data[self.sender_mobile_number]['profile_url'], self.profile_url)
+        self.assertIn('meta', viewer_data)    # viewer_data not updated until pobox is called!
+        self.assertNotIn(self.sender_mobile_number, viewer_data)    # viewer_data not updated until pobox is called!
 
 class ConnectCases(TestCase):
     def setUp(self):

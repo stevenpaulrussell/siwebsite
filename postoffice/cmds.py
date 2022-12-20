@@ -3,8 +3,10 @@ import json
 import time
 
 
-from . import saveget, postcards, connects
+from saveget import saveget
 from filer import exceptions
+
+from . import postcards, connects
 
 def dq_and_do_one_cmd():
     cmd_dict = saveget.get_one_sqs_cmd()

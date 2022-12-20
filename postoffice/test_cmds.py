@@ -6,7 +6,9 @@ import pprint
 from django.test import TestCase
 
 from filer import views as filerviews 
-from . import cmds, saveget, postcards, connects
+from saveget import saveget
+
+from . import cmds, postcards, connects
 
 
 class TwiSim:

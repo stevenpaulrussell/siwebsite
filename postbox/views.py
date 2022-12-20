@@ -4,22 +4,14 @@ import json
 
 from django.http.response import HttpResponse
 
-from postoffice import saveget, test_cmds
+from postoffice import test_cmds
 from filer import views as filerviews 
+from saveget import saveget
 
 
 
 # viewer_data and pobox are both initialized when the pobox_id is assigned.
 # As each sender is connected, update both viewer_data and pobox
-
-
-def update_pobox_new_card(from_tel, to_tel, pobox_id, card_id):
-    pobox = saveget.get_pobox(pobox_id)        
-    pobox['cardlists'][from_tel].append(card_id)
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    update_viewer_data(pobox, viewer_data)
-    saveget.save_pobox(pobox)
-    saveget.save_viewer_data(viewer_data)
 
 
 def played_it(pobox_id, card_id):
