@@ -5,28 +5,10 @@ import json
 from django.http.response import HttpResponse
 
 from postoffice import test_cmds
-from filer import views as filerviews 
 from saveget import saveget
 
 
-
-# viewer_data and pobox are both initialized when the pobox_id is assigned.
-# As each sender is connected, update both viewer_data and pobox
-
-
-def played_it(pobox_id, card_id):
-    pobox = saveget.get_pobox(pobox_id)
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    card = saveget.get_postcard[card_id]
-    from_tel = card['from_tel']
-    card['play_count'] += 1
-    viewer_data[from_tel]['play_count'] += 1
-    update_viewer_data(pobox, viewer_data)
-
-
 def update_viewer_data(pobox, viewer_data):              
-    """viewer_data is {from_tel: card_spec} where card_spec is everything needed for play"""
-    # Change pobox data_dict defintion to conform to this change
     for from_tel in pobox['cardlists']:
         cardlist = pobox['cardlists'][from_tel]
         if not cardlist:        # No new cards to show, so on to the next sender's list
@@ -48,29 +30,51 @@ def update_viewer_data(pobox, viewer_data):
             viewer_data[from_tel] = viewer_card
         
 
+def return_playable_viewer_data(request, pobox_id):
+    if pobox_id == 'test_pobox':    
+        return _make_playable_viewer_data_for_testing(request, pobox_id)
+    """Production"""
+    return HttpResponse(content = json.dumps(viewer_data))
+
+
+def played_this_card(request, pobox_id, card_id):
+    pobox = saveget.get_pobox(pobox_id)
+    viewer_data = saveget.get_viewer_data(pobox_id)
+    card = saveget.get_postcard[card_id]
+    from_tel = card['from_tel']
+    card['play_count'] += 1
+    viewer_data[from_tel]['play_count'] += 1
+    update_viewer_data(pobox, viewer_data)
+    return HttpResponse()
+
 def validate_passkey(response, from_tel, passkey):
     if 'test' in from_tel.lower() or 'test' in passkey.lower():
         return HttpResponse(content=json.dumps('test_pobox'))
     else:
         return HttpResponse(content=json.dumps(None))
 
-def return_playable_viewer_data(request, pobox_id):
-    if pobox_id == 'test_pobox':    
-        if not os.environ['TEST']:
-            raise EnvironmentError
-        filerviews.clear_the_read_bucket()
-        filerviews.clear_the_sqs_queue_TEST_SQS()
-        viewer_data = test_cmds.make_two_sender_viewer_data()
-        for from_tel in viewer_data:
-            viewer_data[from_tel]['profile_url'] = img2    
-            viewer_data[from_tel]['image_url'] = img1      
-            viewer_data[from_tel]['audio_url'] = audio1     
-        return HttpResponse(content = json.dumps(viewer_data))
+def _make_playable_viewer_data_for_testing(request, pobox_id):
+    if not os.environ['TEST']:
+        raise EnvironmentError
+    saveget.clear_sqs_and_s3_for_testing
+    viewer_data = test_cmds.make_two_sender_viewer_data()
+    for from_tel in viewer_data:
+        viewer_data[from_tel]['profile_url'] = img2    
+        viewer_data[from_tel]['image_url'] = img1      
+        viewer_data[from_tel]['audio_url'] = audio1     
+    return HttpResponse(content = json.dumps(viewer_data))
 
 
-def played_this_card(request, card_id):
-    print(f'\npostoffice cmdline got played_this_card for card_id:\n{card_id}\n')
-    return HttpResponse()
+
+
+
+
+
+
+
+
+
+
 
 
 

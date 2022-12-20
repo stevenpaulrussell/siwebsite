@@ -65,6 +65,11 @@ def delete_viewer_data(viewer_data):
 def delete_twilio_new_sender(sender):
     filerviews._delete_a_thing_using_key(key=f'new_sender/{sender["from_tel"]}')
 
+def clear_sqs_and_s3_for_testing(sender):
+    filerviews.clear_the_read_bucket()
+    filerviews.clear_the_sqs_queue_TEST_SQS()
+
+
 
 def get_one_sqs_cmd():
     """In TEST, CMD_SQS and ADMIN queue urls both map to CMD_URL read here. 
@@ -74,5 +79,6 @@ def get_one_sqs_cmd():
 def _test_send_an_sqs_cmd(message):
     """This used only for testing."""
     filerviews.send_an_sqs_message(message, QueueUrl=filerviews.TEST_SQS)
+
 
     
