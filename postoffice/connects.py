@@ -51,17 +51,21 @@ def disconnect_from_viewer(sender, to_tel):
     key_operator = pobox['meta']['key_operator']
 
 
-def connect_joiner_to_lead_sender_pobox(joiner, lead_sender, r_to_tel, g_to_tel):
+def connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel):
     """from_tel, to_tel pair determines a unique connection.  Map the request_sender connection
     to the pobox the lead_sender from_tel, to_tel points to.  Update the pobox to store those 
     postcards.
     """
-    wanted_pobox_id = lead_sender['conn'][g_to_tel]['pobox_id']   # This pobox_id is the one being added to.
-    joiner['conn'][r_to_tel]['pobox_id'] = wanted_pobox_id
+    wanted_pobox_id = lead_sender['conn'][to_tel]['pobox_id']   # This pobox_id is the one being added to.
+    to_name = lead_sender['conn'][to_tel]['to']
+    joiner['conn'][joiner_to_tel]['pobox_id'] = wanted_pobox_id
+    joiner['conn'][joiner_to_tel]['to'] = to_name
     pobox = saveget.get_pobox(wanted_pobox_id)
     pobox['cardlists'][joiner['from_tel']] = []
     saveget.save_pobox(pobox)
     saveget.update_sender_and_morsel(joiner)
+    message = f'Successfully connected {joiner["from_tel"]} to {to_name}'
+    return message
 
 
 def check_passkey(from_tel, possible_key):

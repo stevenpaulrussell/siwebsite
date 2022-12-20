@@ -50,12 +50,10 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
         except (ValueError, AssertionError, KeyError):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         connects.disconnect_from_viewer(joiner, joiner_to_tel)
-        connects.connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel)
+        message = connects.connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel)
         saveget.update_sender_and_morsel(lead_sender)
         saveget.update_sender_and_morsel(joiner)
-        
-        print(f'')
-        return 'Successful connect message'
+        return message
 
     if 'from:' in text:
         try:    

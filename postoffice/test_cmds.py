@@ -262,7 +262,6 @@ def make_two_sender_viewer_data():
     sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
     # Issue the connect command and inspect the results
     sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
-    assert(sender0_msg_back =='Successful connect message')
 
     # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
     cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
