@@ -143,13 +143,17 @@ class OneCmdTests(TestCase):
         self.assertEqual(sender['profile_url'], 'profile_Mr0')
        
 
-    def xtest_using_simulation_of_two_senders(self):
+    def test_using_simulation_of_two_senders(self):
         # Remember useful constants
         Sender0 = TwiSim('Mr0')
         Sender1 = TwiSim('Ms1')
         sender1_twil0 = Sender1.twi_directory['twil0']
         sender1_twil1 = Sender1.twi_directory['twil1']
         sender0_twil0 = Sender0.twi_directory['twil0']
+
+        to_do = """This test has been moved to maybe project level. Line 188 or so looking
+        at viewer_data would need circular import from postbox to get viewer_data updated."""
+        self.assertFalse(to_do)
 
         # Twilio side is quiet until the sender succeeds in 'sign-up' by making wip and a profile.
         # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
@@ -237,33 +241,3 @@ class OneCmdTests(TestCase):
         self.assertIn(Sender0.mobile, viewer_data)
         self.assertIn(Sender1.mobile, viewer_data)
         display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
-
-
-def make_two_sender_viewer_data():
-    Sender0 = TwiSim('Mr0')
-    Sender1 = TwiSim('Ms1')
-    sender1_twil0 = Sender1.twi_directory['twil0']
-    sender1_twil1 = Sender1.twi_directory['twil1']
-    sender0_twil0 = Sender0.twi_directory['twil0']
-
-    cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
-    cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
-    # Sender1 sends to a second twilio number
-    cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
-
-    # Sender0 makes a viewer.  This sets up the pobox, the viewer_data, putting a card in viewer_data, returning pobox_id
-    sender0 = saveget.get_sender(Sender0.mobile)
-    pobox_id = connects.connect_viewer(sender0, sender0_twil0)
-    # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
-    cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
-
-    # Sender0 connects Sender1 to the viewer:
-    cmds.interpret_one_cmd(Sender1.passkey('twil0'))
-    sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
-    # Issue the connect command and inspect the results
-    sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
-
-    # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-    cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    return viewer_data

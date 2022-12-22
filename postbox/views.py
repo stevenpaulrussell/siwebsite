@@ -4,8 +4,8 @@ import json
 
 from django.http.response import HttpResponse
 
-from postoffice import test_cmds
 from saveget import saveget
+from . import tests
 
 
 def update_viewer_data(pobox, viewer_data):              
@@ -57,7 +57,7 @@ def _make_playable_viewer_data_for_testing(request, pobox_id):
     if not os.environ['TEST']:
         raise EnvironmentError
     saveget.clear_sqs_and_s3_for_testing
-    viewer_data = test_cmds.make_two_sender_viewer_data()
+    viewer_data = tests.make_two_sender_viewer_data()
     for from_tel in viewer_data:
         viewer_data[from_tel]['profile_url'] = img2    
         viewer_data[from_tel]['image_url'] = img1      
