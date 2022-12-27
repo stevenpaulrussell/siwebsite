@@ -6,14 +6,15 @@ from django.test import TestCase
 # postoffice replaces the old 'read' website completely
 
 from filer import views as filerviews 
-from postoffice import test_cmds, cmds, connects
+from postoffice import cmds, connects
 from saveget import saveget
+from siwebsite_project.sender_object_for_tests import TwiSim, pp
 from . import views
 
 
 def make_two_sender_viewer_data():
-    Sender0 = test_cmds.TwiSim('Mr0')
-    Sender1 = test_cmds.TwiSim('Ms1')
+    Sender0 = TwiSim('Mr0')
+    Sender1 = TwiSim('Ms1')
     sender1_twil0 = Sender1.twi_directory['twil0']
     sender1_twil1 = Sender1.twi_directory['twil1']
     sender0_twil0 = Sender0.twi_directory['twil0']
@@ -52,7 +53,7 @@ class OneCmdTests(TestCase):
         """Makes test data using code from postmaster.test_cmds.  Testing to see if this can be fed to the new postcard viwer code."""
         viewer_data = make_two_sender_viewer_data()
         self.assertIn('meta', viewer_data)
-        test_cmds.pp.pprint(viewer_data)
+        pp.pprint(viewer_data)
 
 
 

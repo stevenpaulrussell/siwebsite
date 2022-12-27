@@ -8,7 +8,7 @@ from saveget import saveget
 from . import tests
 
 
-def update_viewer_data(pobox, viewer_data):              
+def update_viewer_data(pobox, viewer_data):       
     for from_tel in pobox['cardlists']:
         cardlist = pobox['cardlists'][from_tel]
         if not cardlist:        # No new cards to show, so on to the next sender's list
@@ -28,6 +28,7 @@ def update_viewer_data(pobox, viewer_data):
             viewer_card['image_url'] = new_card['image_url']
             viewer_card['audio_url'] = new_card['audio_url']
             viewer_data[from_tel] = viewer_card
+    saveget.save_viewer_data(viewer_data)
         
 
 def return_playable_viewer_data(request, pobox_id):
