@@ -39,7 +39,9 @@ class LookAtPagesAndViews(TestCase):
 
 class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
     def test_some_stuff(self):
+        """Sender0, Sender1 each have poboxes.  Sender1 is connected to Sender0 """
         Sender0, Sender1 = run_simulation_of_two_senders()
+
 
     def test_unit_postoffice_has_function_to_find_pobox_id_from_passkey(self):
         pass

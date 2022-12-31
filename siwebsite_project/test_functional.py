@@ -1,6 +1,7 @@
 import time
 import uuid
 import pprint
+import json
 
 
 from django.test import TestCase
@@ -8,7 +9,8 @@ from django.test import TestCase
 from filer import views as filerviews 
 from saveget import saveget
 from postoffice import cmds, connects
-from postbox.views import update_viewer_data
+from postbox.views import update_viewer_data, pobox_id_if_good_passkey
+from player.views import get_a_pobox_id
 
 from .sender_object_for_tests import TwiSim, pp
 
@@ -228,6 +230,15 @@ class OneCmdTests(TestCase):
         # Somebody connects a viewer using webpage....
         # Instructions view works
 
+        # ************************************************************************************
+        connects._set_passkey(Sender0.mobile, sender0_twil0)
+        passkey = saveget.get_passkey_dictionary(Sender0.mobile)['passkey']
+        sender0 = saveget.get_sender(Sender0.mobile)
+        expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
+        response = pobox_id_if_good_passkey(request=None, from_tel=Sender0.mobile, offered_key=passkey)
+        got_pobox_id = json.loads(response.content)
+        self.assertEqual(expected_pobox_id, got_pobox_id)
+
 
 
 
@@ -293,9 +304,6 @@ def run_simulation_of_two_senders():
     cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
     pobox = saveget.get_pobox(pobox_id)
     viewer_data = saveget.get_viewer_data(pobox_id)
-
-    # The updated_viewer_data does what it says
     update_viewer_data(pobox, viewer_data)
-    viewer_data = saveget.get_viewer_data(pobox_id)
 
     return Sender0, Sender1
