@@ -33,13 +33,15 @@ def update_viewer_data(pobox, viewer_data):
         
 
 def return_playable_viewer_data(request, pobox_id):
-    if pobox_id == 'test_pobox':    
+    if 'test' in pobox_id:    
         return _make_playable_viewer_data_for_testing(request, pobox_id)
     """Production"""
     return HttpResponse(content = json.dumps(viewer_data))
 
 
 def played_this_card(request, pobox_id, card_id):
+    if 'test' in pobox_id:
+        return HttpResponse(content=json.dumps(f'Testing, got: pobox_id: {pobox_id};  card_id: {card_id}'))
     pobox = saveget.get_pobox(pobox_id)
     viewer_data = saveget.get_viewer_data(pobox_id)
     card = saveget.get_postcard[card_id]
@@ -49,10 +51,10 @@ def played_this_card(request, pobox_id, card_id):
     update_viewer_data(pobox, viewer_data)
     return HttpResponse()
 
-def pobox_id_if_good_passkey(request, from_tel, offered_key):
+def pobox_id_if_good_passkey(request, from_tel, passkey):
     try:
         found_key, to_tel = get_passkey(from_tel)     #  TypeError is raised if get_passkey returns None
-        assert(offered_key==found_key)
+        assert(passkey==found_key)
         sender = saveget.get_sender(from_tel)
         pobox_id = sender['conn'][to_tel]['pobox_id']
     except (TypeError, AssertionError):   

@@ -8,7 +8,7 @@ from .views import instructions_view, get_a_pobox_id, show_postcards_view
 
 
 urlpatterns = [
-    path('played/<card_id>', played_this_card, name='played_it'),                               # RPC to postbox, purpose as stated
+    path('played/<pobox_id>/<card_id>', played_this_card, name='played_it'),                               # RPC to postbox, purpose as stated
     path('viewer_data/<pobox_id>', return_playable_viewer_data, name='viewer_data'),            # RPC, asks for new data & as check-in
     path('validate_me/<from_tel>/<passkey>', pobox_id_if_good_passkey, name='validate_passkey'),   # RPC, returns a redirect to viewer_data/<pobox_id>
     path('postbox/<pobox_id>', show_postcards_view, name='viewer'),                   # URL used by browser to see the basic postcards view

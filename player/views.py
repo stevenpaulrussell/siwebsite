@@ -17,7 +17,7 @@ def show_postcards_view(request, pobox_id):
     view_data.pop('meta')
     for from_tel, one_card_spec in view_data.items():
         one_card_spec['audio_id'] = f'{from_tel} audio'
-        one_card_spec['played_this_card'] = f'/played/{one_card_spec["card_id"]}'
+        one_card_spec['played_this_card'] = f'/played/{pobox_id}/{one_card_spec["card_id"]}'
     return render(request, 'read.html', {'data_items': view_data, 'version': version})
 
 
@@ -31,7 +31,7 @@ def get_a_pobox_id(request):
                 return HttpResponseRedirect(f'postbox/test_pobox')
             else: 
                 pobox_id_url = f'{data_source}/validate_me/{from_tel}/{passkey}'
-                pobox_id = requests.get().json()
+                pobox_id = requests.get(pobox_id_url).json()
             if pobox_id:
                 return HttpResponseRedirect(f'postbox/{pobox_id}')
     # else to any of the above, maybe want to respond more specifically, anyway:
