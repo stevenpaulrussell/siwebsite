@@ -5,6 +5,8 @@ import requests
 from django.test import TestCase
 from django.test.client import RequestFactory
 
+from siwebsite_project.test_functional import run_simulation_of_two_senders
+
 
 
 class LookAtPagesAndViews(TestCase):
@@ -34,4 +36,17 @@ class LookAtPagesAndViews(TestCase):
         viewer_data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
         self.assertIn('meta', viewer_data)
+
+class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
+    def test_some_stuff(self):
+        Sender0, Sender1 = run_simulation_of_two_senders()
+
+    def test_unit_postoffice_has_function_to_find_pobox_id_from_passkey(self):
+        pass
+
+    def test_good_form_submission_redirects_to_right_postbox(self):
+        pass
+
+    def test_bad_form_submission_redirects_to_different_page(self):
+        pass
 

@@ -56,46 +56,30 @@ class PostcardProcessing(TestCase):
                             to_tel=self.twilio_phone_number, wip=wip, sent_at=test_time)
         self.assertEqual(card_id, sender['conn'][self.twilio_phone_number]['recent_card_id'])
 
-# class HelperFunctionTests(TestCase):
-#     def setUp(self):
-#         filerviews.clear_the_read_bucket()
-#         filerviews.clear_the_sqs_queue_TEST_SQS()
-#         self.sender_mobile_number = '+1_sender_mobile_number'
-#         self.twilio_phone_number = 'twilio_number_1'
-#         self.profile_url = 'sender_selfie_url'
+class HelperFunctionTests(TestCase):
+    def setUp(self):
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.sender_mobile_number = '+1_sender_mobile_number'
+        self.twilio_phone_number = 'twilio_number_1'
+        self.profile_url = 'sender_selfie_url'
 
-#     def test_get_passkey_when_absent(self):
-#         passkey = connects.get_passkey(from_tel=self.sender_mobile_number)
-#         self.assertIsNone(passkey)
+    def test_get_passkey_when_absent(self):
+        passkey__to_tel__tuple = connects.get_passkey(from_tel=self.sender_mobile_number)
+        self.assertIsNone(passkey__to_tel__tuple)
+      
+    def test_get_passkey_when_present(self):
+        connects._set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
+        passkey, to_tel = connects.get_passkey(from_tel=self.sender_mobile_number)
+        self.assertEqual(len(passkey), 4)
+        self.assertEqual(to_tel, self.twilio_phone_number)
    
-#     def test_set_passkey_when_absent(self):
-#         passkey = connects.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-#         self.assertEqual(len(passkey), 4)
-   
-#     def test_get_passkey_when_present(self):
-#         passkey1 = connects.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-#         passkey2, to_tel = connects.get_passkey(from_tel=self.sender_mobile_number)
-#         self.assertEqual(passkey1, passkey2)
-#         self.assertEqual(to_tel, self.twilio_phone_number)
-   
-#     def test_get_passkey_when_expired(self):
-#         passkey1 = connects.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number, duration=-1)
-#         passkey2 = connects.get_passkey(from_tel=self.sender_mobile_number)
-#         self.assertEqual(len(passkey1), 4)
-#         self.assertIsNone(passkey2)
+    def test_get_passkey_when_expired(self):
+        connects._set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number, duration=-1)
+        passkey__to_tel__tuple = connects.get_passkey(from_tel=self.sender_mobile_number)
+        self.assertIsNone(passkey__to_tel__tuple)
+    
 
-#     def test_check_passkey_when_passing(self):
-#         passkey = connects.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-#         res = connects.check_passkey(self.sender_mobile_number, passkey)
-#         self.assertIn('to_tel', res)
-#         self.assertEqual(res['to_tel'], self.twilio_phone_number)
-  
-#     def test_check_passkey_when_no_match(self):
-#         passkey = connects.set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-#         res = connects.check_passkey(self.sender_mobile_number, '1234')
-#         self.assertNotIn('to_tel', res)
-#         self.assertIn('error', res)
-  
 class NewPostcardCases(TestCase):
     def setUp(self):
         filerviews.clear_the_read_bucket()

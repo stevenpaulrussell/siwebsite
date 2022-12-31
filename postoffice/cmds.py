@@ -42,12 +42,13 @@ def handle_possible_cmd_general(from_tel, to_tel, text):
         lead_sender = saveget.get_sender(from_tel)
         cmd, joiner_from_tel, passkey_literal, passkey = [word.strip() for word in text.split(' ')]
         try:    
+            joiner = saveget.get_sender(joiner_from_tel)
+            found_key, joiner_to_tel = connects.get_passkey(joiner_from_tel)     # Raises TypeError if no passkey
+            assert(found_key == passkey)
             assert cmd == 'connect'
             assert passkey_literal == 'passkey'
             assert len(passkey) == 4
-            joiner = saveget.get_sender(joiner_from_tel)
-            joiner_to_tel = connects.check_passkey(joiner_from_tel, passkey)['to_tel']      # Throws KeyError if no match
-        except (ValueError, AssertionError, KeyError):
+        except (ValueError, AssertionError, TypeError):
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         connects.disconnect_from_viewer(joiner, joiner_to_tel)
         message = connects.connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel)

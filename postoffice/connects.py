@@ -68,28 +68,19 @@ def connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_t
     return message
 
 
-def check_passkey(from_tel, possible_key):
-    passkey, to_tel = get_passkey(from_tel)
-    if passkey == possible_key:
-        return dict(to_tel=to_tel)
-    else:
-        return dict(error='xxx')    # Make a proper message back to the web or to the sender somehow... prefer the sender,
-                        # but should run a check on the sender number since that might be the error!
-
 def get_passkey(from_tel):
     """Return both the passkey and the to_tel associated, to allow matching for security or for to_tel ident."""
     current_key = saveget.get_passkey_dictionary(from_tel)
     if current_key and time.time() < current_key['expire']:
         return current_key['passkey'], current_key['to_tel']
     
-# def set_passkey(from_tel, to_tel, duration=24):
-#     """Stores a short-lived 'passkey' for both security and easy id of a to_tell when adding a sender.
-#     Each from_tel allowed a single passkey even if have multiple to_tel, but use case is ok. """
-#     expire = time.time() + duration*60*60
-#     passkey = str(uuid.uuid4())[0:4]
-#     current_key = dict(passkey=passkey, from_tel=from_tel, to_tel=to_tel, expire=expire)
-#     saveget.save_passkey_dictionary(current_key)
-#     return passkey
+def _set_passkey(from_tel, to_tel, duration=24):
+    """Used only for test in this module"""
+    expire = time.time() + duration*60*60
+    passkey = str(uuid.uuid4())[0:4]
+    current_key = dict(passkey=passkey, from_tel=from_tel, to_tel=to_tel, expire=expire)
+    saveget.save_passkey_dictionary(current_key)
+    
 
 
 
