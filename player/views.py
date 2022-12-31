@@ -27,15 +27,16 @@ def get_a_pobox_id(request):
         if form.is_valid():
             from_tel = form.cleaned_data['from_tel']
             passkey = form.cleaned_data['passkey']
-            pobox_id_response = requests.get(f'{data_source}/validate_passkey/{from_tel}/{passkey}')
-            pobox_id = pobox_id_response.json()
+            if 'test' in from_tel.lower() or 'test' in passkey.lower():
+                return HttpResponseRedirect(f'postbox/test_pobox')
+            else: 
+                pobox_id_url = f'{data_source}/validate_me/{from_tel}/{passkey}'
+                pobox_id = requests.get().json()
             if pobox_id:
                 return HttpResponseRedirect(f'postbox/{pobox_id}')
-            else:
-                return render(request, 'to_connect.html', {'form': form})
-    else:
-        form = ConnectionsForm()
-        return render(request, 'to_connect.html', {'form': form})
+    # else to any of the above, maybe want to respond more specifically, anyway:
+    form = ConnectionsForm()
+    return render(request, 'to_connect.html', {'form': form})
 
 
 def instructions_view(request):

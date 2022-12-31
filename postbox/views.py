@@ -5,6 +5,7 @@ import json
 from django.http.response import HttpResponse
 
 from saveget import saveget
+from postoffice.connects import get_passkey
 from . import tests
 
 
@@ -48,12 +49,18 @@ def played_this_card(request, pobox_id, card_id):
     update_viewer_data(pobox, viewer_data)
     return HttpResponse()
 
-def validate_passkey(response, from_tel, passkey):
-    if 'test' in from_tel.lower() or 'test' in passkey.lower():
-        return HttpResponse(content=json.dumps('test_pobox'))
-    else:
+def pobox_id_if_good_passkey(response, from_tel, offered_key):
+    try:
+        found_key, to_tel = get_passkey(from_tel)     #  TypeError is raised if get_passkey returns None
+        assert(offered_key==found_key)
+        sender = saveget.get_sender(from_tel)
+        pobox_id = sender['conn'][to_tel][pobox_id]
+    except (TypeError, AssertionError):   
         return HttpResponse(content=json.dumps(None))
+    else:
+        return HttpResponse(content=json.dumps(pobox_id))
 
+      
 def _make_playable_viewer_data_for_testing(request, pobox_id):
     if not os.environ['TEST']:
         raise EnvironmentError
