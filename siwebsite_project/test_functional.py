@@ -235,7 +235,7 @@ class OneCmdTests(TestCase):
         passkey = saveget.get_passkey_dictionary(Sender0.mobile)['passkey']
         sender0 = saveget.get_sender(Sender0.mobile)
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
-        response = pobox_id_if_good_passkey(request=None, from_tel=Sender0.mobile, offered_key=passkey)
+        response = pobox_id_if_good_passkey(request=None, from_tel=Sender0.mobile, passkey=passkey)
         got_pobox_id = json.loads(response.content)
         self.assertEqual(expected_pobox_id, got_pobox_id)
 
