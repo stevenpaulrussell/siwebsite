@@ -70,9 +70,9 @@ def connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_t
 
 def get_passkey(from_tel):
     """Return both the passkey and the to_tel associated, to allow matching for security or for to_tel ident."""
-    current_key = saveget.get_passkey_dictionary(from_tel)
-    if current_key and time.time() < current_key['expire']:
-        return current_key['passkey'], current_key['to_tel']
+    passkey_dictionary = saveget.get_passkey_dictionary(from_tel)
+    if passkey_dictionary and time.time() < passkey_dictionary['expire']:
+        return passkey_dictionary['passkey'], passkey_dictionary['to_tel']
     
 def _set_passkey(from_tel, to_tel, duration=24):
     """Used only for test in this module"""
