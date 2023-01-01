@@ -81,16 +81,13 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
         response = requests.get(f'{data_source}/validate_me/{Sender0.mobile}/{sender0_passkey}')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.content), expected_pobox_id)
+        self.assertEqual(expected_pobox_id, json.loads(response.content))
+
+        # Now try the call direct!
+        response = requests.post('/get_a_pobox_id', {'from_tel': Sender0.mobile, 'passkey': sender0_passkey})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(expected_pobox_id, json.loads(response.content))
 
 
 
-    def test_unit_postoffice_has_function_to_find_pobox_id_from_passkey(self):
-        pass
-
-    def test_good_form_submission_redirects_to_right_postbox(self):
-        pass
-
-    def test_bad_form_submission_redirects_to_different_page(self):
-        pass
 
