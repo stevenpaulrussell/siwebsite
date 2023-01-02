@@ -69,7 +69,7 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
     card = dict(
         version = 1,
         card_id = card_id, 
-        plays = 0,                                  
+        play_count = 0,                                  
         from_tel = from_tel,
         to_tel = to_tel,
         sent_at = sent_at,    

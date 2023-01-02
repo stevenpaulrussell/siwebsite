@@ -18,7 +18,7 @@ def update_viewer_data(pobox, viewer_data):
         viewer_card = viewer_data.get(from_tel, {})     
         if not viewer_card or viewer_card['play_count'] > 0:  # If initializing, or current has been played
             new_card_id, cardlist = cardlist[0], cardlist[1:]
-
+            
             old_card_id = viewer_data.get('card_id', None)
             # Archive the old_card_id into some new data structure for each (receiver?).  Watch for None value
             
@@ -44,7 +44,7 @@ def played_this_card(request, pobox_id, card_id):
         return HttpResponse(content=json.dumps(f'Testing, got: pobox_id: {pobox_id};  card_id: {card_id}'))
     pobox = saveget.get_pobox(pobox_id)
     viewer_data = saveget.get_viewer_data(pobox_id)
-    card = saveget.get_postcard[card_id]
+    card = saveget.get_postcard(card_id)
     from_tel = card['from_tel']
     card['play_count'] += 1
     viewer_data[from_tel]['play_count'] += 1
