@@ -37,10 +37,11 @@ f'card_{postcard_id}':
     'from_tel':
     'to_tel': 
     'sent_at': -> time.time() when made and stored in S3 and referenced in post_office  
-    'recent_play': -> time.time() when last played
     'image_url': 
     'audio_url': 
     'profile_url': ->        at time postcard was made!  Viewer may see something different
+    'retired_at': -> time.time(), added when retired from viewer_data
+    'pobox_id': -> added when retired from viewer_data 
 
 
     

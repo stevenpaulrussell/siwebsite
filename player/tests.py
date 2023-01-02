@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import requests
 
 from django.test import TestCase
@@ -94,17 +95,24 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         viewer_card_id = view_data[Sender0.mobile]['card_id']
         self.assertEqual(len(pobox_card_list), 1)
         pobox_card_id_before_play = pobox_card_list[0]
+
         # Now run played_it 
         response = requests.get(f'{data_source}/played/{expected_pobox_id}/{viewer_card_id}')
-        # fetch the new state
+        # fetch the new state... but wait for state change to propogate S3!
         pobox = saveget.get_pobox(expected_pobox_id)
         view_data = saveget.get_viewer_data(expected_pobox_id)
         updated_pobox_card_list = pobox['cardlists'][Sender0.mobile]
         updated_viewer_card_id = view_data[Sender0.mobile]['card_id']
-        # Check that the played card id is gone, and that view_data has the correct new card
+        retired_card = saveget.get_postcard(viewer_card_id)
+
+        # Check that the played card id is gone,
+        #  that view_data has the correct new card, and that the card is 'retired'
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(updated_pobox_card_list), 0)
         self.assertEqual(updated_viewer_card_id, pobox_card_id_before_play)
+        self.assertEqual(retired_card['pobox_id'], expected_pobox_id)
+        self.assertIn('retired_at', retired_card)
+
         # Check that muliple plays works and that play_count is updated properly
         card = saveget.get_postcard(updated_viewer_card_id)
         self.assertEqual(card['play_count'], 0)

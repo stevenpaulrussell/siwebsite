@@ -1,5 +1,6 @@
 """ Build the (static) website for a specified po_box from postbox.   """
 import os
+import time
 import json
 
 from django.http.response import HttpResponse
@@ -14,18 +15,23 @@ def update_viewer_data(pobox, viewer_data):
         cardlist, viewer_card = pobox['cardlists'][from_tel], viewer_data.get(from_tel, {}) 
         if not cardlist or viewer_card and viewer_card['play_count'] == 0:    #   
             continue        # No new cards in pobox, or have an unplayed card waiting in viewer_data
+        try:  
+            retiring_card_id = viewer_data[from_tel]['card_id']  # KeyError if there is no card yet!
+        except KeyError:
+            pass
         else:
-            old_card_id = viewer_data.get('card_id', None)
-            # Archive the old_card_id into some new data structure for each (receiver?).  Watch for None value
-
-            new_card_id, pobox['cardlists'][from_tel] = cardlist[0], cardlist[1:]  # swap a card from pobox to viewer_data
-            new_card = saveget.get_postcard(new_card_id)
-            viewer_card['card_id'] = new_card_id
-            viewer_card['play_count'] = 0
-            viewer_card['profile_url'] = new_card['profile_url']
-            viewer_card['image_url'] = new_card['image_url']
-            viewer_card['audio_url'] = new_card['audio_url']
-            viewer_data[from_tel] = viewer_card
+            retiring_card = saveget.get_postcard(retiring_card_id)
+            retiring_card['pobox_id'] =  pobox['meta']['pobox_id']
+            retiring_card['retired_at'] = time.time()
+            saveget.save_postcard(retiring_card)
+        new_card_id, pobox['cardlists'][from_tel] = cardlist[0], cardlist[1:]  # swap a card from pobox to viewer_data
+        new_card = saveget.get_postcard(new_card_id)
+        viewer_card['card_id'] = new_card_id
+        viewer_card['play_count'] = 0
+        viewer_card['profile_url'] = new_card['profile_url']
+        viewer_card['image_url'] = new_card['image_url']
+        viewer_card['audio_url'] = new_card['audio_url']
+        viewer_data[from_tel] = viewer_card
     saveget.save_pobox(pobox)
     saveget.save_viewer_data(viewer_data)
         
@@ -48,9 +54,9 @@ def played_this_card(request, pobox_id, card_id):
     card = saveget.get_postcard(card_id)
     from_tel = card['from_tel']
     card['play_count'] += 1
+    saveget.save_postcard(card)
     viewer_data[from_tel]['play_count'] += 1
     update_viewer_data(pobox, viewer_data)
-    saveget.save_postcard(card)
     return HttpResponse()
 
 def pobox_id_if_good_passkey(request, from_tel, passkey):
