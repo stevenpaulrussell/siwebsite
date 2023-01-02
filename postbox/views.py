@@ -11,17 +11,14 @@ from . import tests
 
 def update_viewer_data(pobox, viewer_data):       
     for from_tel in pobox['cardlists']:
-        cardlist = pobox['cardlists'][from_tel]
-        if not cardlist:        # No new cards to show, so on to the next sender's list
-            continue    
-        # There is a new card in pobox if viewer needs one
-        viewer_card = viewer_data.get(from_tel, {})     
-        if not viewer_card or viewer_card['play_count'] > 0:  # If initializing, or current has been played
-            new_card_id, cardlist = cardlist[0], cardlist[1:]
-            
+        cardlist, viewer_card = pobox['cardlists'][from_tel], viewer_data.get(from_tel, {}) 
+        if not cardlist or viewer_card and viewer_card['play_count'] == 0:    #   
+            continue        # No new cards in pobox, or have an unplayed card waiting in viewer_data
+        else:
             old_card_id = viewer_data.get('card_id', None)
             # Archive the old_card_id into some new data structure for each (receiver?).  Watch for None value
-            
+
+            new_card_id, pobox['cardlists'][from_tel] = cardlist[0], cardlist[1:]  # swap a card from pobox to viewer_data
             new_card = saveget.get_postcard(new_card_id)
             viewer_card['card_id'] = new_card_id
             viewer_card['play_count'] = 0
@@ -29,6 +26,7 @@ def update_viewer_data(pobox, viewer_data):
             viewer_card['image_url'] = new_card['image_url']
             viewer_card['audio_url'] = new_card['audio_url']
             viewer_data[from_tel] = viewer_card
+    saveget.save_pobox(pobox)
     saveget.save_viewer_data(viewer_data)
         
 
