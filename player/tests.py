@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 
 from postoffice import cmds, connects
+from postbox.views import return_playable_viewer_data
 from saveget import saveget
 
 from siwebsite_project.test_functional import run_simulation_of_two_senders
@@ -39,8 +40,8 @@ class LookAtURLs(TestCase):
         data_source = os.environ['POSTBOX_DATA_SOURCE']
         pobox_id = 'test_pobox'
         response = requests.get(f'{data_source}/viewer_data/{pobox_id}')
-        viewer_data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
+        viewer_data = json.loads(response.content)
         self.assertIn('meta', viewer_data)
 
     def test_played_it_is_reachable(self):
@@ -104,12 +105,21 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(updated_pobox_card_list), 0)
         self.assertEqual(updated_viewer_card_id, pobox_card_id_before_play)
+        # Check that muliple plays works and that play_count is updated properly
+        card = saveget.get_postcard(updated_viewer_card_id)
+        self.assertEqual(card['play_count'], 0)
+        requests.get(f'{data_source}/played/{expected_pobox_id}/{updated_viewer_card_id}')
+        requests.get(f'{data_source}/played/{expected_pobox_id}/{updated_viewer_card_id}')
+        requests.get(f'{data_source}/played/{expected_pobox_id}/{updated_viewer_card_id}')
+        card = saveget.get_postcard(updated_viewer_card_id)
+        self.assertEqual(card['play_count'], 3)
 
-
-
-
-        # What is supposed to happen at return_playable_viewer_data in postbox??  Should this be tested from postbox??
-
-        
+        # Test that pobox.return_playable_viewer_data works fine
+        response = requests.get(f'{data_source}/viewer_data/{expected_pobox_id}')
+        self.assertEqual(response.status_code, 200)
+        view_data = json.loads(response.content)
+        play_count_of_Sender0_card = view_data[Sender0.mobile]['play_count']
+        self.assertEqual(play_count_of_Sender0_card, 3)
+       
 
 

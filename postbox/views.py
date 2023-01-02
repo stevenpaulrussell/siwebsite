@@ -32,8 +32,11 @@ def update_viewer_data(pobox, viewer_data):
 
 def return_playable_viewer_data(request, pobox_id):
     if 'test' in pobox_id:    
-        return _make_playable_viewer_data_for_testing(request, pobox_id)
-    """Production"""
+        viewer_data = _make_playable_viewer_data_for_testing()
+    else:
+        pobox = saveget.get_pobox(pobox_id)
+        viewer_data = saveget.get_viewer_data(pobox_id)
+        update_viewer_data(pobox, viewer_data)
     return HttpResponse(content = json.dumps(viewer_data))
 
 
@@ -47,6 +50,7 @@ def played_this_card(request, pobox_id, card_id):
     card['play_count'] += 1
     viewer_data[from_tel]['play_count'] += 1
     update_viewer_data(pobox, viewer_data)
+    saveget.save_postcard(card)
     return HttpResponse()
 
 def pobox_id_if_good_passkey(request, from_tel, passkey):
@@ -60,7 +64,7 @@ def pobox_id_if_good_passkey(request, from_tel, passkey):
     return HttpResponse(content=json.dumps(pobox_id))
 
       
-def _make_playable_viewer_data_for_testing(request, pobox_id):
+def _make_playable_viewer_data_for_testing():
     if not os.environ['TEST']:
         raise EnvironmentError
     saveget.clear_sqs_and_s3_for_testing
@@ -69,7 +73,7 @@ def _make_playable_viewer_data_for_testing(request, pobox_id):
         viewer_data[from_tel]['profile_url'] = img2    
         viewer_data[from_tel]['image_url'] = img1      
         viewer_data[from_tel]['audio_url'] = audio1     
-    return HttpResponse(content = json.dumps(viewer_data))
+    return viewer_data
 
 
 
