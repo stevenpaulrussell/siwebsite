@@ -93,24 +93,33 @@ class OneCmdTests(TestCase):
         self.assertIn('meta', sender0_viewer_data)
         self.assertEqual(sender0_viewer_data['meta']['pobox_id'], pobox_id)
 
-        # postbox.update_viewer_data  puts a card in viewer_data
+        # postbox.update_viewer_data removes a card from pobox, putting it in viewer_data
+        # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
         pobox = saveget.get_pobox(pobox_id)
+        self.assertIn(sender0_first_card_id, pobox['cardlists'][Sender0.mobile])
         update_viewer_data(pobox, sender0_viewer_data)
         updated_viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertIn(Sender0.mobile, sender0_viewer_data)
+        self.assertNotIn(sender0_first_card_id, pobox['cardlists'][Sender0.mobile])
         self.assertEqual(updated_viewer_data[Sender0.mobile]['card_id'], sender0_first_card_id)      # the card is present
         display_sender(Sender0.mobile, 'sender0 after sender0 sets a viewer for twil0')
         display_postal(pobox_id, 'postbox and view_data after sender0 sets a viewer for twil0')
 
-        # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
-        # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
+        # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
         sender0 = saveget.get_sender(Sender0.mobile)
         sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
         pobox = saveget.get_pobox(pobox_id)
         self.assertNotEqual(sender0_first_card_id, sender0_second_card_id)
-        self.assertIn(sender0_first_card_id, pobox['cardlists'][Sender0.mobile])
         self.assertIn(sender0_second_card_id, pobox['cardlists'][Sender0.mobile])
+        # updating viewer_data changes nothing becaue the card in viewer_data remains unplayed
+        update_viewer_data(pobox, sender0_viewer_data)
+        secondcard_pobox = saveget.get_pobox(pobox_id)
+        secondcard_viewer_data = saveget.get_viewer_data(pobox_id)
+        self.assertIn(sender0_second_card_id, secondcard_pobox['cardlists'][Sender0.mobile])
+        self.assertIn(sender0_first_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
+        self.assertNotIn(sender0_second_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
+
         display_sender(Sender0.mobile, f'sender0 after setting up a viewer and sending a second card')
         display_postal(pobox_id, f'pobox after sender0 sent that second card')
 
@@ -151,13 +160,15 @@ class OneCmdTests(TestCase):
         sender1_recent_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = saveget.get_viewer_data(pobox_id)
-        # The updated_viewer_data does what it says
-        update_viewer_data(pobox, viewer_data)
-        viewer_data = saveget.get_viewer_data(pobox_id)
         self.assertEqual(pobox['cardlists'][Sender1.mobile], [sender1_recent_card_id])
+        self.assertNotIn(Sender1.mobile, viewer_data)
+        # The updated_viewer_data does what it says
+        update_viewer_data(pobox, viewer_data)      # changes both pobox and viewer_data, saving both
+        pobox = saveget.get_pobox(pobox_id)
+        viewer_data = saveget.get_viewer_data(pobox_id)
+        self.assertEqual(pobox['cardlists'][Sender1.mobile], [])    # The card is no longer in the list
         self.assertIn(Sender0.mobile, viewer_data)
         self.assertIn(Sender1.mobile, viewer_data)
-
         display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
 
 

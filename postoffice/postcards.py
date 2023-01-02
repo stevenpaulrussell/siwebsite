@@ -90,9 +90,5 @@ def update_pobox_new_card(from_tel, to_tel, pobox_id, card_id):
     pobox['cardlists'][from_tel].append(card_id)
     saveget.save_pobox(pobox)
 
-    # update viwer datat right here?  or wait for pobox to do it from some trigger?
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    saveget.save_viewer_data(viewer_data)
-
 
 

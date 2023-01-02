@@ -91,10 +91,9 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         view_data = saveget.get_viewer_data(expected_pobox_id)
         pobox_card_list = pobox['cardlists'][Sender0.mobile]
         viewer_card_id = view_data[Sender0.mobile]['card_id']
-        self.assertEqual(len(pobox_card_list), 2)
-        self.assertEqual(viewer_card_id, pobox_card_list[0])
+        self.assertEqual(len(pobox_card_list), 1)
+        pobox_card_id_before_play = pobox_card_list[0]
         # Now run played_it 
-        print(f'\n\nDebug starting played_it test with \npobox {expected_pobox_id}, viewer_card_id {viewer_card_id}\n\n')
         response = requests.get(f'{data_source}/played/{expected_pobox_id}/{viewer_card_id}')
         # fetch the new state
         pobox = saveget.get_pobox(expected_pobox_id)
@@ -103,16 +102,8 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         updated_viewer_card_id = view_data[Sender0.mobile]['card_id']
         # Check that the played card id is gone, and that view_data has the correct new card
         self.assertEqual(response.status_code, 200)
-
-
-        # Failing ....  updated_pobox_card_list still has 2 entries  .... How is this updated???
-        # Issue is lines 19 - 24 of postbox.view.update_viewer_data
-        self.assertEqual(len(updated_pobox_card_list), 1)
-
-
-        
-        self.assertEqual(updated_viewer_card_id, updated_pobox_card_list[0])
-        self.assertEqual(updated_viewer_card_id, pobox_card_list[1])
+        self.assertEqual(len(updated_pobox_card_list), 0)
+        self.assertEqual(updated_viewer_card_id, pobox_card_id_before_play)
 
 
 
