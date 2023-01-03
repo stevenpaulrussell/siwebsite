@@ -112,6 +112,7 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         self.assertEqual(updated_viewer_card_id, pobox_card_id_before_play)
         self.assertEqual(retired_card['pobox_id'], expected_pobox_id)
         self.assertIn('retired_at', retired_card)
+        self.assertAlmostEqual(pobox['meta']['played_a_card'], time.time(), delta=10.)
 
         # Check that muliple plays works and that play_count is updated properly
         card = saveget.get_postcard(updated_viewer_card_id)
@@ -119,15 +120,20 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         requests.get(f'{data_source}/played/{expected_pobox_id}/{updated_viewer_card_id}')
         requests.get(f'{data_source}/played/{expected_pobox_id}/{updated_viewer_card_id}')
         requests.get(f'{data_source}/played/{expected_pobox_id}/{updated_viewer_card_id}')
+
+
         card = saveget.get_postcard(updated_viewer_card_id)
         self.assertEqual(card['play_count'], 3)
 
-        # Test that pobox.return_playable_viewer_data works fine
+        # Test that pobox.return_playable_viewer_data works fine, heard_from works
         response = requests.get(f'{data_source}/viewer_data/{expected_pobox_id}')
+        pobox = saveget.get_pobox(expected_pobox_id)
         self.assertEqual(response.status_code, 200)
         view_data = json.loads(response.content)
         play_count_of_Sender0_card = view_data[Sender0.mobile]['play_count']
         self.assertEqual(play_count_of_Sender0_card, 3)
+        self.assertAlmostEqual(pobox['meta']['heard_from'], time.time(), delta=10.)
+
        
 
 

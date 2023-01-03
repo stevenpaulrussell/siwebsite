@@ -12,26 +12,28 @@ from . import tests
 
 def update_viewer_data(pobox, viewer_data):       
     for from_tel in pobox['cardlists']:
-        cardlist, viewer_card = pobox['cardlists'][from_tel], viewer_data.get(from_tel, {}) 
-        if not cardlist or viewer_card and viewer_card['play_count'] == 0:    #   
-            continue        # No new cards in pobox, or have an unplayed card waiting in viewer_data
-        try:  
-            retiring_card_id = viewer_data[from_tel]['card_id']  # KeyError if there is no card yet!
-        except KeyError:
-            pass
-        else:
-            retiring_card = saveget.get_postcard(retiring_card_id)
-            retiring_card['pobox_id'] =  pobox['meta']['pobox_id']
-            retiring_card['retired_at'] = time.time()
-            saveget.save_postcard(retiring_card)
+        cardlist = pobox['cardlists'][from_tel]
+        if not cardlist:     
+            continue    # No new cards in pobox
+        playable = viewer_data.get(from_tel, {}) 
+        if playable:    
+            if playable['play_count'] == 0:
+                continue
+            else:   # Card has been played, and there is a replacement
+                retiring_card_id = playable['card_id']  # KeyError if there is no card yet!
+                retiring_card = saveget.get_postcard(retiring_card_id)
+                retiring_card['pobox_id'] =  pobox['meta']['pobox_id']
+                retiring_card['retired_at'] = time.time()
+                saveget.save_postcard(retiring_card)
+        # Fill in with a new playable, either first one, or one has been retired 
         new_card_id, pobox['cardlists'][from_tel] = cardlist[0], cardlist[1:]  # swap a card from pobox to viewer_data
         new_card = saveget.get_postcard(new_card_id)
-        viewer_card['card_id'] = new_card_id
-        viewer_card['play_count'] = 0
-        viewer_card['profile_url'] = new_card['profile_url']
-        viewer_card['image_url'] = new_card['image_url']
-        viewer_card['audio_url'] = new_card['audio_url']
-        viewer_data[from_tel] = viewer_card
+        playable['card_id'] = new_card_id
+        playable['play_count'] = 0
+        playable['profile_url'] = new_card['profile_url']
+        playable['image_url'] = new_card['image_url']
+        playable['audio_url'] = new_card['audio_url']
+        viewer_data[from_tel] = playable
     saveget.save_pobox(pobox)
     saveget.save_viewer_data(viewer_data)
         
@@ -41,6 +43,7 @@ def return_playable_viewer_data(request, pobox_id):
         viewer_data = _make_playable_viewer_data_for_testing()
     else:
         pobox = saveget.get_pobox(pobox_id)
+        pobox['meta']['heard_from'] = time.time()
         viewer_data = saveget.get_viewer_data(pobox_id)
         update_viewer_data(pobox, viewer_data)
     return HttpResponse(content = json.dumps(viewer_data))
@@ -49,13 +52,14 @@ def return_playable_viewer_data(request, pobox_id):
 def played_this_card(request, pobox_id, card_id):
     if 'test' in pobox_id:
         return HttpResponse(content=json.dumps(f'Testing, got: pobox_id: {pobox_id};  card_id: {card_id}'))
-    pobox = saveget.get_pobox(pobox_id)
-    viewer_data = saveget.get_viewer_data(pobox_id)
     card = saveget.get_postcard(card_id)
-    from_tel = card['from_tel']
     card['play_count'] += 1
-    saveget.save_postcard(card)
+    from_tel = card['from_tel']
+    viewer_data = saveget.get_viewer_data(pobox_id)
     viewer_data[from_tel]['play_count'] += 1
+    pobox = saveget.get_pobox(pobox_id)
+    pobox['meta']['played_a_card'] = time.time()
+    saveget.save_postcard(card)  # Save now to not overwrite a coming save in update_viewer_data
     update_viewer_data(pobox, viewer_data)
     return HttpResponse()
 

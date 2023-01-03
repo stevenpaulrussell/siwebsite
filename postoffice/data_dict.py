@@ -23,7 +23,8 @@ f'pobox_{pobox_id}':
         'version': -> start at 1
         'pobox_id': pobox_id
         'key_operator': from_tel              # set when viewer is first connected for (from_tel, to_tel)
-        'heard_from': -> time.time() of last postbox.played_it or return_playable_viewer_data
+        'heard_from': -> time.time() of last return_playable_viewer_data
+        'played_a_card': -> time.time() of last postbox.played_it
     'cardlists':
         from_tel:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
     ...
