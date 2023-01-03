@@ -15,6 +15,10 @@ Including another URLconf
 """
 from django.urls import path, include
 
+from twitalk.views import accept_media
+
 urlpatterns = [
+#    path('twitalk', include('twitalk.urls')),
+    path('twitalk/accept_media', accept_media),
     path('', include('player.urls')),
 ]
