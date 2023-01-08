@@ -10,9 +10,10 @@ from . import postcards, connects
 
 def dq_and_do_one_cmd():
     cmd_dict = saveget.get_one_sqs_cmd()
-    if not cmd_dict:
-        return
-    interpret_one_cmd(cmd_dict)
+    if not cmd_dict or os.environ['TEST'] == 'True' and type(cmd_dict) != dict:
+        return cmd_dict
+    else:
+        interpret_one_cmd(cmd_dict)
 
 def interpret_one_cmd(cmd_dict):
     from_tel = cmd_dict['from_tel']
