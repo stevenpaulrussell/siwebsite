@@ -55,11 +55,11 @@ for cardlist in pobox.values():
         cardlist = cardlist[:2]
 
 
-def nq_one_sender(from_tel):
+def nq_one_sender(from_tel, to_tel):
     sender = senders[from_tel]
     to_tel = gerry_links[from_tel]
     profile_url = sender['profile_photo_url']
-    first_card = pobox[from_tel][0]
+    first_card = pobox[from_tel].pop(0)
     image_url = first_card['image']['media_url']
     image_when = first_card['image']['post_time']
     audio_url = first_card['audio']['media_url']
@@ -87,6 +87,15 @@ def sim_cmd(from_tel, to_tel, cmd, image_url=None):
     cmd_msg = twitalk.free_tier.mms_to_free_tier(now, from_tel, to_tel, cmd, image_url, free_tier_morsel=None)    
     return cmd_msg
 
+def send_a_postcard_to_pobox(from_tel, to_tel):
+    card = pobox[from_tel].pop(0)
+    image_url = card['image']['media_url']
+    image_when = card['image']['post_time']
+    audio_url = card['audio']['media_url']
+    audio_when = card['audio']['post_time']
+    wip = dict(image_timestamp=image_when, image_url=image_url, audio_timestamp=audio_when, audio_url=audio_url)  
+    filerviews.nq_postcard(from_tel, to_tel, wip=wip, context='HaveViewer')     
+
 
 
 
@@ -97,7 +106,7 @@ class OneCmdTests(TestCase):
 
     def test_build_one_step_at_a_time(self):
         for from_tel in gerry_links:
-            nq_one_sender(from_tel)
+            nq_one_sender(from_tel, to_tel=gerry_links[from_tel])
         msgs = dq_cmds_and_admin(count=10)
         twitalk_sender  =  filerviews.load_from_free_tier(from_Steve)  # twitalk cannot see much state
         postoffice_sender = saveget.get_sender(from_Steve)             # Whole state available to postoffice
@@ -116,51 +125,17 @@ class OneCmdTests(TestCase):
         for from_tel in [from_Nancy, from_Ryan, from_Zach]:
             to_tel = gerry_links[from_tel]
             passkey = sim_get_a_passkey(from_tel, to_tel)
-            passkey_msgs = dq_cmds_and_admin(count=3)
+            dq_cmds_and_admin(count=2)
             connect_cmd = f'connect {from_tel} passkey {passkey}'
             connect_msg = sim_cmd(from_Steve, to_tel_used_by_Steve, connect_cmd)    
-            admin_msgs = dq_cmds_and_admin(count=3)
-            print(f'{from_tel}  passkey_msgs {passkey_msgs}')
-            print(f'{from_tel} connect_msg {connect_msg}')
-            print(f'{from_tel} admin_msgs {admin_msgs}')
+            dq_cmds_and_admin(count=2)
+        # Now send postcards to be seen!
+        for from_tel in [from_Steve, from_Nancy, from_Ryan, from_Zach]:
+            send_a_postcard_to_pobox(from_tel, to_tel=gerry_links[from_tel])
+            dq_cmds_and_admin(count=2)
+        # Check that it works!  And it does!
         webbrowser.open(pobox_url)
         
 
-
-        
-
-
-
-
-    """
-    nq_new_senders: postcard and profile
-
-    dq_cmds
-
-    (check result)
-
-    viewer 2196500
-
-    connect ~ 2196500
-
-    send 2 postcards
-    
-    """
-
-
-#  pp.pprint(a_card)
-
-# Get postcards ordered by time.
-# Get senders ordered by from_tel
-# Get connections ordered by from_tel
-
-# 1. From a list of wanted senders, for each sender, get oldest card and profile and nq the sender.
-# 2. Connect the 650.219... to the established pobox_id, adding a key value to do this into connects.connect_viewer
-# 3. For each of the others, run connect command by getting passkey in twitalk (doing nq write and read) and...
-#       running connect command, sent from free_tier.
-#  ==> write this as a functional test, which it is, but produces a useful result. After each step, test and
-#       maybe print for inspection.
-#       Write all this in test_  !!
-#
 
 
