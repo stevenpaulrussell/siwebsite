@@ -67,7 +67,7 @@ def nq_one_sender(from_tel):
     wip = dict(image_timestamp=image_when, image_url=image_url, audio_timestamp=audio_when, audio_url=audio_url)  
     filerviews.nq_postcard(from_tel, to_tel, wip=wip, profile_url=profile_url, context='NewSenderFirst')     
 
-def dq_cmds_and_admin(count=10):
+def dq_cmds_and_admin(count):
     msgs = []
     for i in range(count):
         msg = postoffice.cmds.dq_and_do_one_cmd()
@@ -75,12 +75,18 @@ def dq_cmds_and_admin(count=10):
             msgs.append(msg)
     return msgs
 
-def get_a_passkey(from_tel, to_tel):
-    now = time.time()
-    passkey_cmd = 'passkey'
-    image_url = free_tier_morsel = None
-    passkey_msg = twitalk.free_tier.mms_to_free_tier(now, from_tel, to_tel, passkey_cmd, image_url, free_tier_morsel)
+def sim_get_a_passkey(from_tel, to_tel):
+    """Use twitalk to get a passkey returned.  Have postbox read the sqs cmd and store that passkey"""
+    passkey_msg = sim_cmd(from_tel, to_tel, cmd='passkey')    
     passkey = passkey_msg.split('"')[1]
+    return passkey
+
+def sim_cmd(from_tel, to_tel, cmd, image_url=None):
+    now = time.time()
+    # The following line generates a command in sqs....
+    cmd_msg = twitalk.free_tier.mms_to_free_tier(now, from_tel, to_tel, cmd, image_url, free_tier_morsel=None)    
+    return cmd_msg
+
 
 
 
@@ -92,21 +98,35 @@ class OneCmdTests(TestCase):
     def test_build_one_step_at_a_time(self):
         for from_tel in gerry_links:
             nq_one_sender(from_tel)
-        msgs = dq_cmds_and_admin()
-        afrom_tel , ato_tel = '+16502196500',  gerry_links['+16502196500']
-        twitalk_sender  =  filerviews.load_from_free_tier(afrom_tel)
-        postoffice_sender = saveget.get_sender(afrom_tel)
-        self.assertIn(ato_tel, twitalk_sender)
-        self.assertEqual(twitalk_sender[ato_tel]['from'], '6 5 0 0')
+        msgs = dq_cmds_and_admin(count=10)
+        twitalk_sender  =  filerviews.load_from_free_tier(from_Steve)  # twitalk cannot see much state
+        postoffice_sender = saveget.get_sender(from_Steve)             # Whole state available to postoffice
+        to_tel_used_by_Steve = gerry_links[from_Steve]
+        self.assertIn(to_tel_used_by_Steve, twitalk_sender)
+        self.assertEqual(twitalk_sender[to_tel_used_by_Steve]['from'], '6 5 0 0')
         self.assertIn('profile_url', postoffice_sender)
         self.assertEqual(len(msgs), 4)
         self.assertIn('using new to_tel', msgs[0])
-        # Connect a viewer and get a new pobox_id
-        pobox_id = postoffice.connects.connect_viewer(postoffice_sender, ato_tel)
-        # url = f'{data_source}/postbox/{pobox_id}'
-        # webbrowser.open(url)
-
+        # Connect a viewer and get a new pobox_id: connect_viewer guarded by a form checking a passkey, not tested here.
+        pobox_id = postoffice.connects.connect_viewer(postoffice_sender, to_tel_used_by_Steve) 
+        pobox_url = f'{data_source}/postbox/{pobox_id}'
+        # View the pobox, which if seen now only has Steve as a sender
+        # webbrowser.open(pobox_url)
         # Now connect the other senders to the viewer, start by getting a passkey
+        for from_tel in [from_Nancy, from_Ryan, from_Zach]:
+            to_tel = gerry_links[from_tel]
+            passkey = sim_get_a_passkey(from_tel, to_tel)
+            passkey_msgs = dq_cmds_and_admin(count=3)
+            connect_cmd = f'connect {from_tel} passkey {passkey}'
+            connect_msg = sim_cmd(from_Steve, to_tel_used_by_Steve, connect_cmd)    
+            admin_msgs = dq_cmds_and_admin(count=3)
+            print(f'{from_tel}  passkey_msgs {passkey_msgs}')
+            print(f'{from_tel} connect_msg {connect_msg}')
+            print(f'{from_tel} admin_msgs {admin_msgs}')
+        webbrowser.open(pobox_url)
+        
+
+
         
 
 
