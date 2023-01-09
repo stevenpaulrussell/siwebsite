@@ -33,7 +33,7 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
         passkey = str(uuid.uuid4())[0:4]
         expire = time.time() + 24*60*60
         filerviews.nq_cmd(from_tel, to_tel, cmd='passkey', passkey=passkey, expire=expire)
-        from_tel_msg = lines.line(f'Your passkey is {passkey}, valid in a few minutes, lasting for a day!') 
+        from_tel_msg = lines.line(f'Your passkey is "{passkey}", valid in a few minutes, lasting for a day!') 
         return from_tel_msg
     assert(text and not image_url)
     filerviews.nq_cmd(from_tel, to_tel, cmd='cmd_general', text=text)

@@ -10,14 +10,21 @@ from django.test import TestCase
 import postoffice 
 from filer import views as filerviews 
 from saveget import saveget
+import twitalk
 from . import views as old_filer
 
 pp = pprint.PrettyPrinter(indent=2)
 
 data_source = os.environ['POSTBOX_DATA_SOURCE']
-wanted_from_tels = ('+16502196500', '+16502185923', '+12068173605', '+16508151092')   
-Josh = '+16508151092'
-wanted_from_tels.pop(Josh)
+from_Steve = '+16502196500'
+from_Nancy = '+16502185923'
+from_Ryan = '+16508159597'
+from_Zach = '+12068173605'
+from_Josh = '+16508151092'
+wanted_from_tels = [from_Steve, from_Nancy, from_Ryan, from_Zach, from_Josh]
+
+# Keep Josh who has not been sending??
+wanted_from_tels.remove(from_Josh)
 
 # Get all the old stuff, arrange for use in the transfer
 old_filer.aws_read_bucket_name = 'real-software-bucket'
@@ -25,9 +32,10 @@ all_state = old_filer.load_state_from_s3()
 senders, po, c_in_p, conns, po_admin = all_state
 some_cards = old_filer.get_cards(limit=15)
 
-# f: from_tel, t: to_tel
-gerry_links = {f: t for f in conns for t in conns[f] if 'gerry' in conns[f][t]['recipient_handle']}
-gerry_links.pop(Josh)
+# f: from_tel, t: to_tel.  Gerry's pobox_id in the old system was '27f12208-......'
+gerry_links = {f: t for f in conns for t in conns[f] if '27f12208-' in conns[f][t]['po_box_uuid']}
+# Keep Josh who has not been sending??
+gerry_links.pop(from_Josh)
 
 pobox = {}
 for card in some_cards:
@@ -67,6 +75,14 @@ def dq_cmds_and_admin(count=10):
             msgs.append(msg)
     return msgs
 
+def get_a_passkey(from_tel, to_tel):
+    now = time.time()
+    passkey_cmd = 'passkey'
+    image_url = free_tier_morsel = None
+    passkey_msg = twitalk.free_tier.mms_to_free_tier(now, from_tel, to_tel, passkey_cmd, image_url, free_tier_morsel)
+    passkey = passkey_msg.split('"')[1]
+
+
 
 class OneCmdTests(TestCase):
     def setUp(self) -> None:
@@ -83,14 +99,15 @@ class OneCmdTests(TestCase):
         self.assertIn(ato_tel, twitalk_sender)
         self.assertEqual(twitalk_sender[ato_tel]['from'], '6 5 0 0')
         self.assertIn('profile_url', postoffice_sender)
-        self.assertEqual(len(msgs), 3)
+        self.assertEqual(len(msgs), 4)
         self.assertIn('using new to_tel', msgs[0])
         # Connect a viewer and get a new pobox_id
         pobox_id = postoffice.connects.connect_viewer(postoffice_sender, ato_tel)
         # url = f'{data_source}/postbox/{pobox_id}'
         # webbrowser.open(url)
 
-        # Now connect the other senders to the viewer
+        # Now connect the other senders to the viewer, start by getting a passkey
+        
 
 
 
