@@ -119,22 +119,23 @@ class OneCmdTests(TestCase):
         # Connect a viewer and get a new pobox_id: connect_viewer guarded by a form checking a passkey, not tested here.
         pobox_id = postoffice.connects.connect_viewer(postoffice_sender, to_tel_used_by_Steve) 
         pobox_url = f'{data_source}/postbox/{pobox_id}'
-        # View the pobox, which if seen now only has Steve as a sender
-        # webbrowser.open(pobox_url)
-        # Now connect the other senders to the viewer, start by getting a passkey
+        # Steve connect the other senders to the viewer. Other senders each start by getting a passkey
         for from_tel in [from_Nancy, from_Ryan, from_Zach]:
-            to_tel = gerry_links[from_tel]
-            passkey = sim_get_a_passkey(from_tel, to_tel)
-            dq_cmds_and_admin(count=2)
+            passkey = sim_get_a_passkey(from_tel, to_tel=gerry_links[from_tel])
+            dq_cmds_and_admin(count=2)      # . postoffice finds the passkey and stores it
             connect_cmd = f'connect {from_tel} passkey {passkey}'
-            connect_msg = sim_cmd(from_Steve, to_tel_used_by_Steve, connect_cmd)    
+            returned_msg = sim_cmd(from_Steve, to_tel_used_by_Steve, connect_cmd)    
+            self.assertIn(f'connect {from_tel} passkey', returned_msg)
+            self.assertIn('is queued for processing... you will hear back!', returned_msg)
             dq_cmds_and_admin(count=2)
-        # Now send postcards to be seen!
+        # Send postcards, these will  be the first to be put into that newly set pobox!
         for from_tel in [from_Steve, from_Nancy, from_Ryan, from_Zach]:
+            to_tel = gerry_links[from_tel]
             send_a_postcard_to_pobox(from_tel, to_tel=gerry_links[from_tel])
             dq_cmds_and_admin(count=2)
-        # Check that it works!  And it does!
-        webbrowser.open(pobox_url)
+        # See that it works!  And it does!
+        # webbrowser.open(pobox_url)
+
         
 
 
