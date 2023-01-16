@@ -139,7 +139,7 @@ class Twilio_Cmds_Testing(TestCase):
         message_key = 'testing sms back'
         keys = dict(keysize='just one key')
         no_res = twilio_cmds.sms_back(self.from_tel, self.to_tel, message_key, **keys)
-        queued_sms_msg = views.get_an_sqs_message()
+        queued_sms_msg = views.get_an_sqs_message(views.ADMIN_URL)
         self.assertIsInstance(queued_sms_msg, dict)
         self.assertEqual(queued_sms_msg['message_key'], message_key)
         self.assertIsInstance(queued_sms_msg['kwds'], dict)

@@ -12,8 +12,12 @@ The lines are read in at program load.
 
 def line(msg_key, **kwds):
     if os.environ['TEST'] == 'True':   
-        msg_frame = {}.get(msg_key, msg_key)
-        return msg_key.format(**kwds) 
+        try:
+            msg_frame = {}.get(msg_key, msg_key)
+            return msg_key.format(**kwds) 
+        except:
+            print(f'error in lines. \nmsg_key: <{msg_key}>, kwds: <{kwds}>\n')
+            raise
     else:
         """msg_key is the 'name' of the line, coming from some static file. """
         msg_frame = ALL_MESSAGES.get(msg_key, msg_key)

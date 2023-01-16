@@ -45,17 +45,18 @@ class SiWebCarepostUser:
 
 
 def get_all_sqs():
-    # In Test, both admin and cmd sqs go to test_sqs.
-    # This function reads the one sqs queue, and demuxes
-    # messages based on structure
     admin_list = []
     cmd_list = []
     while True:
         msg = filerviews.get_an_sqs_message()
-        if isinstance(msg, str):
-            admin_list.append(msg)
-        elif isinstance(msg, dict):
+        if msg:
             cmd_list.append(msg)
+        else:
+            break
+    while True:
+        msg = filerviews.get_an_sqs_message(filerviews.ADMIN_URL)
+        if msg:
+            admin_list.append(msg)
         else:
             break
     return admin_list, cmd_list

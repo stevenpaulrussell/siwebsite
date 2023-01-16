@@ -71,13 +71,14 @@ def clear_sqs_and_s3_for_testing(sender):
 
 
 def get_one_sqs_cmd():
-    """In TEST, CMD_SQS and ADMIN queue urls both map to CMD_URL read here. 
-        In PRODUCTION,  ADMIN is not read by these 'web' programs"""
     return filerviews.get_an_sqs_message()
+
+def get_one_sqs_admin():
+    return filerviews.get_an_sqs_message(QueueUrl=filerviews.ADMIN_URL)
 
 def _test_send_an_sqs_cmd(message):
     """This used only for testing."""
-    filerviews.send_an_sqs_message(message, QueueUrl=filerviews.TEST_SQS)
+    filerviews.send_an_sqs_message(message, QueueUrl=filerviews.CMD_URL)
 
 
     

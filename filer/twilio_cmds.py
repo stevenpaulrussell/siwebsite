@@ -12,11 +12,11 @@ from .views import nq_admin_message
 
 def sms_back(from_tel, to_tel, message_key, **kwds):
     """Use twilio to send text message to from_tel"""
-    text_back_to_sender = lines.line(message_key, **kwds)
     if os.environ['TEST'] == 'True':    
         message = dict(from_tel=from_tel, to_tel=to_tel, message_key=message_key, kwds=kwds)
         nq_admin_message(message)   
     else:
+        text_back_to_sender = lines.line(message_key, **kwds)
         sms_to_some_telephone_number(text_back_to_sender, destination_number=from_tel, twilio_number=to_tel)
 
 

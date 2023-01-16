@@ -21,7 +21,9 @@ DEFAULT_TWILIO_NUMBER = '+18326626430'
 #  twilio3-commands   or   twilio3-tests
 CMD_SQS = 'twilio3-commands'
 ADMIN_SQS = 'twilio3-admin'
-TEST_SQS = 'twilio3-tests'
+TEST_CMD_SQS = 'twilio3-tests'
+TEST_ADMIN_SQS = 'twilio3-admin_tests'
+
 
 # Set up resources to access AWS
 S3client = boto3.client(
@@ -40,10 +42,10 @@ SQSClient = boto3.client(
 if os.environ['TEST'] == 'True':    
     TEST = True
     aws_bucket_name = os.environ['TEST_BUCKET']        # This from .env  Not from Heroku config
-    CMD_SQS = TEST_SQS
-    ADMIN_SQS = TEST_SQS
+    CMD_SQS = TEST_CMD_SQS
+    ADMIN_SQS = TEST_ADMIN_SQS
 CMD_URL = SQSClient.get_queue_url(QueueName=CMD_SQS)['QueueUrl']
-ADMIN_URL = SQSClient.get_queue_url(QueueName=CMD_SQS)['QueueUrl']
+ADMIN_URL = SQSClient.get_queue_url(QueueName=ADMIN_SQS)['QueueUrl']
 print('Remember to add the sqs names to .env filer.views line 33 or so')
 
 
@@ -142,10 +144,6 @@ def send_an_sqs_message(message, QueueUrl):
     SQSClient.send_message(MessageBody=json_message, QueueUrl=QueueUrl)
 
 def get_an_sqs_message(QueueUrl=CMD_URL):
-# In Production, only 'twilio3-commands' is read by these program, as
-#    'twilio3-admin' goes elsewhere.  In Test, CMD_URL and ADMIN_URL
-#     both point to 'twilio3-tests'. Therefore, in both Production
-#     and Test, reads from CMD_URL get all that is needed.  
     response = SQSClient.receive_message(QueueUrl=QueueUrl, WaitTimeSeconds=1)
     if 'Messages' in response:
         sqs_message = response['Messages'][0]
@@ -162,6 +160,10 @@ def clear_the_sqs_queue_TEST_SQS(PREFIX=''):
     else:
         while True:
             message = get_an_sqs_message()
+            if not message:
+                break
+        while True:
+            message = get_an_sqs_message(QueueUrl=ADMIN_URL)
             if not message:
                 break
 

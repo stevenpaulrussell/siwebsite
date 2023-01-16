@@ -10,20 +10,13 @@ from . import postcards, connects
 
 def dq_and_do_one_cmd():
     cmd_item = saveget.get_one_sqs_cmd()
-    if not cmd_item:  # empty queue, None return item a signal that nothing left to do
-        return   
-    if os.environ['TEST'] == 'True':
-        if type(cmd_item) == dict:  
-            return interpret_one_cmd(cmd_item)
-        else:  # During test, admin message queue is dequed here 
-            return cmd_item    
-    else: # production, and any message is sent back to the 
+    if cmd_item:    
         message = interpret_one_cmd(cmd_item)
         if message:
             from_tel = cmd_item['from_tel']
             to_tel = cmd_item['to_tel']
             twilio_cmds.sms_back(from_tel=from_tel, to_tel=to_tel, message_key=message)
-    return cmd_item  # Returning the item as a signal that the queue was not empty, and likely dq should be called again.
+    return cmd_item  # Returns None if sqs was empty, signaling no need to re-invoke
     
 
 def interpret_one_cmd(cmd_dict):
@@ -40,9 +33,10 @@ def interpret_one_cmd(cmd_dict):
             saveget.update_sender_and_morsel(sender)
             return f'OK, your profile image has been updated.'
         case 'passkey':
-            current_key = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
-            saveget.save_passkey_dictionary(current_key)
-            return f'Your passkey <{current_key}> is now good. It will expire 24 hours from now.'
+            passkey=cmd_dict['passkey']
+            to_store = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
+            saveget.save_passkey_dictionary(to_store)
+            return f'Your passkey <{passkey}> is now good. It will expire 24 hours from now.'
         case 'cmd_general':
             message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
             return message

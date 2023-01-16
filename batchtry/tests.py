@@ -67,10 +67,18 @@ def nq_one_sender(from_tel, to_tel):
     wip = dict(image_timestamp=image_when, image_url=image_url, audio_timestamp=audio_when, audio_url=audio_url)  
     filerviews.nq_postcard(from_tel, to_tel, wip=wip, profile_url=profile_url, context='NewSenderFirst')     
 
-def dq_cmds_and_admin(count):
+def dq_cmds_and_do_one_cmd(count):
     msgs = []
     for i in range(count):
         msg = postoffice.cmds.dq_and_do_one_cmd()
+        if msg:
+            msgs.append(msg)
+    return msgs
+
+def dq_admin(count):
+    msgs = []
+    for i in range(count):
+        msg = saveget.get_one_sqs_admin()
         if msg:
             msgs.append(msg)
     return msgs
@@ -107,32 +115,35 @@ class OneCmdTests(TestCase):
     def test_build_one_step_at_a_time(self):
         for from_tel in gerry_links:
             nq_one_sender(from_tel, to_tel=gerry_links[from_tel])
-        msgs = dq_cmds_and_admin(count=10)
+        cmd_msgs = dq_cmds_and_do_one_cmd(count=10)
+        admin_msgs = dq_admin(count=10)
         twitalk_sender  =  filerviews.load_from_free_tier(from_Steve)  # twitalk cannot see much state
         postoffice_sender = saveget.get_sender(from_Steve)             # Whole state available to postoffice
         to_tel_used_by_Steve = gerry_links[from_Steve]
         self.assertIn(to_tel_used_by_Steve, twitalk_sender)
         self.assertEqual(twitalk_sender[to_tel_used_by_Steve]['from'], '6 5 0 0')
         self.assertIn('profile_url', postoffice_sender)
-        self.assertEqual(len(msgs), 4)
-        self.assertIn('using new to_tel', msgs[0])
+        self.assertEqual(len(cmd_msgs), 4)
+        self.assertEqual(len(admin_msgs), 4)
+        self.assertIn('using new to_tel', admin_msgs[0])
         # Connect a viewer and get a new pobox_id: connect_viewer guarded by a form checking a passkey, not tested here.
         pobox_id = postoffice.connects.connect_viewer(postoffice_sender, to_tel_used_by_Steve) 
         pobox_url = f'{data_source}/postbox/{pobox_id}'
         # Steve connect the other senders to the viewer. Other senders each start by getting a passkey
         for from_tel in [from_Nancy, from_Ryan, from_Zach]:
             passkey = sim_get_a_passkey(from_tel, to_tel=gerry_links[from_tel])
-            dq_cmds_and_admin(count=2)      # . postoffice finds the passkey and stores it
+            dq_cmds_and_do_one_cmd(count=2)      # . postoffice finds the passkey and stores it
+            admin_msgs = dq_admin(count=10)
             connect_cmd = f'connect {from_tel} passkey {passkey}'
             returned_msg = sim_cmd(from_Steve, to_tel_used_by_Steve, connect_cmd)    
             self.assertIn(f'connect {from_tel} passkey', returned_msg)
             self.assertIn('is queued for processing... you will hear back!', returned_msg)
-            dq_cmds_and_admin(count=2)
+            dq_cmds_and_do_one_cmd(count=2)
         # Send postcards, these will  be the first to be put into that newly set pobox!
         for from_tel in [from_Steve, from_Nancy, from_Ryan, from_Zach]:
             to_tel = gerry_links[from_tel]
             send_a_postcard_to_pobox(from_tel, to_tel=gerry_links[from_tel])
-            dq_cmds_and_admin(count=2)
+            dq_cmds_and_do_one_cmd(count=2)
         # See that it works!  And it does!
         # webbrowser.open(pobox_url)
 
