@@ -10,7 +10,7 @@ from filer import views as filerviews
 from saveget import saveget
 from postoffice import cmds, connects
 from postbox.views import update_viewer_data, pobox_id_if_good_passkey
-from player.views import get_a_pobox_id
+from postmaster.views import get_a_pobox_id
 
 from .sender_object_for_tests import TwiSim, pp
 
