@@ -12,7 +12,7 @@ def mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url):
     wip = filerviews.load_wip(from_tel, to_tel)
     msg_keys = dict(from_tel=from_tel, to_tel=to_tel, timestamp=timestamp)
 
-    # First check for text=='help' to return something specific to new sender asking for help
+    # First check for text=='help' to return something specific to new sender asking for help.  Write a test for this!!!
 
     match expect:
         case 'new_sender_ready':    # Handle as for free_tier

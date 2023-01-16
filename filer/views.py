@@ -6,9 +6,6 @@ import json
 import os
 
 import boto3
-from botocore.exceptions import ClientError
-
-from . import exceptions
 
 
 # Placeholder for static file storing strings for constructing messages
@@ -16,7 +13,6 @@ ALL_MESSAGES = {}
 legal_commands = 'help ? profile connector connect from: to:'
 completed_onboarding_message = 'Welcome to the postcarding system! To set up a viewer for postcards, or to get other instructions, \
     please go to https://dry-sierra-55179.herokuapp.com/.'
-
 
 
 MGMT_TELEPHONE_NUMBER = 'MGMT_TELEPHONE_NUMBER'
@@ -51,24 +47,29 @@ ADMIN_URL = SQSClient.get_queue_url(QueueName=CMD_SQS)['QueueUrl']
 print('Remember to add the sqs names to .env filer.views line 33 or so')
 
 
+class S3Error(Exception):
+    pass
+class S3KeyNotFound(S3Error):
+    pass
+
 
 # S3 Loading
 def load_from_free_tier(from_tel):
     try:
         return  _load_a_thing_using_key(f'free_tier/{from_tel}')
-    except exceptions.S3KeyNotFound:
+    except S3KeyNotFound:
         return None
 
 def load_from_new_sender(from_tel):
     try:
         return  _load_a_thing_using_key(f'new_sender/{from_tel}')
-    except exceptions.S3KeyNotFound:
+    except S3KeyNotFound:
         return None
 
 def load_wip(from_tel, to_tel):
     try:
         return  _load_a_thing_using_key(f'wip/{from_tel}/{to_tel}')
-    except exceptions.S3KeyNotFound:
+    except S3KeyNotFound:
         return {}
 
 
@@ -82,7 +83,7 @@ def update_free_tier(from_tel, to_tel, sender_name=None, recipient_name=None):  
     key = f'free_tier/{from_tel}'
     try:
         value = _load_a_thing_using_key(key)
-    except exceptions.S3KeyNotFound:
+    except S3KeyNotFound:
         value = {}
     value.update({to_tel: {'from': sender_name, 'to': recipient_name}})
     _save_a_thing_using_key(value, key)
@@ -100,7 +101,7 @@ def _load_a_thing_using_key(key):
     try:
         response_dictionary = S3client.get_object(Bucket=aws_bucket_name, Key=key)
     except S3client.exceptions.NoSuchKey:
-        raise exceptions.S3KeyNotFound
+        raise S3KeyNotFound
     return json.loads(response_dictionary['Body'].read())
 
 def _save_a_thing_using_key(thing, key):

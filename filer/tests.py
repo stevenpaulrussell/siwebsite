@@ -7,7 +7,6 @@ import time
 
 from django.test import TestCase
 
-from .exceptions import S3KeyNotFound
 from . import views 
 from . import lines
 from . import twilio_cmds
@@ -20,7 +19,7 @@ class FilerViewS3FunctionsWork(TestCase):
         self.new_to_tel = '+13105551212'
 
     def test_missing_key_raises_exception_in____load_a_thing_using_key(self):
-        with self.assertRaises(S3KeyNotFound):
+        with self.assertRaises(views.S3KeyNotFound):
             res = views._load_a_thing_using_key(self.new_from_tel)
 
     def test_load_from_free_tier_returns_None_on_missing_key(self):

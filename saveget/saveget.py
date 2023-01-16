@@ -1,4 +1,3 @@
-from filer import exceptions as filerexceptions
 from filer import views as filerviews
 
 
@@ -45,7 +44,7 @@ def save_postcard(postcard):
 def get_passkey_dictionary(from_tel):
     try:
         return filerviews._load_a_thing_using_key(f'passkey_{from_tel}')
-    except filerexceptions.S3KeyNotFound:
+    except filerviews.S3KeyNotFound:
         return None
 def save_passkey_dictionary(passkey):
     from_tel =  passkey['from_tel']

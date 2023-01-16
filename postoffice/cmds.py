@@ -4,16 +4,27 @@ import time
 
 
 from saveget import saveget
-from filer import exceptions
+from filer import twilio_cmds
 
 from . import postcards, connects
 
 def dq_and_do_one_cmd():
-    cmd_dict = saveget.get_one_sqs_cmd()
-    if not cmd_dict or os.environ['TEST'] == 'True' and type(cmd_dict) != dict:
-        return cmd_dict
-    else:
-        interpret_one_cmd(cmd_dict)
+    cmd_item = saveget.get_one_sqs_cmd()
+    if not cmd_item:  # empty queue, None return item a signal that nothing left to do
+        return   
+    if os.environ['TEST'] == 'True':
+        if type(cmd_item) == dict:  
+            return interpret_one_cmd(cmd_item)
+        else:  # During test, admin message queue is dequed here 
+            return cmd_item    
+    else: # production, and any message is sent back to the 
+        message = interpret_one_cmd(cmd_item)
+        if message:
+            from_tel = cmd_item['from_tel']
+            to_tel = cmd_item['to_tel']
+            twilio_cmds.sms_back(from_tel=from_tel, to_tel=to_tel, message_key=message)
+    return cmd_item  # Returning the item as a signal that the queue was not empty, and likely dq should be called again.
+    
 
 def interpret_one_cmd(cmd_dict):
     from_tel = cmd_dict['from_tel']
@@ -21,21 +32,23 @@ def interpret_one_cmd(cmd_dict):
     cmd = cmd_dict['cmd']
     match cmd:
         case 'new_postcard':
-            message = postcards.new_postcard(from_tel, to_tel, cmd_dict)
+            postcards.new_postcard(from_tel, to_tel, cmd_dict)
+            return 
         case 'profile':
             sender = saveget.get_sender(from_tel)
             sender['profile_url'] = cmd_dict['profile_url']
-            message = f'OK, your profile image has been updated.'
             saveget.update_sender_and_morsel(sender)
-            return message
+            return f'OK, your profile image has been updated.'
         case 'passkey':
             current_key = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
             saveget.save_passkey_dictionary(current_key)
+            return f'Your passkey <{current_key}> is now good. It will expire 24 hours from now.'
         case 'cmd_general':
             message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
             return message
         case _:
             """ Send admin an error message or in test raise exception"""
+            assert(f'Got command {cmd}, which did not match any command' == False)
 
 def handle_possible_cmd_general(from_tel, to_tel, text): 
     if 'connect' in text:

@@ -12,7 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 
 from filer import views as filerviews
-from filer import exceptions as filerexceptions
 from filer import lines
 
 from .free_tier import mms_to_free_tier, recorder_to_free_tier
