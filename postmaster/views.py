@@ -22,6 +22,9 @@ def get_a_pobox_id(request):
         if form.is_valid():
             from_tel = form.cleaned_data['from_tel']
             passkey = form.cleaned_data['passkey']
+
+# ---------> if os.environ['TEST'] == 'TEST', then bypass the form .    What URL would get this function called?
+
             if 'test' in from_tel.lower() or 'test' in passkey.lower():
                 return HttpResponseRedirect(f'player/postbox/test_pobox')
             else: 
