@@ -8,9 +8,10 @@ import json
 import os
 
 from django.shortcuts import render
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponse, HttpResponseRedirect
 
-
+from postoffice.cmds import dq_and_do_one_cmd
+from saveget import saveget
 from .forms import ConnectionsForm
 
 data_source = os.environ['POSTBOX_DATA_SOURCE']
@@ -33,5 +34,27 @@ def get_a_pobox_id(request):
     return render(request, 'to_connect.html', {'form': form})
 
 
+def dq_and_do_cmds():
+    msg, msgs = True, []
+    while msg:
+        msg = dq_and_do_one_cmd()
+        msgs.append(msg)
+    return msgs[:-1]  # Last item appended will be None
+
+def dq_admin():
+    msg, msgs = True, []
+    while msg:
+        msg = saveget.get_one_sqs_admin()
+        msgs.append(msg)
+    return msgs[:-1]  # Last item appended will be None
+
+
 def instructions_view(request):
     return render(request, 'home.html')
+
+
+def tickles(request):
+    data = {'cmds': dq_and_do_cmds(), 'admins': dq_admin()}
+    return HttpResponse(content=json.dumps(data))
+
+

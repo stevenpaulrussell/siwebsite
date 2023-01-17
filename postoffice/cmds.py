@@ -42,7 +42,7 @@ def interpret_one_cmd(cmd_dict):
             return message
         case _:
             """ Send admin an error message or in test raise exception"""
-            assert(f'Got command {cmd}, which did not match any command' == False)
+            message = f'whoops, do not recognize command {cmd}.'
 
 def handle_possible_cmd_general(from_tel, to_tel, text): 
     if 'connect' in text:
