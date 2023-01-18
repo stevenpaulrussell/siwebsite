@@ -6,7 +6,7 @@ from filer import views as filerviews
 from twitalk.tests import SiWebCarepostUser
 from saveget import saveget
 
-from . import postcards, connects
+from . import postcards, connects, views
 
 
 class PostcardProcessing(TestCase):
@@ -108,9 +108,9 @@ class NewPostcardCases(TestCase):
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
         sender = saveget.get_sender(self.sender_mobile_number)
-        url_msg_string = connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
+        pobox_id = views.new_pobox_id(sender, to_tel=self.twilio_phone_number)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
-        self.assertIn(sender['conn'][self.twilio_phone_number]['pobox_id'], url_msg_string)
+        self.assertIn(sender['conn'][self.twilio_phone_number]['pobox_id'], pobox_id)
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
         
@@ -121,7 +121,7 @@ class NewPostcardCases(TestCase):
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
         sender = saveget.get_sender(self.sender_mobile_number)
         # Connect to a viewer
-        connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
+        views.new_pobox_id(sender, to_tel=self.twilio_phone_number)
         # See what happened
         pobox_id =  sender['conn'][self.twilio_phone_number]['pobox_id']
         pobox = saveget.get_pobox(pobox_id)
@@ -138,7 +138,7 @@ class NewPostcardCases(TestCase):
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
         sender = saveget.get_sender(self.sender_mobile_number)
-        connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
+        views.new_pobox_id(sender, to_tel=self.twilio_phone_number)
         # Send the test postcard
         specifics = dict(context='HaveViewer', profile_url=self.profile_url)
         self.msg.update(specifics)
@@ -172,7 +172,7 @@ class ConnectCases(TestCase):
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
         sender = saveget.get_sender(self.sender_mobile_number)
         # Connect to a viewer
-        connects.connect_viewer(sender, to_tel=self.twilio_phone_number)
+        views.new_pobox_id(sender, to_tel=self.twilio_phone_number)
         # Disconnect from the viewer
         old_pobox_id =  sender['conn'][self.twilio_phone_number]['pobox_id']
         connects.disconnect_from_viewer(sender, self.twilio_phone_number)

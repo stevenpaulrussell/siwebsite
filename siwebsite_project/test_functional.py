@@ -20,8 +20,9 @@ from django.test import TestCase
 from filer import views as filerviews 
 from saveget import saveget
 from postoffice import cmds, connects
-from postbox.views import update_viewer_data, pobox_id_if_good_passkey
-from postmaster.views import tickles, get_a_pobox_id
+from postoffice.views import new_pobox_id
+from postbox.views import update_viewer_data
+from postmaster.views import tickles
 
 from .sender_object_for_tests import TwiSim, pp
 data_source = os.environ['POSTBOX_DATA_SOURCE']
@@ -94,54 +95,53 @@ class OneCmdTests(TestCase):
 
 
 
-#     def test_backend_using_simulation_of_two_senders(self):
-#         # Remember useful constants
-#         Sender0 = TwiSim('Mr0')
-#         Sender1 = TwiSim('Ms1')
-#         sender1_twil0 = Sender1.twi_directory['twil0']
-#         sender1_twil1 = Sender1.twi_directory['twil1']
-#         sender0_twil0 = Sender0.twi_directory['twil0']
+    def test_backend_using_simulation_of_two_senders(self):
+        # Remember useful constants
+        Sender0 = TwiSim('Mr0')
+        Sender1 = TwiSim('Ms1')
+        sender1_twil0 = Sender1.twi_directory['twil0']
+        sender1_twil1 = Sender1.twi_directory['twil1']
+        sender0_twil0 = Sender0.twi_directory['twil0']
 
-#         # Twilio side is quiet until the sender succeeds in 'sign-up' by making wip and a profile.
-#         # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
-#         cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
-#         cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
-#         # Sender1 sends to a second twilio number
-#         cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
-#         # Sender1 sends a second card to the first twilio number
-#         cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
-#         sender0 = saveget.get_sender(Sender0.mobile)
-#         sender1 = saveget.get_sender(Sender1.mobile)
-#         sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
+        # Twilio side is quiet until the sender succeeds in 'sign-up' by making wip and a profile.
+        # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
+        cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
+        cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
+        # Sender1 sends to a second twilio number
+        cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
+        # Sender1 sends a second card to the first twilio number
+        cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
+        sender0 = saveget.get_sender(Sender0.mobile)
+        sender1 = saveget.get_sender(Sender1.mobile)
+        sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
 
-#         # Check that all is as expected
-#         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
-#         self.assertIsNone(sender1['conn'][sender1_twil0]['pobox_id'])
-#         self.assertIsNone(sender1['conn'][sender1_twil1]['pobox_id'])
-#         sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
-#         sender1_card = saveget.get_postcard(sender1_card_id)
-#         self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
-#         display_sender(Sender0.mobile, 'sender0 before setting any viewer')
-#         display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
+        # Check that all is as expected
+        self.assertEqual(sender1['profile_url'], 'profile_Ms1')
+        self.assertIsNone(sender1['conn'][sender1_twil0]['pobox_id'])
+        self.assertIsNone(sender1['conn'][sender1_twil1]['pobox_id'])
+        sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
+        sender1_card = saveget.get_postcard(sender1_card_id)
+        self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
+        display_sender(Sender0.mobile, 'sender0 before setting any viewer')
+        display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
-#         # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
-#         # Check that, and see that pobox_id is retrieved on a re-look, and that bad values give None
-#         sender0 = saveget.get_sender(Sender0.mobile)
-
-
-
-#         pobox_id       = connects.connect_viewer(sender0, sender0_twil0)
+        # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
+        # Check that, and see that pobox_id is retrieved on a re-look, and that bad values give None
+        sender0 = saveget.get_sender(Sender0.mobile)
 
 
+        # Change below to go to postmaster.get_a_pobox_id ...
+        #       .... with a TEST trapdoor to bypass the form? Some django form method??
+        # pobox_id       = connects.connect_viewer(sender0, sender0_twil0)
+        # pobox_id_again = connects.connect_viewer(sender0, sender0_twil0)
 
 
-#         pobox_id_again = connects.connect_viewer(sender0, sender0_twil0)
-#         self.assertEqual(pobox_id, pobox_id_again)
-#         self.assertIsNone(connects.connect_viewer(sender0, 'some wrong twilio number'))
-#         sender0_viewer_data = saveget.get_viewer_data(pobox_id)
-#         self.assertNotIn(Sender0.mobile, sender0_viewer_data)
-#         self.assertIn('meta', sender0_viewer_data)
-#         self.assertEqual(sender0_viewer_data['meta']['pobox_id'], pobox_id)
+        self.assertEqual(pobox_id, pobox_id_again)
+        self.assertIsNone(connects.connect_viewer(sender0, 'some wrong twilio number'))
+        sender0_viewer_data = saveget.get_viewer_data(pobox_id)
+        self.assertNotIn(Sender0.mobile, sender0_viewer_data)
+        self.assertIn('meta', sender0_viewer_data)
+        self.assertEqual(sender0_viewer_data['meta']['pobox_id'], pobox_id)
 
 #         # postbox.update_viewer_data removes a card from pobox, putting it in viewer_data
 #         # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
@@ -305,66 +305,66 @@ class OneCmdTests(TestCase):
 
 
 
-# def run_simulation_of_two_senders():
-#     "This runs the scenario to setup a given state but does not test the state.  Used for further testing."
-#     filerviews.clear_the_read_bucket()
-#     filerviews.clear_the_sqs_queue_TEST_SQS()
+def run_simulation_of_two_senders():
+    "This runs the scenario to setup a given state but does not test the state.  Used for further testing."
+    filerviews.clear_the_read_bucket()
+    filerviews.clear_the_sqs_queue_TEST_SQS()
     
-#     # Set up as in test_backend..... but not doing any checks on the results
-#     Sender0 = TwiSim('Mr0')
-#     Sender1 = TwiSim('Ms1')
-#     sender1_twil0 = Sender1.twi_directory['twil0']
-#     sender1_twil1 = Sender1.twi_directory['twil1']
-#     sender0_twil0 = Sender0.twi_directory['twil0']
+    # Set up as in test_backend..... but not doing any checks on the results
+    Sender0 = TwiSim('Mr0')
+    Sender1 = TwiSim('Ms1')
+    sender1_twil0 = Sender1.twi_directory['twil0']
+    sender1_twil1 = Sender1.twi_directory['twil1']
+    sender0_twil0 = Sender0.twi_directory['twil0']
     
-#     # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
-#     cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
-#     cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
+    # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
+    cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
+    cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
 
-#     # Sender1 sends to a second twilio number
-#     cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
+    # Sender1 sends to a second twilio number
+    cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
 
-#     # Sender1 sends a second card to the first twilio number
-#     cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
-#     # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
-#     sender0 = saveget.get_sender(Sender0.mobile)
-#     pobox_id       = connects.connect_viewer(sender0, sender0_twil0)
-#     sender0_viewer_data = saveget.get_viewer_data(pobox_id)
+    # Sender1 sends a second card to the first twilio number
+    cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
+    # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
+    sender0 = saveget.get_sender(Sender0.mobile)
+    pobox_id       = new_pobox_id(sender0, sender0_twil0)
+    sender0_viewer_data = saveget.get_viewer_data(pobox_id)
 
-#     # postbox.update_viewer_data  puts a card in viewer_data
-#     pobox = saveget.get_pobox(pobox_id)
-#     update_viewer_data(pobox, sender0_viewer_data)
-#     updated_viewer_data = saveget.get_viewer_data(pobox_id)
+    # postbox.update_viewer_data  puts a card in viewer_data
+    pobox = saveget.get_pobox(pobox_id)
+    update_viewer_data(pobox, sender0_viewer_data)
+    updated_viewer_data = saveget.get_viewer_data(pobox_id)
 
-#     # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
-#     # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
-#     cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
-#     sender0 = saveget.get_sender(Sender0.mobile)
-#     sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
-#     pobox = saveget.get_pobox(pobox_id)
+    # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
+    # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
+    cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
+    sender0 = saveget.get_sender(Sender0.mobile)
+    sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
+    pobox = saveget.get_pobox(pobox_id)
 
-#     # Sender0 connects Sender1 to the viewer:
-#     # First make the passkey, checking msg back
-#     cmds.interpret_one_cmd(Sender1.passkey('twil0'))
-#     sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+    # Sender0 connects Sender1 to the viewer:
+    # First make the passkey, checking msg back
+    cmds.interpret_one_cmd(Sender1.passkey('twil0'))
+    sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
 
-#     # Issue the connect command and inspect the results
-#     sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
-#     sender1 = saveget.get_sender(Sender1.mobile)
+    # Issue the connect command and inspect the results
+    sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
+    sender1 = saveget.get_sender(Sender1.mobile)
 
-#     # Sender1 sets up a to: name for a first recipient
-#     res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
+    # Sender1 sets up a to: name for a first recipient
+    res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
 
-#     # Sender1 sets up a from: name for himself
-#     res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
+    # Sender1 sets up a from: name for himself
+    res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
 
-#     # Sender1 changes its profile
-#     res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
+    # Sender1 changes its profile
+    res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
 
-#     # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-#     cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
-#     pobox = saveget.get_pobox(pobox_id)
-#     viewer_data = saveget.get_viewer_data(pobox_id)
-#     update_viewer_data(pobox, viewer_data)
+    # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
+    cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
+    pobox = saveget.get_pobox(pobox_id)
+    viewer_data = saveget.get_viewer_data(pobox_id)
+    update_viewer_data(pobox, viewer_data)
 
-#     return Sender0, Sender1
+    return Sender0, Sender1

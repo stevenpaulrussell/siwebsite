@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from filer import views as filerviews 
 from postoffice import cmds, connects
+from postoffice import views as postofficeviews
 from saveget import saveget
 from siwebsite_project.sender_object_for_tests import TwiSim, pp
 from . import views
@@ -26,7 +27,7 @@ def make_two_sender_viewer_data():
 
     # Sender0 makes a viewer.  This sets up the pobox, the viewer_data, putting a card in viewer_data, returning pobox_id
     sender0 = saveget.get_sender(Sender0.mobile)
-    pobox_id = connects.connect_viewer(sender0, sender0_twil0)
+    pobox_id = postofficeviews.new_pobox_id(sender0, sender0_twil0)
     # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
     cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
 

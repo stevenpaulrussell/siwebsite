@@ -60,13 +60,6 @@ class LookAtURLs(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('test_pobox', test_return_message)
 
-    def test_validate_me_is_HTTP_fetchable(self):
-        data_source = os.environ['POSTBOX_DATA_SOURCE']
-        from_tel = 'test_from_tel'
-        passkey = 'test_passkey'
-        response = requests.get(f'{data_source}/validate_me/{from_tel}/{passkey}')
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNone(json.loads(response.content))
 
 
 class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
@@ -89,7 +82,14 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         # Postponing running the 'validate_me' from player.views:  Dont know how to handle the form,
         #    and the untested part is small.
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
-        response = requests.get(f'{data_source}/validate_me/{Sender0.mobile}/{sender0_passkey}')
+
+        # response = requests.get(f'{data_source}/validate_me/{Sender0.mobile}/{sender0_passkey}')
+        # Line above no longer in the urls. Instead, line below calls forth a form.
+        
+        response = requests.post(f'{data_source}/get_a_pobox_id/{Sender0.mobile}/{sender0_passkey}')
+        response = requests.post(f'{data_source}/get_a_pobox_id')
+
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(expected_pobox_id, json.loads(response.content))
 
