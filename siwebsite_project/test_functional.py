@@ -130,10 +130,8 @@ class OneCmdTests(TestCase):
         sender0 = saveget.get_sender(Sender0.mobile)
 
 
-        # Change below to go to postmaster.get_a_pobox_id ...
-        #       .... with a TEST trapdoor to bypass the form? Some django form method??
-        # pobox_id       = connects.connect_viewer(sender0, sender0_twil0)
-        # pobox_id_again = connects.connect_viewer(sender0, sender0_twil0)
+        pobox_id       = connects.connect_viewer(sender0, sender0_twil0)
+        pobox_id_again = connects.connect_viewer(sender0, sender0_twil0)
 
 
         self.assertEqual(pobox_id, pobox_id_again)

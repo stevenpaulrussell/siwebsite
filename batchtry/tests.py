@@ -127,8 +127,8 @@ class OneCmdTests(TestCase):
         self.assertEqual(len(admin_msgs), 4)
         self.assertIn('using new to_tel', admin_msgs[0])
         # Connect a viewer and get a new pobox_id: connect_viewer guarded by a form checking a passkey, not tested here.
-        pobox_id = postoffice.connects.connect_viewer(postoffice_sender, to_tel_used_by_Steve) 
-        pobox_url = f'{data_source}/postbox/{pobox_id}'
+        pobox_id = postoffice.views.new_pobox_id(postoffice_sender, to_tel_used_by_Steve) 
+        pobox_url = f'{data_source}/player/postbox/{pobox_id}'
         # Steve connect the other senders to the viewer. Other senders each start by getting a passkey
         for from_tel in [from_Nancy, from_Ryan, from_Zach]:
             passkey = sim_get_a_passkey(from_tel, to_tel=gerry_links[from_tel])

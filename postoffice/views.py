@@ -7,6 +7,7 @@ import uuid
 
 from django.shortcuts import render
 from django.http.response import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 
 
 from saveget import saveget
@@ -14,15 +15,11 @@ from .forms import ConnectionsForm
 from .connects import get_passkey
 
 
-
+@csrf_exempt
 def get_a_pobox_id(request):
     """Use a form to enter from_tel and passkey. If the combo is not valid, 
     return the user to the form, where there should be some guide for this failure...
-
-    With a valid combo, got to postoffice.connects.connect viewer.
-    That retrieve the pobox_id from sender using the discovered to_tel or,  
-    if that is None, create and store a pobox_id"""
-
+    With a valid combo, redirect the browser to the right pobox"""
     if request.method == 'POST':
         form = ConnectionsForm(request.POST)
         if form.is_valid():
@@ -31,7 +28,7 @@ def get_a_pobox_id(request):
             if 'test' in from_tel.lower() or 'test' in passkey.lower():
                 return HttpResponseRedirect(f'player/postbox/test_pobox')
             else: 
-                pobox_id = pobox_id_if_good_passkey
+                pobox_id = pobox_id_if_good_passkey(from_tel, passkey)
             if pobox_id:
                 return HttpResponseRedirect(f'player/postbox/{pobox_id}')
     # else to any of the above, maybe want to respond more specifically, anyway:

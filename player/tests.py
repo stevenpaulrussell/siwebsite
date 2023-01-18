@@ -82,16 +82,11 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         # Postponing running the 'validate_me' from player.views:  Dont know how to handle the form,
         #    and the untested part is small.
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
-
-        # response = requests.get(f'{data_source}/validate_me/{Sender0.mobile}/{sender0_passkey}')
-        # Line above no longer in the urls. Instead, line below calls forth a form.
-        
-        response = requests.post(f'{data_source}/get_a_pobox_id/{Sender0.mobile}/{sender0_passkey}')
-        response = requests.post(f'{data_source}/get_a_pobox_id')
-
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(expected_pobox_id, json.loads(response.content))
+        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'from_tel': Sender0.mobile, 'passkey': sender0_passkey})
+        redirected_url = redirect_response.url
+        redirected_postbox_id =  redirected_url.split('/postbox/')[-1]
+        self.assertEqual(redirect_response.status_code, 200)
+        self.assertEqual(expected_pobox_id, redirected_postbox_id)
 
         # Run played_it and see that both postbox and view_data are updated
         # First check the current state
