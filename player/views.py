@@ -3,14 +3,14 @@ import json
 import os
 
 from django.shortcuts import render
-from django.http.response import HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 
 
 
 
 data_source = os.environ['POSTBOX_DATA_SOURCE']
 
-
+@csrf_exempt
 def show_postcards_view(request, pobox_id):
     view_data = requests.get(f'{data_source}/player/viewer_data/{pobox_id}').json()  
     version = view_data['meta']['version']

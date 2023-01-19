@@ -34,7 +34,7 @@ def instructions_view(request):
 
 
 def tickles(request):
-    data = {'cmds': dq_and_do_cmds(), 'admins': dq_admin()}
+    data = {'cmd_msgs': dq_and_do_cmds(), 'admin_msgs': dq_admin()}
     return HttpResponse(content=json.dumps(data))
 
 
