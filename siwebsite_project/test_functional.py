@@ -228,6 +228,8 @@ class OneCmdTests(TestCase):
 
         # display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
 
+        self.assertFalse('connect command needs to check whether the issuer is the key_operator.  Make unit and functional tests for this case.')
+
         self.assertFalse('Still need to check on this last part, and see if the tes on played it and new cards is here.  Almost done!')
 
 
