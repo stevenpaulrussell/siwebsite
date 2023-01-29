@@ -55,6 +55,11 @@ class S3KeyNotFound(S3Error):
     pass
 
 
+
+print(f'\n\n=========> In filer.views for **** siwebsite ****, starting using bucket <{aws_bucket_name}>  <==========\n\n')
+
+
+
 # S3 Loading
 def load_from_free_tier(from_tel):
     try:
