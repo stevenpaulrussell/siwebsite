@@ -18,7 +18,7 @@ f'sender/{from_tel}':
 
 
 # CHANGED !
-f'pobox_{pobox_id}':
+f'pobox/pobox_{pobox_id}':
     'meta':
         'version': -> start at 1
         'pobox_id': pobox_id
@@ -31,7 +31,7 @@ f'pobox_{pobox_id}':
 
     
     
-f'card_{postcard_id}':
+f'card/card_{postcard_id}':
     'version': -> start at 1
     'card_id':  -> card_id, 
     'plays':  -> default 0, then updated from Recently_Played_Cards_V1 when archived  ---> change this?                                  
