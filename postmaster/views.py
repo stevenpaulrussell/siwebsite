@@ -14,7 +14,7 @@ from saveget import saveget
 data_source = os.environ['POSTBOX_DATA_SOURCE']
 
 
-def dq_and_do_cmds():
+def run_from_event_queue():
     msg, msgs = True, []
     while msg:
         msg = dq_and_do_one_cmd()
@@ -34,7 +34,7 @@ def instructions_view(request):
 
 
 def tickles(request):
-    data = {'cmd_msgs': dq_and_do_cmds(), 'admin_msgs': dq_admin()}
+    data = {'cmd_msgs': run_from_event_queue(), 'admin_msgs': dq_admin()}
     return HttpResponse(content=json.dumps(data))
 
 

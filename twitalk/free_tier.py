@@ -36,7 +36,7 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
         from_tel_msg = lines.line(f'Your passkey is "{passkey}", valid in a few minutes, lasting for a day!') 
         return from_tel_msg
     assert(text and not image_url)
-    filerviews.nq_event(from_tel, to_tel, event='cmd_general', text=text)
+    filerviews.nq_event(from_tel, to_tel, event='text_was_entered', text=text)
     from_tel_msg = lines.line('Your command <{text}> is queued for processing... you will hear back!', **msg_keys)
     return from_tel_msg
 

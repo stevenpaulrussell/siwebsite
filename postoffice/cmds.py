@@ -37,14 +37,14 @@ def interpret_one_cmd(cmd_dict):
             to_store = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
             saveget.save_passkey_dictionary(to_store)
             return f'Your passkey <{passkey}> is now good. It will expire 24 hours from now.'
-        case 'cmd_general':
-            message = handle_possible_cmd_general(from_tel, to_tel, cmd_dict['text'])
+        case 'text_was_entered':
+            message = handle_entered_text_event(from_tel, to_tel, cmd_dict['text'])
             return message
         case _:
             """ Send admin an error message or in test raise exception"""
             message = f'whoops, do not recognize command {cmd}.'
 
-def handle_possible_cmd_general(from_tel, to_tel, text): 
+def handle_entered_text_event(from_tel, to_tel, text): 
     if 'connect' in text:
         """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
         lead_sender = saveget.get_sender(from_tel)

@@ -195,7 +195,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(len(admin_list), 0)
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['event'], 'cmd_general')
+        self.assertEqual(cmd_from_list['event'], 'text_was_entered')
         self.assertIn('Your command <some random text> is queued for processing... you will hear back!', from_tel_msg)
 
     def test_image_only(self):

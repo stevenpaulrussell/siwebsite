@@ -19,7 +19,7 @@ class TwiSim:
         self.url_count = 0
 
     def _cmd_common(self, twinumber, **message):
-        message['event'] = 'cmd_general'
+        message['event'] = 'text_was_entered'
         message['sent_at'] = time.time()
         message['from_tel'] = self.mobile
         message['to_tel'] = self.twi_directory[twinumber]
