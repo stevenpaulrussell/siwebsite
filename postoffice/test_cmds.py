@@ -27,7 +27,7 @@ class OneCmdTests(TestCase):
     def test__dq_and_do_one_cmd(self):
         Sender0 = TwiSim('Mr0')
         sqs_message = Sender0.newsender_firstpostcard()
-        saveget._test_send_an_sqs_cmd(sqs_message)
+        saveget._test_send_an_sqs_event(sqs_message)
         cmds.dq_and_do_one_cmd()
         sender = saveget.get_sender(Sender0.mobile)
         self.assertEqual(sender['profile_url'], 'profile_Mr0')

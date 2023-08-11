@@ -27,7 +27,7 @@ from postmaster.views import tickles
 
 from .sender_object_for_tests import TwiSim, pp
 data_source = os.environ['POSTBOX_DATA_SOURCE']
-CMD_URL = filerviews.CMD_URL
+CMD_URL = filerviews.EVENT_URL
 
 def display_sender(from_tel, comment=None):
     if comment:
@@ -83,7 +83,7 @@ class OneCmdTests(TestCase):
         http_response = tickles('request_dummy')
         cmds_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = cmds_admins_msgs['cmd_msgs'], cmds_admins_msgs['admin_msgs']
-        self.assertEqual('new_postcard', cmd_msgs[1]['cmd'])
+        self.assertEqual('new_postcard', cmd_msgs[1]['event'])
         self.assertIn('using new to_tel', admin_msgs[1])
 
         # Sender1 sends to a second twilio number

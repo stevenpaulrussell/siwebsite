@@ -9,7 +9,7 @@ from filer import twilio_cmds
 from . import postcards, connects
 
 def dq_and_do_one_cmd():
-    cmd_item = saveget.get_one_sqs_cmd()
+    cmd_item = saveget.get_one_sqs_event()
     if cmd_item:    
         message = interpret_one_cmd(cmd_item)
         if message:
@@ -22,7 +22,7 @@ def dq_and_do_one_cmd():
 def interpret_one_cmd(cmd_dict):
     from_tel = cmd_dict['from_tel']
     to_tel = cmd_dict['to_tel']
-    cmd = cmd_dict['cmd']
+    cmd = cmd_dict['event']
     match cmd:
         case 'new_postcard':
             postcards.new_postcard(from_tel, to_tel, cmd_dict)

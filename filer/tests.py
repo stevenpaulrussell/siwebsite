@@ -60,15 +60,15 @@ class FilerViewSQS_Utility_FunctionsWork(TestCase):
 
     def test_can_write_and_read_to_a_queue(self):
         sent_message = {'mylabel': 'test_can_write_and_read_to_a_queue'}
-        views.send_an_sqs_message(message=sent_message, QueueUrl=views.CMD_URL)
+        views.send_an_sqs_message(message=sent_message, QueueUrl=views.EVENT_URL)
         received_message = views.get_an_sqs_message()
         self.assertEqual(received_message['mylabel'], 'test_can_write_and_read_to_a_queue')
 
     def test_can_write_multiple_and_read_from_a_queue(self):
         sent_message0 = {'mylabel': 'mycontent0'}
         sent_message1 = {'mylabel': 'mycontent1'}
-        views.send_an_sqs_message(message=sent_message0, QueueUrl=views.CMD_URL)
-        views.send_an_sqs_message(message=sent_message1, QueueUrl=views.CMD_URL)
+        views.send_an_sqs_message(message=sent_message0, QueueUrl=views.EVENT_URL)
+        views.send_an_sqs_message(message=sent_message1, QueueUrl=views.EVENT_URL)
         received_message0 = views.get_an_sqs_message()
         received_message1 = views.get_an_sqs_message()
         received_message2 = views.get_an_sqs_message()

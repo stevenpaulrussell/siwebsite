@@ -22,6 +22,7 @@ from_Nancy = '+16502185923'
 from_Ryan = '+16508159597'
 from_Zach = '+12068173605'
 from_Josh = '+16508151092'
+from_David = '+12134475412'
 wanted_from_tels = [from_Steve, from_Nancy, from_Ryan, from_Zach, from_Josh]
 
 # Keep Josh who has not been sending??
@@ -35,8 +36,9 @@ some_cards = old_filer.get_cards(limit=15)
 
 # f: from_tel, t: to_tel.  Gerry's pobox_id in the old system was '27f12208-......'
 gerry_links = {f: t for f in conns for t in conns[f] if '27f12208-' in conns[f][t]['po_box_uuid']}
-# Keep Josh who has not been sending??
+# Keep Josh, David who have not been sending??
 gerry_links.pop(from_Josh)
+gerry_links.pop(from_David)
 
 pobox = {}
 for card in some_cards:

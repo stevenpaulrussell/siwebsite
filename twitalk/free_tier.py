@@ -22,7 +22,7 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
             filerviews.save_wip(from_tel, to_tel, wip)
             from_tel_msg = lines.line('Good image received free tier', **msg_keys)
         elif text == 'profile':   # Have cmd 'profile' with image_url, all ok
-            filerviews.nq_cmd(from_tel, to_tel, cmd='profile', profile_url=image_url)
+            filerviews.nq_event(from_tel, to_tel, event='profile', profile_url=image_url)
             from_tel_msg = lines.line('Your profile will be updated shortly, and you will be notified.', **msg_keys)
         else:
             msg = 'Free tier, could not interpret command <{text}> with image {image_url}.'
@@ -32,11 +32,11 @@ def mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_mor
     if text == 'passkey' and not image_url:         
         passkey = str(uuid.uuid4())[0:4]
         expire = time.time() + 24*60*60
-        filerviews.nq_cmd(from_tel, to_tel, cmd='passkey', passkey=passkey, expire=expire)
+        filerviews.nq_event(from_tel, to_tel, event='passkey', passkey=passkey, expire=expire)
         from_tel_msg = lines.line(f'Your passkey is "{passkey}", valid in a few minutes, lasting for a day!') 
         return from_tel_msg
     assert(text and not image_url)
-    filerviews.nq_cmd(from_tel, to_tel, cmd='cmd_general', text=text)
+    filerviews.nq_event(from_tel, to_tel, event='cmd_general', text=text)
     from_tel_msg = lines.line('Your command <{text}> is queued for processing... you will hear back!', **msg_keys)
     return from_tel_msg
 

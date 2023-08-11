@@ -31,10 +31,10 @@ f'wip/{from_tel}/{to_tel}':    `# Written, read, and deleted by twitalk for stat
 """
 
 
-# command SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
+# event SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
 """ 
-....  json dict: from_tel:, to_tel:, cmd:, **message
-cmd:
+....  json dict: from_tel:, to_tel:, event:, **message
+event:
     first_postcard
         wip:
         profile_url:
@@ -45,9 +45,26 @@ cmd:
     profile:
         profile_url:
 
-    cmd_general
+    cmd:
         text: 'text string..'
 """
+# # command SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
+# """ 
+# ....  json dict: from_tel:, to_tel:, cmd:, **message
+# cmd:
+#     first_postcard
+#         wip:
+#         profile_url:
+
+#     new_postcard    
+#         wip:
+
+#     profile:
+#         profile_url:
+
+#     cmd_general
+#         text: 'text string..'
+# """
 
 
 

@@ -152,7 +152,7 @@ class New_Sender_Common_Test_Cases(TestCase):
         self.assertEqual(admin_list, [])
         self.assertEqual(len(cmd_list), 1)
         command = cmd_list[0]
-        self.assertEqual(command['cmd'], 'new_postcard')
+        self.assertEqual(command['event'], 'new_postcard')
         self.assertEqual(command['context'], 'NewSenderFirst')
         self.assertIn('sent_at', command)
         self.assertIn('profile_url', command)
@@ -185,7 +185,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(len(admin_list), 0)
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['cmd'], 'profile')
+        self.assertEqual(cmd_from_list['event'], 'profile')
         self.assertIn('Your profile will be updated shortly, and you will be notified', from_tel_msg)
 
     def test_text_random_only(self):
@@ -195,7 +195,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(len(admin_list), 0)
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['cmd'], 'cmd_general')
+        self.assertEqual(cmd_from_list['event'], 'cmd_general')
         self.assertIn('Your command <some random text> is queued for processing... you will hear back!', from_tel_msg)
 
     def test_image_only(self):
@@ -237,7 +237,7 @@ class Free_Tier_Common_Test_Cases(TestCase):
         self.assertEqual(admin_list, [])
         self.assertEqual(len(cmd_list), 1)
         cmd_from_list = cmd_list[0]
-        self.assertEqual(cmd_from_list['cmd'], 'new_postcard')
+        self.assertEqual(cmd_from_list['event'], 'new_postcard')
 
     def test_audio_delivery_when_image_NOT_present(self):
         # The recording is being delivered

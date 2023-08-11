@@ -19,9 +19,9 @@ MGMT_TELEPHONE_NUMBER = 'MGMT_TELEPHONE_NUMBER'
 DEFAULT_TWILIO_NUMBER = '+18326626430'
 
 #  twilio3-commands   or   twilio3-tests
-CMD_SQS = 'twilio3-commands'
+EVENT_SQS = 'twilio3-commands'
 ADMIN_SQS = 'twilio3-admin'
-TEST_CMD_SQS = 'twilio3-tests'
+TEST_EVENT_SQS = 'twilio3-tests'
 TEST_ADMIN_SQS = 'twilio3-admin_tests'
 
 
@@ -42,9 +42,9 @@ SQSClient = boto3.client(
 if os.environ['TEST'] == 'True':    
     TEST = True
     aws_bucket_name = os.environ['TEST_BUCKET']        # This from .env  Not from Heroku config
-    CMD_SQS = TEST_CMD_SQS
+    EVENT_SQS = TEST_EVENT_SQS
     ADMIN_SQS = TEST_ADMIN_SQS
-CMD_URL = SQSClient.get_queue_url(QueueName=CMD_SQS)['QueueUrl']
+EVENT_URL = SQSClient.get_queue_url(QueueName=EVENT_SQS)['QueueUrl']
 ADMIN_URL = SQSClient.get_queue_url(QueueName=ADMIN_SQS)['QueueUrl']
 print('Remember to add the sqs names to .env filer.views line 33 or so')
 
@@ -129,9 +129,9 @@ def clear_the_read_bucket(PREFIX=''):
 
 
 # SQS Use Functions
-def nq_cmd(from_tel, to_tel, cmd, **message):
-    message.update(dict(from_tel=from_tel, to_tel=to_tel, cmd=cmd))
-    send_an_sqs_message(message, CMD_URL)
+def nq_event(from_tel, to_tel, event, **message):
+    message.update(dict(from_tel=from_tel, to_tel=to_tel, event=event))
+    send_an_sqs_message(message, EVENT_URL)
 
 def nq_admin_message(message):
     send_an_sqs_message(message, ADMIN_URL)
@@ -139,7 +139,7 @@ def nq_admin_message(message):
 def nq_postcard(from_tel, to_tel, **message):
     """Build and sqs message, call filer to send it, call filer to remove the wip."""
     message['sent_at'] = time.time()
-    nq_cmd(from_tel=from_tel, to_tel=to_tel, cmd='new_postcard',  **message)
+    nq_event(from_tel=from_tel, to_tel=to_tel, event='new_postcard',  **message)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
 
@@ -148,7 +148,7 @@ def send_an_sqs_message(message, QueueUrl):
     json_message = json.dumps(message)
     SQSClient.send_message(MessageBody=json_message, QueueUrl=QueueUrl)
 
-def get_an_sqs_message(QueueUrl=CMD_URL):
+def get_an_sqs_message(QueueUrl=EVENT_URL):
     response = SQSClient.receive_message(QueueUrl=QueueUrl, WaitTimeSeconds=1)
     if 'Messages' in response:
         sqs_message = response['Messages'][0]
