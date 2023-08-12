@@ -4,26 +4,15 @@ import time
 
 
 from saveget import saveget
-from filer import twilio_cmds
 
 from . import postcards, connects
 
-def dq_and_do_one_cmd():
-    cmd_item = saveget.get_one_sqs_event()
-    if cmd_item:    
-        message = interpret_one_cmd(cmd_item)
-        if message:
-            from_tel = cmd_item['from_tel']
-            to_tel = cmd_item['to_tel']
-            twilio_cmds.sms_back(from_tel=from_tel, to_tel=to_tel, message_key=message)
-    return cmd_item  # Returns None if sqs was empty, signaling no need to re-invoke
-    
 
 def interpret_one_cmd(cmd_dict):
     from_tel = cmd_dict['from_tel']
     to_tel = cmd_dict['to_tel']
-    cmd = cmd_dict['event']
-    match cmd:
+    event = cmd_dict['event']
+    match event:
         case 'new_postcard':
             postcards.new_postcard(from_tel, to_tel, cmd_dict)
             return 
@@ -42,7 +31,7 @@ def interpret_one_cmd(cmd_dict):
             return message
         case _:
             """ Send admin an error message or in test raise exception"""
-            message = f'whoops, do not recognize command {cmd}.'
+            message = f'whoops, do not recognize command {event}.'
 
 def handle_entered_text_event(from_tel, to_tel, text): 
     if 'connect' in text:

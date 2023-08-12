@@ -71,12 +71,16 @@ def nq_one_sender(from_tel, to_tel):
     filerviews.nq_postcard(from_tel, to_tel, wip=wip, profile_url=profile_url, context='NewSenderFirst')     
 
 def dq_cmds_and_do_one_cmd(count):
-    msgs = []
+    events = []
+    messages = []
     for i in range(count):
-        msg = postoffice.cmds.dq_and_do_one_cmd()
-        if msg:
-            msgs.append(msg)
-    return msgs
+        event = saveget.get_one_sqs_event()
+        if not event:
+            break
+        events.append(event)
+        message = postoffice.cmds.interpret_one_cmd(event)
+        messages.append(message)
+    return events
 
 def dq_admin(count):
     msgs = []
