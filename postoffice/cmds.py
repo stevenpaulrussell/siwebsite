@@ -8,30 +8,30 @@ from saveget import saveget
 from . import postcards, connects
 
 
-def interpret_one_cmd(cmd_dict):
-    from_tel = cmd_dict['from_tel']
-    to_tel = cmd_dict['to_tel']
-    event = cmd_dict['event']
-    match event:
+def interpret_one_cmd(event):
+    from_tel = event['from_tel']
+    to_tel = event['to_tel']
+    event_type = event['event_type']
+    match event_type:
         case 'new_postcard':
-            postcards.new_postcard(from_tel, to_tel, cmd_dict)
+            postcards.new_postcard(from_tel, to_tel, event)
             return 
         case 'profile':
             sender = saveget.get_sender(from_tel)
-            sender['profile_url'] = cmd_dict['profile_url']
+            sender['profile_url'] = event['profile_url']
             saveget.update_sender_and_morsel(sender)
             return f'OK, your profile image has been updated.'
         case 'passkey':
-            passkey=cmd_dict['passkey']
-            to_store = dict(from_tel=from_tel, to_tel=to_tel, passkey=cmd_dict['passkey'], expire=cmd_dict['expire'])
+            passkey=event['passkey']
+            to_store = dict(from_tel=from_tel, to_tel=to_tel, passkey=event['passkey'], expire=event['expire'])
             saveget.save_passkey_dictionary(to_store)
             return f'Your passkey <{passkey}> is now good. It will expire 24 hours from now.'
         case 'text_was_entered':
-            message = handle_entered_text_event(from_tel, to_tel, cmd_dict['text'])
+            message = handle_entered_text_event(from_tel, to_tel, event['text'])
             return message
         case _:
             """ Send admin an error message or in test raise exception"""
-            message = f'whoops, do not recognize command {event}.'
+            message = f'whoops, do not recognize command {event_type}.'
 
 def handle_entered_text_event(from_tel, to_tel, text): 
     if 'connect' in text:

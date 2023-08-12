@@ -129,8 +129,8 @@ def clear_the_read_bucket(PREFIX=''):
 
 
 # SQS Use Functions
-def nq_event(from_tel, to_tel, event, **message):
-    message.update(dict(from_tel=from_tel, to_tel=to_tel, event=event))
+def nq_event(from_tel, to_tel, event_type, **message):
+    message.update(dict(from_tel=from_tel, to_tel=to_tel, event_type=event_type))
     send_an_sqs_message(message, EVENT_URL)
 
 def nq_admin_message(message):
@@ -139,7 +139,7 @@ def nq_admin_message(message):
 def nq_postcard(from_tel, to_tel, **message):
     """Build and sqs message, call filer to send it, call filer to remove the wip."""
     message['sent_at'] = time.time()
-    nq_event(from_tel=from_tel, to_tel=to_tel, event='new_postcard',  **message)
+    nq_event(from_tel=from_tel, to_tel=to_tel, event_type='new_postcard',  **message)
     delete_wip(from_tel=from_tel, to_tel=to_tel)
 
 

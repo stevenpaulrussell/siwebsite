@@ -19,7 +19,7 @@ class TwiSim:
         self.url_count = 0
 
     def _cmd_common(self, twinumber, **message):
-        message['event'] = 'text_was_entered'
+        message['event_type'] = 'text_was_entered'
         message['sent_at'] = time.time()
         message['from_tel'] = self.mobile
         message['to_tel'] = self.twi_directory[twinumber]
@@ -34,7 +34,7 @@ class TwiSim:
 
     def _new_postcard_common(self, twinumber):
         postcard_common = self._cmd_common(twinumber)
-        postcard_common['event'] = 'new_postcard'
+        postcard_common['event_type'] = 'new_postcard'
         postcard_common['wip'] = self._make_wip()
         return postcard_common
 
@@ -62,7 +62,7 @@ class TwiSim:
     
     def set_profile(self, twinumber, profile_url):
         sqs_message = self._cmd_common(twinumber)
-        sqs_message['event'] = 'profile'
+        sqs_message['event_type'] = 'profile'
         sqs_message['profile_url'] = profile_url
         return sqs_message
 
@@ -78,7 +78,7 @@ class TwiSim:
 
     def passkey(self, twinumber):
         sqs_message = self._cmd_common(twinumber)
-        sqs_message['event'] = 'passkey'
+        sqs_message['event_type'] = 'passkey'
         sqs_message['passkey'] = str(uuid.uuid4())[0:4]
         sqs_message['expire'] = time.time() + 24*60*60
         return sqs_message

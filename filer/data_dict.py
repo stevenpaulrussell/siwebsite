@@ -1,9 +1,9 @@
 # State storage for twitalk. 
 # **********************************************************************
 # 2023 August 4 Work Plan sketch --> Change 'command SQS' name and contents to 'event SQS and
-# change the word 'cmd' to 'event' everywhere, including in functions. change 'cmd_general' to 'text_was_entered'.
+# change the word 'cmd' to 'event' everywhere, including in functions. Change 'cmd_general' to 'text_was_entered'.
 # 
-# Then simplify and refactor the handling ... get rid of postmaster, in postoffice refactor & rename 'cmds'
+# Then simplify and refactor the handling ... 
 #
 # **********************************************************************
 
