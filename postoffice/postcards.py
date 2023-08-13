@@ -8,12 +8,12 @@ from filer import lines
 from saveget import saveget
 
 
-def new_postcard(from_tel, to_tel, msg):
-    wip = msg['wip']
-    sent_at = msg['sent_at']
-    match msg['context']:          # The detailed ordering requires the apparent duplication below
+def new_postcard(from_tel, to_tel, event):
+    wip = event['wip']
+    sent_at = event['sent_at']
+    match event['context']:          # The detailed ordering requires the apparent duplication below
         case 'NewSenderFirst':
-            profile_url = msg['profile_url']
+            profile_url = event['profile_url']
             sender = create_new_sender(from_tel, profile_url)
             create_new_connection(sender, to_tel)
             card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
@@ -35,7 +35,7 @@ def new_postcard(from_tel, to_tel, msg):
             update_pobox_new_card(from_tel, to_tel, pobox_id, card_id)
 
     saveget.update_sender_and_morsel(sender)    
-    if msg['context'] == 'NewSenderFirst':
+    if event['context'] == 'NewSenderFirst':
         saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
 

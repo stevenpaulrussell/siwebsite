@@ -74,7 +74,7 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         sender0 = saveget.get_sender(Sender0.mobile)
 
         # Sender0 gets a passkey (simulation, not testing twitalk)
-        cmds.interpret_one_cmd(Sender0.passkey('twil0'))
+        cmds.interpret_one_event(Sender0.passkey('twil0'))
         sender0_passkey, to_tel_used = connects.get_passkey(Sender0.mobile)
 
         # Sender0 could use the passkey to get connected to the already established pobox

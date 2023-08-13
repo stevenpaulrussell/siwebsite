@@ -8,7 +8,7 @@ import json
 from django.shortcuts import render
 from django.http.response import HttpResponse
 
-from postoffice.cmds import interpret_one_cmd
+from postoffice.cmds import interpret_one_event
 from saveget import saveget
 from filer import twilio_cmds
 
@@ -23,7 +23,7 @@ def run_from_event_queue():
         if not event:
             break
         event_list.append(event)
-        message = interpret_one_cmd(event)
+        message = interpret_one_event(event)
         if message:
             from_tel = event['from_tel']
             to_tel = event['to_tel']

@@ -243,14 +243,14 @@ class OneCmdTests(TestCase):
         sender0_twil0 = Sender0.twi_directory['twil0']
         
         # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
-        cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
-        cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
+        cmds.interpret_one_event(Sender0.newsender_firstpostcard())
+        cmds.interpret_one_event(Sender1.newsender_firstpostcard())
 
         # Sender1 sends to a second twilio number
-        cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
+        cmds.interpret_one_event(Sender1.newrecipient_postcard('twil1'))
 
         # Sender1 sends a second card to the first twilio number
-        cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
+        cmds.interpret_one_event(Sender1.newpostcard_noviewer('twil0'))
         # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
         sender0 = saveget.get_sender(Sender0.mobile)
         pobox_id       = connects.connect_viewer(sender0, sender0_twil0)
@@ -263,31 +263,31 @@ class OneCmdTests(TestCase):
 
         # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
         # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
-        cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
+        cmds.interpret_one_event(Sender0.newpostcard_haveviewer('twil0'))
         sender0 = saveget.get_sender(Sender0.mobile)
         sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
         pobox = saveget.get_pobox(pobox_id)
 
         # Sender0 connects Sender1 to the viewer:
         # First make the passkey, checking msg back
-        cmds.interpret_one_cmd(Sender1.passkey('twil0'))
+        cmds.interpret_one_event(Sender1.passkey('twil0'))
         sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
 
         # Issue the connect command and inspect the results
-        sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
+        sender0_msg_back = cmds.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
         sender1 = saveget.get_sender(Sender1.mobile)
 
         # Sender1 sets up a to: name for a first recipient
-        res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
+        res0 = cmds.interpret_one_event(Sender1.set_to('twil0', 'grammie'))
 
         # Sender1 sets up a from: name for himself
-        res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
+        res1 = cmds.interpret_one_event(Sender1.set_from('twil0', 'sonny'))
 
         # Sender1 changes its profile
-        res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
+        res2 = cmds.interpret_one_event(Sender1.set_profile('twil0', 'new-profile-url'))
 
         # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-        cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
+        cmds.interpret_one_event(Sender1.newpostcard_haveviewer('twil0'))
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = saveget.get_viewer_data(pobox_id)
 
@@ -329,14 +329,14 @@ def run_simulation_of_two_senders():
     sender0_twil0 = Sender0.twi_directory['twil0']
     
     # Sender0 and Sender1 sign up, neither has a viewer yet. Nothing new being tested here
-    cmds.interpret_one_cmd(Sender0.newsender_firstpostcard())
-    cmds.interpret_one_cmd(Sender1.newsender_firstpostcard())
+    cmds.interpret_one_event(Sender0.newsender_firstpostcard())
+    cmds.interpret_one_event(Sender1.newsender_firstpostcard())
 
     # Sender1 sends to a second twilio number
-    cmds.interpret_one_cmd(Sender1.newrecipient_postcard('twil1'))
+    cmds.interpret_one_event(Sender1.newrecipient_postcard('twil1'))
 
     # Sender1 sends a second card to the first twilio number
-    cmds.interpret_one_cmd(Sender1.newpostcard_noviewer('twil0'))
+    cmds.interpret_one_event(Sender1.newpostcard_noviewer('twil0'))
     # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
     sender0 = saveget.get_sender(Sender0.mobile)
     pobox_id       = new_pobox_id(sender0, sender0_twil0)
@@ -349,31 +349,31 @@ def run_simulation_of_two_senders():
 
     # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
     # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
-    cmds.interpret_one_cmd(Sender0.newpostcard_haveviewer('twil0'))
+    cmds.interpret_one_event(Sender0.newpostcard_haveviewer('twil0'))
     sender0 = saveget.get_sender(Sender0.mobile)
     sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
     pobox = saveget.get_pobox(pobox_id)
 
     # Sender0 connects Sender1 to the viewer:
     # First make the passkey, checking msg back
-    cmds.interpret_one_cmd(Sender1.passkey('twil0'))
+    cmds.interpret_one_event(Sender1.passkey('twil0'))
     sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
 
     # Issue the connect command and inspect the results
-    sender0_msg_back = cmds.interpret_one_cmd(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
+    sender0_msg_back = cmds.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
     sender1 = saveget.get_sender(Sender1.mobile)
 
     # Sender1 sets up a to: name for a first recipient
-    res0 = cmds.interpret_one_cmd(Sender1.set_to('twil0', 'grammie'))
+    res0 = cmds.interpret_one_event(Sender1.set_to('twil0', 'grammie'))
 
     # Sender1 sets up a from: name for himself
-    res1 = cmds.interpret_one_cmd(Sender1.set_from('twil0', 'sonny'))
+    res1 = cmds.interpret_one_event(Sender1.set_from('twil0', 'sonny'))
 
     # Sender1 changes its profile
-    res2 = cmds.interpret_one_cmd(Sender1.set_profile('twil0', 'new-profile-url'))
+    res2 = cmds.interpret_one_event(Sender1.set_profile('twil0', 'new-profile-url'))
 
     # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-    cmds.interpret_one_cmd(Sender1.newpostcard_haveviewer('twil0'))
+    cmds.interpret_one_event(Sender1.newpostcard_haveviewer('twil0'))
     pobox = saveget.get_pobox(pobox_id)
     viewer_data = saveget.get_viewer_data(pobox_id)
     update_viewer_data(pobox, viewer_data)

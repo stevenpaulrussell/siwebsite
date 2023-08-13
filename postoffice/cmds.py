@@ -8,7 +8,7 @@ from saveget import saveget
 from . import postcards, connects
 
 
-def interpret_one_cmd(event):
+def interpret_one_event(event):
     from_tel = event['from_tel']
     to_tel = event['to_tel']
     event_type = event['event_type']
