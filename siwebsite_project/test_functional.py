@@ -81,8 +81,8 @@ class OneCmdTests(TestCase):
         filerviews.send_an_sqs_message(Sender0.newsender_firstpostcard(), CMD_URL)
         filerviews.send_an_sqs_message(Sender1.newsender_firstpostcard(), CMD_URL)
         http_response = tickles('request_dummy')
-        cmds_admins_msgs = json.loads(http_response.content)
-        cmd_msgs, admin_msgs = cmds_admins_msgs['cmd_msgs'], cmds_admins_msgs['admin_msgs']
+        events_admins_msgs = json.loads(http_response.content)
+        cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
         self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])
         self.assertIn('using new to_tel', admin_msgs[1])
 

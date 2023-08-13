@@ -1,5 +1,5 @@
 """Instructions and marketing web views.
-    Tickles receiver to dq cmds and return admin messages"""
+    Tickles receiver to dq events and return admin messages"""
 
 
 import os
