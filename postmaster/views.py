@@ -8,7 +8,7 @@ import json
 from django.shortcuts import render
 from django.http.response import HttpResponse
 
-from postoffice.cmds import interpret_one_event
+from postoffice.event_handler import interpret_one_event
 from saveget import saveget
 from filer import twilio_cmds
 

@@ -78,7 +78,7 @@ def dq_cmds_and_do_one_cmd(count):
         if not event:
             break
         events.append(event)
-        message = postoffice.cmds.interpret_one_event(event)
+        message = postoffice.event_handler.interpret_one_event(event)
         messages.append(message)
     return events
 

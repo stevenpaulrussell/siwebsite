@@ -6,7 +6,7 @@ import requests
 from django.test import TestCase
 from django.test.client import RequestFactory
 
-from postoffice import cmds, connects
+from postoffice import event_handler, connects
 from postbox.views import return_playable_viewer_data
 from saveget import saveget
 
@@ -74,7 +74,7 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
         sender0 = saveget.get_sender(Sender0.mobile)
 
         # Sender0 gets a passkey (simulation, not testing twitalk)
-        cmds.interpret_one_event(Sender0.passkey('twil0'))
+        event_handler.interpret_one_event(Sender0.passkey('twil0'))
         sender0_passkey, to_tel_used = connects.get_passkey(Sender0.mobile)
 
         # Sender0 could use the passkey to get connected to the already established pobox

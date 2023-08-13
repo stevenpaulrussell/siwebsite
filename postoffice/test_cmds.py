@@ -9,7 +9,7 @@ from siwebsite_project.test_functional import TwiSim
 from filer import views as filerviews 
 from saveget import saveget
 
-from . import cmds, postcards, connects
+from . import event_handler, postcards, connects
 
 class OneCmdTests(TestCase):
     def setUp(self) -> None:
@@ -20,7 +20,7 @@ class OneCmdTests(TestCase):
         """ Test basic functioning using newsender_firstpostcard """
         Sender0 = TwiSim('Mr0')
         sqs_message = Sender0.newsender_firstpostcard()
-        cmds.interpret_one_event(sqs_message)
+        event_handler.interpret_one_event(sqs_message)
         sender = saveget.get_sender(Sender0.mobile)
         self.assertEqual(sender['profile_url'], 'profile_Mr0')
 
@@ -29,7 +29,7 @@ class OneCmdTests(TestCase):
         sqs_message = Sender0.newsender_firstpostcard()
         saveget._test_send_an_sqs_event(sqs_message)
         event = saveget.get_one_sqs_event()
-        cmds.interpret_one_event(event)
+        event_handler.interpret_one_event(event)
         sender = saveget.get_sender(Sender0.mobile)
         self.assertEqual(sender['profile_url'], 'profile_Mr0')
        

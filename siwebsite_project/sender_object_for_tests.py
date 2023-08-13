@@ -7,7 +7,7 @@ import pprint
 
 # from filer import views as filerviews 
 # from saveget import saveget
-# from postoffice import cmds, connects
+# from postoffice import event_handler, connects
 # from postbox.views import update_viewer_data
 
 
