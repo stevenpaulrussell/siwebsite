@@ -29,6 +29,30 @@ f'pobox/pobox_{pobox_id}':
         from_tel:   [postcard_id,]        # for each from_tel, a list of postcards not yet archived
     ...
 
+
+# NEW IDEA!   # Center everything on the pobox, which is infinitely deeps! Sender now very simple!!
+f'pobox/pobox_{pobox_id}':  # include 'general_delivery' and other special categories!!! as pobox_id
+    'meta':
+        'version': -> start at 1
+        'pobox_id': pobox_id
+        'key_operator_line': (from_tel, to_tel)    # set when viewer is first connected for (from_tel, to_tel)
+        'recent_box_check': -> time.time() of last return_playable_viewer_data
+        'played_a_card': -> time.time() of last postbox.played_it
+        'serial_number': -> incrementing integer  # Used at viewer_data update to flag new
+    'lines':
+        (from_tel, to_tel):   
+            'profile_url':
+            'from_name':
+            'to_name':
+            'last_update':
+            'last_played_card_id':
+            'card_queue': [postcard_id,]  # for each from_tel, a list of postcards not yet archived
+            'passkey':
+                'passkey_value':
+                'passkey_expire':
+    ...
+
+
     
     
 f'card/card_{postcard_id}':
