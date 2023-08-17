@@ -8,13 +8,7 @@ def update_sender_and_morsel(sender):
     save_sender(sender)
 
 def make_morsel(sender):            #  This separated from update_sender_and_morsel for test.
-    morsel =  {}
-    for to_tel in sender['conn']: 
-        morsel[to_tel] = {}
-        morsel[to_tel]['from'] = sender['conn'][to_tel]['from']
-        morsel[to_tel]['to'] = sender['conn'][to_tel]['to']
-        morsel[to_tel]['have_viewer'] = 'HaveViewer' if sender['conn'][to_tel]['pobox_id'] else False
-    return morsel
+    return sender['morsel']
 
 
     
@@ -39,6 +33,14 @@ def get_postcard(card_id):
 def save_postcard(postcard):
     card_id = postcard['card_id']
     filerviews._save_a_thing_using_key(thing=postcard, key=f'card/card_{card_id}')
+
+
+def get_correspondence(from_tel, to_tel):
+    key=f'correspondence/correspondence_{(from_tel, to_tel)}'
+    return filerviews._load_a_thing_using_key(key=key)
+def save_correspondence(from_tel, to_tel, correspondence):
+    key=f'correspondence/correspondence_{(from_tel, to_tel)}'
+    filerviews._save_a_thing_using_key(thing=correspondence, key=key)
 
 
 def get_passkey_dictionary(from_tel):
