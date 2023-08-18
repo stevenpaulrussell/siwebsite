@@ -21,10 +21,10 @@ def save_sender(sender):
 def get_pobox(pobox_id):
     return filerviews._load_a_thing_using_key(key=f'pobox/pobox_{pobox_id}')
 def save_pobox(pobox):
-    pobox_id = pobox['meta']['pobox_id']
+    pobox_id = pobox['pobox_id']
     filerviews._save_a_thing_using_key(thing=pobox, key=f'pobox/pobox_{pobox_id}')
 def delete_pobox(pobox):
-    pobox_id = pobox['meta']['pobox_id']
+    pobox_id = pobox['pobox_id']
     filerviews._delete_a_thing_using_key(key=f'pobox/pobox_{pobox_id}')
 
 

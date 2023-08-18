@@ -35,23 +35,8 @@ def interpret_one_event(event):
 
 def handle_entered_text_event(from_tel, to_tel, text): 
     if 'connect' in text:
-        """ --> Call connects.disconnect_viewer and  connects.connect_requester_to_granted_pobox"""
-        lead_sender = saveget.get_sender(from_tel)
-        cmd, joiner_from_tel, passkey_literal, passkey = [word.strip() for word in text.split(' ')]
-        try:    
-            joiner = saveget.get_sender(joiner_from_tel)
-            found_key, joiner_to_tel = connects.get_passkey(joiner_from_tel)     # Raises TypeError if no passkey
-            assert(found_key == passkey)
-            assert cmd == 'connect'
-            assert passkey_literal == 'passkey'
-            assert len(passkey) == 4
-        except (ValueError, AssertionError, TypeError):
-            return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
-        connects.disconnect_from_viewer(joiner, joiner_to_tel)
-        message = connects.connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel)
-        saveget.update_sender_and_morsel(lead_sender)
-        saveget.update_sender_and_morsel(joiner)
-        return message
+        result = connects.connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, text)
+        return result
 
     if 'from:' in text:
         try:    

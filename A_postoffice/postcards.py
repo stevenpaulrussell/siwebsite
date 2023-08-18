@@ -26,13 +26,13 @@ def new_postcard(from_tel, to_tel, event):
         case 'NoViewer':
             sender = saveget.get_sender(from_tel)
             card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = update_correspondence(from_tel, to_tel, card_id)
+            correspondence = correspondence_gets_new_card(from_tel, to_tel, card_id)
 
         case 'HaveViewer':
             """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
             sender = saveget.get_sender(from_tel)
             card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = update_correspondence(from_tel, to_tel, card_id)
+            correspondence = correspondence_gets_new_card(from_tel, to_tel, card_id)
             pobox_id = correspondence['pobox_id']
             update_pobox_flag(pobox_id)
 
@@ -62,7 +62,7 @@ def create_new_correspondence(sender, to_tel, card_id):
         name_of_from_tel = sender['name_of_from_tel'],
         name_of_to_tel = 'kith or kin',
         profile_url = sender['profile_url'],
-        pobox_id = 'General_Delivery',  # pobox_id is assigned by 'connect' commands
+        pobox_id = from_tel,  # pobox_id is assigned by 'connect' commands
         most_recent_arrival_timestamp = time.time(),
         cardlist_played = [],
         card_current = None,
@@ -80,7 +80,7 @@ def create_new_correspondence(sender, to_tel, card_id):
     return correspondence
 
 
-def update_correspondence(from_tel, to_tel, card_id):
+def correspondence_gets_new_card(from_tel, to_tel, card_id):
     correspondence = saveget.get_correspondence(from_tel, to_tel)
     correspondence['cardlist_unplayed'].append(card_id)
     return correspondence

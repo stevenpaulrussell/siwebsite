@@ -21,7 +21,7 @@ f'correspondence/correspondence_{from_tel, to_tel}':
     'version': -> start at 1
     'name_of_from_tel':  -> default to {from_tel}['from'], change by text command        # Used by twilio to customize sms to sender
     'name_of_to_tel': ->  default to 'kith or kin', change by text command               # Used by twilio to customize sms to sender
-    'pobox_id': -> pobox_id.  Use General_Delivery for oostcards sent with no pobox_id
+    'pobox_id': -> pobox_id.  Use from_tel for postcards sent with no pobox_id
     'most_recent_arrival_timestamp': -> time_stamp       # Enable nudges and alarms
     'cardlist_played': -> [postcard_id,]    # queue, newest at -1
     'card_current': -> postcard_id      # card in_play, *** or None if just being initialized.

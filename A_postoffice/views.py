@@ -48,19 +48,27 @@ def pobox_id_if_good_passkey(from_tel, passkey):
 
 
 def new_pobox_id(sender, to_tel):
-    """With new uuid, initialize the pobox and an empty viewer_data, update the viewer_data from the new pobox"""
-    pobox_id = str(uuid.uuid4())
-    sender['conn'][to_tel]['pobox_id'] = pobox_id
-    # make pobox and an empty viewer data, which will contain nothing until a call from postbox  
+    """??? With new uuid, initialize the pobox and an empty viewer_data, update the viewer_data from the new pobox"""
     from_tel = sender['from_tel']
-    meta = dict(version=1, pobox_id=pobox_id, key_operator=from_tel, heard_from=None)
-    recent_card = sender['conn'][to_tel]['recent_card_id']
-    cardlist = {from_tel: [recent_card,]}               # Couldn't use dict(from_tel=..) as that made from_tel a literal
-    pobox = dict(meta=meta, cardlists=cardlist)
+    pobox_id = str(uuid.uuid4())
+    correspondence = saveget.get_correspondence(from_tel, to_tel)
+    correspondence['pobox_id'] = pobox_id
+    # make pobox and an empty viewer data, which will contain nothing until a call from postbox  
+    pobox = dict(
+        version=1, 
+        pobox_id=pobox_id, 
+        key_operator=from_tel, 
+        heard_from=None,
+        played_a_card = None,
+        box_flag = True,
+        correspondence_list = [(from_tel, to_tel),]
+        )
+    sender['morsel'][to_tel]['have_viewer'] = 'HaveViewer'
     viewer_data = dict(meta=dict(version=1, pobox_id=pobox_id))
-    # Save sender, morsel, pobox, and an empty viewer_data
+    # Save sender, morsel, pobox, correspondence, and an empty viewer_data
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
     saveget.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
+    saveget.save_correspondence(from_tel, to_tel, correspondence)
     saveget.save_viewer_data(viewer_data)       # viewer_data is made from the new pobox
     return pobox_id
 
