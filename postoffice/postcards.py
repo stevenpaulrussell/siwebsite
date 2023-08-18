@@ -64,7 +64,6 @@ def create_new_correspondence(sender, to_tel):
         version = 1,
         name_of_from_tel = sender['name_of_from_tel'],
         name_of_to_tel = 'kith or kin',
-        profile_url = sender['profile_url'],
         pobox_id = from_tel,  # pobox_id is assigned by 'connect' commands
         most_recent_arrival_timestamp = time.time(),
         cardlist_played = [],
@@ -80,12 +79,6 @@ def create_new_correspondence(sender, to_tel):
     msg = 'Sender {from_tel} using new to_tel {to_tel}.'
     new_corr_msg = lines.line(msg, from_tel=from_tel, to_tel=to_tel)
     filerviews.nq_admin_message(new_corr_msg)
-    return correspondence
-
-
-def correspondence_gets_new_card(from_tel, to_tel, card_id):
-    correspondence = saveget.get_correspondence(from_tel, to_tel)
-    correspondence['cardlist_unplayed'].append(card_id)
     return correspondence
 
 

@@ -40,7 +40,7 @@ class PostcardProcessing(TestCase):
         self.assertEqual(morsel[self.twilio_phone_number]['name_of_to_tel'], 'kith or kin')
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
         
-    def test_create_postcard_update_sender(self):
+    def test_create_postcard(self):
         test_time = time.time()
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
         wip = dict(image_timestamp=test_time - 1, image_url='image_url',
@@ -49,19 +49,6 @@ class PostcardProcessing(TestCase):
                             to_tel=self.twilio_phone_number, wip=wip, sent_at=test_time)
         postcard = saveget.get_postcard(card_id)
         self.assertAlmostEqual(postcard['sent_at'], test_time)
-
-    def xtest_correspondence_gets_new_card(self):
-        test_time = time.time()
-        sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-        correspondence = postcards.create_new_correspondence(sender, to_tel=self.twilio_phone_number)   #, card_id='a first card'
-        saveget.save_correspondence(sender['from_tel'], self.twilio_phone_number, correspondence)
-        wip = dict(image_timestamp=test_time - 1, image_url='image_url',
-                    audio_timestamp=test_time - 1, audio_url='audio_url')
-        card_id = postcards.create_postcard_update_sender(sender, from_tel=self.sender_mobile_number,
-                            to_tel=self.twilio_phone_number, wip=wip, sent_at=test_time)
-        correspondence = postcards.correspondence_gets_new_card(from_tel=self.sender_mobile_number,
-                            to_tel=self.twilio_phone_number, card_id=card_id)
-        self.assertEqual(correspondence['cardlist_unplayed'], ['a first card', card_id])
 
 
 class HelperFunctionTests(TestCase):

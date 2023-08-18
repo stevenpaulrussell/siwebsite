@@ -15,6 +15,7 @@ f'correspondence/correspondence_{from_tel, to_tel}':
     'version': -> start at 1
     'name_of_from_tel':  -> default to {from_tel}['from'], change by text command  
     'name_of_to_tel': ->  default to 'kith or kin', change by text command       
+    'profile_url': -> copied from sender when correspondence is created.  
     'pobox_id': -> pobox_id.  Use from_tel for postcards sent with no pobox_id
     'most_recent_arrival_timestamp': -> time_stamp       # Enable nudges and alarms
     'cardlist_played': -> [postcard_id,]        # queue, newest at -1
