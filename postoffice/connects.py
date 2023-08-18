@@ -4,45 +4,26 @@ import uuid
 
 from saveget import saveget
 
-
-def disconnect_from_viewer(sender, to_tel):
-    """Delete from sender, pobox, and viewer_data, ... if there is a pobox"""
-    if not sender['conn'][to_tel]['pobox_id']:
-        return
-    # Reset sender...[pobox_id] to None. 
-    pobox_id, sender['conn'][to_tel]['pobox_id'] = sender['conn'][to_tel]['pobox_id'],  None
-    saveget.update_sender_and_morsel(sender)    
-    # Clear sender from the pobox and view_data, maybe send a message to the key_operator
-    pobox, viewer_data = saveget.get_pobox(pobox_id), saveget.get_viewer_data(pobox_id)
-    from_tel = sender['from_tel']
-    pobox['cardlists'].pop(from_tel)
-    if from_tel in viewer_data:             # Not True in unit test since viewer_data is updated only in module pobox
-        viewer_data.pop(from_tel)
-    if pobox['cardlists'] == {}:
-        saveget.delete_pobox(pobox)
-        saveget.delete_viewer_data(viewer_data)
-    else:
-        saveget.save_pobox(pobox)
-        saveget.save_viewer_data(viewer_data)
-    # Send messages to key_operator, admin???
-    key_operator = pobox['meta']['key_operator']
-
-
-def connect_joiner_to_lead_sender_pobox(joiner, lead_sender, joiner_to_tel, to_tel):
-    """from_tel, to_tel pair determines a unique connection.  Map the request_sender connection
-    to the pobox the lead_sender from_tel, to_tel points to.  Update the pobox to store those 
-    postcards.
-    """
-    wanted_pobox_id = lead_sender['conn'][to_tel]['pobox_id']   # This pobox_id is the one being added to.
-    to_name = lead_sender['conn'][to_tel]['to']
-    joiner['conn'][joiner_to_tel]['pobox_id'] = wanted_pobox_id
-    joiner['conn'][joiner_to_tel]['to'] = to_name
-    pobox = saveget.get_pobox(wanted_pobox_id)
-    pobox['cardlists'][joiner['from_tel']] = []
-    saveget.save_pobox(pobox)
-    saveget.update_sender_and_morsel(joiner)
-    message = f'Successfully connected {joiner["from_tel"]} to {to_name}'
-    return message
+def connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, text):
+        lead_sender = saveget.get_sender(from_tel)
+        cmd, joiner_from_tel, passkey_literal, passkey = [word.strip() for word in text.split(' ')]
+        try:    
+            joiner = saveget.get_sender(joiner_from_tel)
+            found_key, joiner_to_tel = connects.get_passkey(joiner_from_tel)     # Raises TypeError if no passkey
+            assert(found_key == passkey)
+            assert cmd == 'connect'
+            assert passkey_literal == 'passkey'
+            assert len(passkey) == 4
+        except (ValueError, AssertionError, TypeError):
+            return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
+        dest_correspondence = saveget.get_correspondence(lead_sender['from_tel'], to_tel)
+        joiner_correspondence = saveget.get_correspondence(joiner['from_tel'], joiner_to_tel)
+        joiner_correspondence['pobox_id'] = dest_correspondence['pobox_id']
+        joiner_correspondence['name_of_to_tel'] = 'kith or kin'
+        joiner['morsel'][joiner_to_tel]['name_of_to_tel'] = 'kith or kin'
+        saveget.save_correspondence(joiner['from_tel'], joiner_to_tel, joiner_correspondence)
+        saveget.update_sender_and_morsel(joiner)
+        return f'Successfully connected {joiner["from_tel"]} to {dest_correspondence["name_of_to_tel"]}'
 
 
 def get_passkey(from_tel):
@@ -58,7 +39,6 @@ def _set_passkey(from_tel, to_tel, duration=24):
     current_key = dict(passkey=passkey, from_tel=from_tel, to_tel=to_tel, expire=expire)
     saveget.save_passkey_dictionary(current_key)
     
-
 
 
     
