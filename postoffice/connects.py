@@ -9,7 +9,7 @@ def connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, text):
         cmd, joiner_from_tel, passkey_literal, passkey = [word.strip() for word in text.split(' ')]
         try:    
             joiner = saveget.get_sender(joiner_from_tel)
-            found_key, joiner_to_tel = connects.get_passkey(joiner_from_tel)     # Raises TypeError if no passkey
+            found_key, joiner_to_tel = get_passkey(joiner_from_tel)     # Raises TypeError if no passkey
             assert(found_key == passkey)
             assert cmd == 'connect'
             assert passkey_literal == 'passkey'

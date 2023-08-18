@@ -10,14 +10,17 @@ from . import tests
 
 
 def update_viewer_data(pobox, viewer_data):       
-    for from_tel in pobox['cardlists']:
-        cardlist = pobox['cardlists'][from_tel]
-        if not cardlist:     
+    for (from_tel, to_tel) in pobox['correspondents_list']:
+        correspondence = saveget.get_correspondence(from_tel, to_tel)
+        unplayed_card_ids = correspondence['cardlist_unplayed']
+        if not unplayed_card_ids:     
             continue    # No new cards in pobox
+
         playable = viewer_data.get(from_tel, {}) 
         if playable:    
             if playable['play_count'] == 0:
                 continue
+            
             else:   # Card has been played, and there is a replacement
                 retiring_card_id = playable['card_id']  # KeyError if there is no card yet!
                 retiring_card = saveget.get_postcard(retiring_card_id)
@@ -33,6 +36,13 @@ def update_viewer_data(pobox, viewer_data):
         playable['image_url'] = new_card['image_url']
         playable['audio_url'] = new_card['audio_url']
         viewer_data[from_tel] = playable
+
+
+
+    # clear the box_flag!!
+    
+
+
     saveget.save_pobox(pobox)
     saveget.save_viewer_data(viewer_data)
         

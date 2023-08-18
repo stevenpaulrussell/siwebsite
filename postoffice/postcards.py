@@ -15,24 +15,28 @@ def new_postcard(from_tel, to_tel, event):
         case 'NewSenderFirst':
             profile_url = event['profile_url']
             sender = create_new_sender(from_tel, profile_url)
-            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = create_new_correspondence(sender, to_tel, card_id)
+            correspondence = create_new_correspondence(sender, to_tel)
+            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
+            correspondence['cardlist_unplayed'].append(card_id)
             
         case 'NewRecipientFirst':
             sender = saveget.get_sender(from_tel)
-            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
             correspondence = create_new_correspondence(sender, to_tel)
+            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
+            correspondence['cardlist_unplayed'].append(card_id)
 
         case 'NoViewer':
             sender = saveget.get_sender(from_tel)
-            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = correspondence_gets_new_card(from_tel, to_tel, card_id)
+            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
+            correspondence = saveget.get_correspondence(from_tel, to_tel)
+            correspondence['cardlist_unplayed'].append(card_id)
 
         case 'HaveViewer':
             """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
             sender = saveget.get_sender(from_tel)
-            card_id = create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = correspondence_gets_new_card(from_tel, to_tel, card_id)
+            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
+            correspondence = saveget.get_correspondence(from_tel, to_tel)
+            correspondence['cardlist_unplayed'].append(card_id)
             pobox_id = correspondence['pobox_id']
             update_pobox_flag(pobox_id)
 
@@ -49,13 +53,12 @@ def create_new_sender(from_tel, profile_url):
         from_tel = from_tel,
         profile_url = profile_url,
         name_of_from_tel = name_of_from_tel,  
-        heard_from = time.time(),
         morsel = {}             # morsel made by each create_new_correspondence 
     )
     return sender
 
 
-def create_new_correspondence(sender, to_tel, card_id):
+def create_new_correspondence(sender, to_tel):
     from_tel = sender['from_tel']
     correspondence = dict(
         version = 1,
@@ -66,7 +69,7 @@ def create_new_correspondence(sender, to_tel, card_id):
         most_recent_arrival_timestamp = time.time(),
         cardlist_played = [],
         card_current = None,
-        cardlist_unplayed = [card_id]
+        cardlist_unplayed = []
     )
     morsel = sender['morsel']
     morsel[to_tel] = dict(
@@ -86,7 +89,7 @@ def correspondence_gets_new_card(from_tel, to_tel, card_id):
     return correspondence
 
 
-def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
+def create_postcard(sender, from_tel, to_tel, wip, sent_at):
     card_id = str(uuid.uuid4())
     card = dict(
         version = 1,
@@ -100,7 +103,6 @@ def create_postcard_update_sender(sender, from_tel, to_tel, wip, sent_at):
         audio_url = wip['audio_url'],
         profile_url = sender['profile_url']       #  Viewer may see something different, but saving current profile with each card
     )
-    sender['heard_from'] = sent_at
     saveget.save_postcard(card)
     return card_id
 
