@@ -10,36 +10,40 @@ from . import tests
 
 
 def update_viewer_data(pobox, viewer_data):       
-    for (from_tel, to_tel) in pobox['correspondents_list']:
-        correspondence = saveget.get_correspondence(from_tel, to_tel)
-        unplayed_card_ids = correspondence['cardlist_unplayed']
-        if not unplayed_card_ids:     
+    for (sending_tel, to_tel) in pobox['correspondents_list']:          # sending_tel is the <from_tel> that originated the postcard
+        correspondence = saveget.get_correspondence(sending_tel, to_tel)
+        unplayed_card_list = correspondence['cardlist_unplayed']
+        if not unplayed_card_list:     
             continue    # No new cards in pobox
 
-        playable = viewer_data.get(from_tel, {}) 
+        playable = viewer_data.get(sending_tel, {}) 
         if playable:    
-            if playable['play_count'] == 0:
+            if playable['play_count'] == 0:     # Have an unplayed card, do nothing for this sender
                 continue
             
             else:   # Card has been played, and there is a replacement
+                # Write use data to the card record
                 retiring_card_id = playable['card_id']  # KeyError if there is no card yet!
                 retiring_card = saveget.get_postcard(retiring_card_id)
-                retiring_card['pobox_id'] =  pobox['meta']['pobox_id']
+                retiring_card['pobox_id'] =  pobox['pobox_id']
                 retiring_card['retired_at'] = time.time()
                 saveget.save_postcard(retiring_card)
         # Fill in with a new playable, either first one, or one has been retired 
-        new_card_id, pobox['cardlists'][from_tel] = cardlist[0], cardlist[1:]  # swap a card from pobox to viewer_data
+        new_card_id, pobox['cardlists'][sending_tel] = unplayed_card_list[0], cardlist[1:]  # swap a card from pobox to viewer_data
+        #  ---> Instruct server to update the lists on the correspondence.  ??
         new_card = saveget.get_postcard(new_card_id)
         playable['card_id'] = new_card_id
         playable['play_count'] = 0
         playable['profile_url'] = new_card['profile_url']
         playable['image_url'] = new_card['image_url']
         playable['audio_url'] = new_card['audio_url']
-        viewer_data[from_tel] = playable
+        viewer_data[sending_tel] = playable
 
 
 
-    # clear the box_flag!!
+    # clear the box_flag.  All state is maintained at the server in response to 
+    # played_it messages, so server knows to set the flag or not.
+
     
 
 

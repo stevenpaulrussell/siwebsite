@@ -93,7 +93,12 @@ class OneCmdTests(TestCase):
         tickles('request_dummy')
         sender0 = saveget.get_sender(Sender0.mobile)
         sender1 = saveget.get_sender(Sender1.mobile)
-        sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
+        # sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
+
+
+
+
+        #   -----> Substantial change required. What is the logic of these tests???
 
         # Check that all is as expected
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')

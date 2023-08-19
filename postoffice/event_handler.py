@@ -47,12 +47,12 @@ def handle_entered_text_event(from_tel, to_tel, text):
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         sender = saveget.get_sender(from_tel)
-        if sender['from'] == postcards.create_default_using_from_tel(from_tel):      # Had been using the default name, so change all
-            sender['from'] = name
-            for some_to_tel in sender['conn']:
-                sender['conn'][some_to_tel]['from'] = name
+        if sender['name_of_from_tel'] == postcards.create_default_using_from_tel(from_tel):      # Had been using the default name, so change all
+            sender['name_of_from_tel'] = name
+            for each_to_tel in sender['morsel']:
+                sender['morsel'][each_to_tel]['name_of_from_tel'] = name
         else:
-            sender['conn'][to_tel]['from'] = name
+            sender['morsel'][to_tel]['from'] = name
         saveget.update_sender_and_morsel(sender)
         return f'You will now be identified to others in your sending group by {name} rather than by your sending telephone number.'
 
@@ -65,8 +65,8 @@ def handle_entered_text_event(from_tel, to_tel, text):
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         sender = saveget.get_sender(from_tel)
-        former_name = sender['conn'][to_tel]['to']
-        sender['conn'][to_tel]['to'] = new_name
+        former_name = sender['morsel'][to_tel]['name_of_to_tel']
+        sender['morsel'][to_tel]['name_of_to_tel'] = new_name
         saveget.update_sender_and_morsel(sender)
         return f'Renamed recipient {former_name} to {new_name}'
 

@@ -47,7 +47,7 @@ def new_postcard(from_tel, to_tel, event):
 
 
 def create_new_sender(from_tel, profile_url):
-    name_of_from_tel = f'{from_tel[-4]} {from_tel[-3]} {from_tel[-2]} {from_tel[-1]}' 
+    name_of_from_tel =  create_default_using_from_tel(from_tel)
     sender = dict(
         version = 1,
         from_tel = from_tel,
@@ -56,6 +56,9 @@ def create_new_sender(from_tel, profile_url):
         morsel = {}             # morsel made by each create_new_correspondence 
     )
     return sender
+
+def create_default_using_from_tel(from_tel):  # Set as a call so later can test if the user is changing from the default
+    return f'{from_tel[-4]} {from_tel[-3]} {from_tel[-2]} {from_tel[-1]}'
 
 
 def create_new_correspondence(sender, to_tel):
