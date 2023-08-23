@@ -61,15 +61,15 @@ def new_pobox_id(sender, to_tel):
         heard_from=None,
         played_a_card = None,
         box_flag = True,
-        correspondence_list = [(from_tel, to_tel),]
+        viewer_data = dict(
+            from_tel= dict()
+            )
         )
     sender['morsel'][to_tel]['have_viewer'] = 'HaveViewer'
-    viewer_data = dict(meta=dict(version=1, pobox_id=pobox_id))
     # Save sender, morsel, pobox, correspondence, and an empty viewer_data
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
     saveget.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
     saveget.save_correspondence(from_tel, to_tel, correspondence)
-    saveget.save_viewer_data(viewer_data)       # viewer_data is made from the new pobox
     return pobox_id
 
 

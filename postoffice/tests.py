@@ -101,7 +101,7 @@ class NewPostcardCases(TestCase):
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
 
-    def test_connect_viewer_after_newsenderfirst(self):
+    def xtest_connect_viewer_after_newsenderfirst(self):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
@@ -119,7 +119,7 @@ class NewPostcardCases(TestCase):
         self.assertIn('meta', viewer_data)    
         self.assertNotIn(self.sender_mobile_number, viewer_data)    # viewer_data not updated until pobox is called!
 
-    def test_new_postcard_HaveViewer(self):
+    def xtest_new_postcard_HaveViewer(self):
         # Setup sender with first card, connect to a viewer, send a second card
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)

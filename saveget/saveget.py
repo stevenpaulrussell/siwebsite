@@ -53,16 +53,6 @@ def save_passkey_dictionary(passkey):
     filerviews._save_a_thing_using_key(thing=passkey, key=f'passkey/{from_tel}')  
 
 
-def get_viewer_data(pobox_id):
-    return filerviews._load_a_thing_using_key(key=f'viewer_data/viewer_data_{pobox_id}')
-def save_viewer_data(viewer_data):
-    pobox_id = viewer_data['meta']['pobox_id']
-    filerviews._save_a_thing_using_key(thing=viewer_data, key=f'viewer_data/viewer_data_{pobox_id}')
-def delete_viewer_data(viewer_data):
-    pobox_id = viewer_data['meta']['pobox_id']
-    filerviews._delete_a_thing_using_key(key=f'viewer_data/viewer_data_{pobox_id}')
-
-
 def delete_twilio_new_sender(sender):
     filerviews._delete_a_thing_using_key(key=f'new_sender/{sender["from_tel"]}')
 
