@@ -30,7 +30,14 @@ f'pobox/pobox_{pobox_id}':
     'heard_from': -> time.time() of last check-in from player
     'played_a_card': -> time.time() of last postbox.played_it
     'box_flag': -> Boolean   
-    'correspondence_list: -> [(from_tel, to_tel)]  ewdata updates
+    'viewer_data: -> 
+        from_tel:
+            'card_id': -> 
+            'play_count' -> 
+            'profile_url': -> 
+            'image_url': -> 
+            'audio_url': -> 
+            'audio_duration': -> 
 
     
 f'card/card_{postcard_id}':
@@ -52,16 +59,4 @@ f'passkey_{from_tel}':
     'passkey': -> value
     'expire': -> time.time of expiration
 
-
-f'viewer_data_{pobox_id}':
-    'meta':
-        'version': -> 1
-        'pobox_id': pobox_id
-    from_tel:
-        'card_id': -> 
-        'play_count' -> 
-        'profile_url': -> 
-        'image_url': -> 
-        'audio_url': -> 
-        'audio_duration': -> 
 """
