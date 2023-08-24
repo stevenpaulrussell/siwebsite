@@ -105,22 +105,26 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-        sender_begin = saveget.get_sender(self.sender_mobile_number)
-        correspondence_begin = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
-        pobox_id = views.new_pobox_id(self.sender_mobile_number, self.twilio_phone_number, correspondence_begin)
+        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)    
+        # card_lists before pobox made:
+        cardlist_unplayed_before_pobox = correspondence['cardlist_unplayed'].copy()
+        card_current_before_pobox = correspondence['card_current']
+        pobox_id = views.new_pobox_id(self.sender_mobile_number, self.twilio_phone_number, correspondence)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
         correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
-        cardlist = correspondence['cardlist_unplayed']
+        cardlist_unplayed = correspondence['cardlist_unplayed']
+        card_current = correspondence['card_current']
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = pobox['viewer_data']
         self.assertEqual(correspondence['pobox_id'], pobox_id)
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
-        self.assertEqual(len(cardlist), 1)
-
-        # self.assertIn('meta', viewer_data)    
-
-        self.assertNotIn(self.sender_mobile_number, viewer_data)    # viewer_data not updated until pobox is called!
+        self.assertEqual(len(cardlist_unplayed_before_pobox), 1)
+        self.assertIsNone(card_current_before_pobox)
+        self.assertEqual(len(cardlist_unplayed), 0)
+        self.assertEqual(card_current, cardlist_unplayed_before_pobox[0])
+        self.assertIn(self.sender_mobile_number, viewer_data)    
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
 
     def test_new_postcard_HaveViewer(self):
         # Setup sender with first card, connect to a viewer, send a second card
@@ -130,7 +134,7 @@ class NewPostcardCases(TestCase):
         sender_begin = saveget.get_sender(self.sender_mobile_number)
         correspondence_begin = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
         pobox_id = views.new_pobox_id(self.sender_mobile_number, self.twilio_phone_number, correspondence_begin)
-        # Send the test postcard
+        # Send a second postcard. This should now occupy cardlist_unplayed
         specifics = dict(context='HaveViewer', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
@@ -138,13 +142,7 @@ class NewPostcardCases(TestCase):
         correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
         cardlist = correspondence['cardlist_unplayed']
         pobox = saveget.get_pobox(pobox_id)
-        viewer_data = pobox['viewer_data']
-        self.assertEqual(len(cardlist), 2)
-        print(f'debug postoffice tests line 142 viewer_data {viewer_data}')
-
-        # self.assertIn('meta', viewer_data)    # viewer_data not updated until pobox is called!
-
-        self.assertNotIn(self.sender_mobile_number, viewer_data)    # viewer_data not updated until pobox is called!
+        self.assertEqual(len(cardlist), 1)  # 2 cards sent, but the first is now in card_current
 
 class ConnectCases(TestCase):
     def setUp(self):

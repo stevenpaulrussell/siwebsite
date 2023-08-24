@@ -62,17 +62,30 @@ def new_pobox_id(from_tel, to_tel, correspondence): # -> nake correspondence lik
         heard_from=None,
         played_a_card = None,
         box_flag = True,
-        viewer_data = dict(
-            )
+        viewer_data = dict()   
         )
     sender = saveget.get_sender(from_tel)
     sender['morsel'][to_tel]['have_viewer'] = 'HaveViewer'
-    # Save sender, morsel, pobox, correspondence, and an empty viewer_data
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
+    populate_new_pobox_view_data(from_tel, to_tel, pobox, correspondence)  # Setup viewer_data entry 
     saveget.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
     saveget.save_correspondence(correspondence)
     return pobox_id
 
 
-# def populate_pobox_view_data(pobox, correspondence):
-#     card_id,  cardlist_unplayed = correspondence.
+def populate_new_pobox_view_data(from_tel, to_tel, pobox, correspondence):
+    # populate with card tsken from correspondence['cardlist_unplayed']
+    """General update for a single correspondence, responding to a single event: new_postbox, connect, new_card, card_played."""
+    cardlist_unplayed = correspondence['cardlist_unplayed']
+    card_id = correspondence['card_current'] = cardlist_unplayed.pop()
+    postcard = saveget.get_postcard(card_id)
+    pobox['viewer_data'][from_tel] = dict(
+        card_id = card_id,
+        play_count = 0,
+        profile_url = postcard['profile_url'],
+        image_url = postcard['image_url'],
+        audio_url = postcard['audio_url'],
+        to_tel = to_tel
+    )
+
+
