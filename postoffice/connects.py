@@ -39,7 +39,7 @@ def update_the_requesting_correspondence_and_morsel(from_tel, to_tel, requesting
     target_name = accepting_correspondence['name_of_to_tel']
     requesting_correspondence['pobox_id'] = target_pobox_id
     requesting_correspondence['name_of_to_tel'] = target_name
-    saveget.save_correspondence(requesting_from_tel, requester_to_tel, requesting_correspondence)
+    saveget.save_correspondence(requesting_correspondence)
     requester = saveget.get_sender(requesting_from_tel)
     requester['morsel'][requester_to_tel]['name_of_to_tel'] = target_name
     saveget.update_sender_and_morsel(requester)     # Update the morsel to reflect 

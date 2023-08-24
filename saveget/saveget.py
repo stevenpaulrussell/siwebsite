@@ -38,7 +38,9 @@ def save_postcard(postcard):
 def get_correspondence(from_tel, to_tel):
     key=f'correspondence/correspondence_{(from_tel, to_tel)}'
     return filerviews._load_a_thing_using_key(key=key)
-def save_correspondence(from_tel, to_tel, correspondence):
+def save_correspondence(correspondence):
+    from_tel = correspondence['from_tel']
+    to_tel = correspondence['to_tel']
     key=f'correspondence/correspondence_{(from_tel, to_tel)}'
     filerviews._save_a_thing_using_key(thing=correspondence, key=key)
 

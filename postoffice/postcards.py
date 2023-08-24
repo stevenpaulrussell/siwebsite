@@ -41,7 +41,7 @@ def new_postcard(from_tel, to_tel, event):
             update_pobox_flag(pobox_id)
 
     saveget.update_sender_and_morsel(sender)    
-    saveget.save_correspondence(from_tel, to_tel, correspondence)
+    saveget.save_correspondence(correspondence)
     if event['context'] == 'NewSenderFirst':
         saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
@@ -64,6 +64,8 @@ def create_default_using_from_tel(from_tel):  # Set as a call so later can test 
 def create_new_correspondence_update_morsel(sender, to_tel):
     from_tel = sender['from_tel']
     correspondence = dict(
+        from_tel = from_tel,
+        to_tel = to_tel,
         version = 1,
         name_of_from_tel = sender['name_of_from_tel'],
         name_of_to_tel = 'kith or kin',

@@ -70,5 +70,9 @@ def new_pobox_id(from_tel, to_tel, correspondence): # -> nake correspondence lik
     # Save sender, morsel, pobox, correspondence, and an empty viewer_data
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
     saveget.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
-    saveget.save_correspondence(from_tel, to_tel, correspondence)
+    saveget.save_correspondence(correspondence)
     return pobox_id
+
+
+# def populate_pobox_view_data(pobox, correspondence):
+#     card_id,  cardlist_unplayed = correspondence.

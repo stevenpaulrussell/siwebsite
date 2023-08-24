@@ -128,7 +128,7 @@ class OneCmdTests(TestCase):
         postoffice_sender = saveget.get_sender(from_Steve)             # Whole state available to postoffice
         to_tel_used_by_Steve = gerry_links[from_Steve]
         self.assertIn(to_tel_used_by_Steve, twitalk_sender)
-        self.assertEqual(twitalk_sender[to_tel_used_by_Steve]['from'], '6 5 0 0')
+        self.assertEqual(twitalk_sender[to_tel_used_by_Steve]['name_of_from_tel'], '6 5 0 0')
         self.assertIn('profile_url', postoffice_sender)
         self.assertEqual(len(cmd_msgs), 4)
         self.assertEqual(len(admin_msgs), 4)

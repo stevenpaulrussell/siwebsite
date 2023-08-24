@@ -13,6 +13,8 @@ f'sender/{from_tel}':
         
 f'correspondence/correspondence_{from_tel, to_tel}':
     'version': -> start at 1
+    'from_tel': -> from_tel
+    'to_tel': -> to_tel
     'name_of_from_tel':  -> default to {from_tel}['from'], change by text command  
     'name_of_to_tel': ->  default to 'kith or kin', change by text command       
     'profile_url': -> copied from sender when correspondence is created.  
@@ -31,7 +33,7 @@ f'pobox/pobox_{pobox_id}':
     'played_a_card': -> time.time() of last postbox.played_it
     'box_flag': -> Boolean   
     'viewer_data: -> 
-        from_tel:
+        (from_tel, to_tel):
             'card_id': -> 
             'play_count' -> 
             'profile_url': -> 
