@@ -15,13 +15,13 @@ def new_postcard(from_tel, to_tel, event):
         case 'NewSenderFirst':
             profile_url = event['profile_url']
             sender = create_new_sender(from_tel, profile_url)
-            correspondence = create_new_correspondence(sender, to_tel)
+            correspondence = create_new_correspondence_update_morsel(sender, to_tel)
             card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
             correspondence['cardlist_unplayed'].append(card_id)
             
         case 'NewRecipientFirst':
             sender = saveget.get_sender(from_tel)
-            correspondence = create_new_correspondence(sender, to_tel)
+            correspondence = create_new_correspondence_update_morsel(sender, to_tel)
             card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
             correspondence['cardlist_unplayed'].append(card_id)
 
@@ -61,7 +61,7 @@ def create_default_using_from_tel(from_tel):  # Set as a call so later can test 
     return f'{from_tel[-4]} {from_tel[-3]} {from_tel[-2]} {from_tel[-1]}'
 
 
-def create_new_correspondence(sender, to_tel):
+def create_new_correspondence_update_morsel(sender, to_tel):
     from_tel = sender['from_tel']
     correspondence = dict(
         version = 1,
