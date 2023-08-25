@@ -9,56 +9,46 @@ from saveget import saveget
 from . import tests
 
 
-def update_viewer_data(pobox, viewer_data):       
-    #  --->>>>>>>>> This function now distributed, and driven by sqs events!!!
-    for (sending_tel, to_tel) in pobox['correspondents_list']:          # sending_tel is the <from_tel> that originated the postcard
-        correspondence = saveget.get_correspondence(sending_tel, to_tel)
-        unplayed_card_list = correspondence['cardlist_unplayed']
-        if not unplayed_card_list:     
-            continue    # No new cards in pobox
+# def update_viewer_data(pobox, viewer_data):       
+#     #  --->>>>>>>>> This function now distributed, and driven by sqs events!!!
+#     for (sending_tel, to_tel) in pobox['correspondents_list']:          # sending_tel is the <from_tel> that originated the postcard
+#         correspondence = saveget.get_correspondence(sending_tel, to_tel)
+#         unplayed_card_list = correspondence['cardlist_unplayed']
+#         if not unplayed_card_list:     
+#             continue    # No new cards in pobox
 
-        playable = viewer_data.get(sending_tel, {}) 
-        if playable:    
-            if playable['play_count'] == 0:     # Have an unplayed card, do nothing for this sender
-                continue
+#         playable = viewer_data.get(sending_tel, {}) 
+#         if playable:    
+#             if playable['play_count'] == 0:     # Have an unplayed card, do nothing for this sender
+#                 continue
             
-            else:   # Card has been played, and there is a replacement
-                # Write use data to the card record
-                retiring_card_id = playable['card_id']  # KeyError if there is no card yet!
-                retiring_card = saveget.get_postcard(retiring_card_id)
-                retiring_card['pobox_id'] =  pobox['pobox_id']
-                retiring_card['retired_at'] = time.time()
-                saveget.save_postcard(retiring_card)
-        # Fill in with a new playable, either first one, or one has been retired 
-        new_card_id, pobox['cardlists'][sending_tel] = unplayed_card_list[0], cardlist[1:]  # swap a card from pobox to viewer_data
-        #  ---> Instruct server to update the lists on the correspondence.  ??
-        new_card = saveget.get_postcard(new_card_id)
-        playable['card_id'] = new_card_id
-        playable['play_count'] = 0
-        playable['profile_url'] = new_card['profile_url']
-        playable['image_url'] = new_card['image_url']
-        playable['audio_url'] = new_card['audio_url']
-        viewer_data[sending_tel] = playable
-
-
-
-    
-
-
-    saveget.save_pobox(pobox)
-    saveget.save_viewer_data(viewer_data)
+#             else:   # Card has been played, and there is a replacement
+#                 # Write use data to the card record
+#                 retiring_card_id = playable['card_id']  # KeyError if there is no card yet!
+#                 retiring_card = saveget.get_postcard(retiring_card_id)
+#                 retiring_card['pobox_id'] =  pobox['pobox_id']
+#                 retiring_card['retired_at'] = time.time()
+#                 saveget.save_postcard(retiring_card)
+#         # Fill in with a new playable, either first one, or one has been retired 
+#         new_card_id, pobox['cardlists'][sending_tel] = unplayed_card_list[0], cardlist[1:]  # swap a card from pobox to viewer_data
+#         #  ---> Instruct server to update the lists on the correspondence.  ??
+#         new_card = saveget.get_postcard(new_card_id)
+#         playable['card_id'] = new_card_id
+#         playable['play_count'] = 0
+#         playable['profile_url'] = new_card['profile_url']
+#         playable['image_url'] = new_card['image_url']
+#         playable['audio_url'] = new_card['audio_url']
+#         viewer_data[sending_tel] = playable
+    # saveget.save_pobox(pobox)
+    # saveget.save_viewer_data(viewer_data)
         
 
 def return_playable_viewer_data(request, pobox_id):
-    # ---->>>>  This now just returns what is stored in pobox.viewer_data, and ALSO clear the flag!
-    # But allow the request to get an update regardless.... or make that the default for now???
     if 'test' in pobox_id:    
         viewer_data = _make_playable_viewer_data_for_testing()
     else:
         pobox = saveget.get_pobox(pobox_id)
-        pobox['meta']['heard_from'] = time.time()
         viewer_data = saveget.get_viewer_data(pobox_id)
-        update_viewer_data(pobox, viewer_data)
     return HttpResponse(content = json.dumps(viewer_data))
 
 
@@ -66,15 +56,7 @@ def played_this_card(request, pobox_id, card_id):
     # ------->>>>>>> This should now just enque an event, and exit
     if 'test' in pobox_id:
         return HttpResponse(content=json.dumps(f'Testing, got: pobox_id: {pobox_id};  card_id: {card_id}'))
-    card = saveget.get_postcard(card_id)
-    card['play_count'] += 1
-    from_tel = card['from_tel']
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    viewer_data[from_tel]['play_count'] += 1
-    pobox = saveget.get_pobox(pobox_id)
-    pobox['meta']['played_a_card'] = time.time()
-    saveget.save_postcard(card)  # Save now to not overwrite a coming save in update_viewer_data
-    update_viewer_data(pobox, viewer_data)
+    saveget.nq_played_this_card(pobox_id, card_id)
     return HttpResponse()
 
       

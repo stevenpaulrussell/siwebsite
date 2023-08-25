@@ -75,4 +75,9 @@ def _test_send_an_sqs_event(message):
     filerviews.send_an_sqs_message(message, QueueUrl=filerviews.EVENT_URL)
 
 
-    
+def nq_played_this_card(pobox_id, card_id):
+    message = dict(
+        pobox_id = pobox_id,
+        card_id = card_id
+    )
+    filerviews.nq_event(None, None, 'played_this_card', message)

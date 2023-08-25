@@ -30,7 +30,7 @@ def interpret_one_event(event):
             message = handle_entered_text_event(from_tel, to_tel, event['text'])
             return message
         case 'played_it':
-            
+            handle_played_it_event(event)            
         case _:
             """ Send admin an error message or in test raise exception"""
             message = f'whoops, do not recognize command {event_type}.'
