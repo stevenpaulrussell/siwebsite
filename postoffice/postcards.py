@@ -37,8 +37,7 @@ def new_postcard(from_tel, to_tel, event):
             card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
             correspondence = saveget.get_correspondence(from_tel, to_tel)
             correspondence['cardlist_unplayed'].append(card_id)
-            pobox_id = correspondence['pobox_id']
-            update_pobox_flag(pobox_id)
+            update_pobox_new_card(correspondence)
 
     saveget.update_sender_and_morsel(sender)    
     saveget.save_correspondence(correspondence)
@@ -88,6 +87,7 @@ def create_new_correspondence_update_morsel(sender, to_tel):
 
 
 def create_postcard(sender, from_tel, to_tel, wip, sent_at):
+    """Make a postcard from received event data"""
     card_id = str(uuid.uuid4())
     card = dict(
         version = 1,
@@ -105,10 +105,32 @@ def create_postcard(sender, from_tel, to_tel, wip, sent_at):
     return card_id
 
 
-def update_pobox_flag(pobox_id):
-    pobox = saveget.get_pobox(pobox_id)        
-    pobox['box_flag'] = True
+def update_pobox_new_card(correspondence):
+    """Called when a new card has arrived and a viewer exists. Update the viewer_data only if the current card has not played. """
+    pobox = saveget.get_pobox(correspondence['pobox_id'])
+    from_tel = correspondence['from_tel'] 
+    viewer_data_item = pobox['viewer_data'][from_tel]    # from_tel key was set when pobox_id was assigned...
+    if viewer_data_item['play_count'] > 0:
+        push_cards_along(correspondence, pobox)
+    # correspondence is changed, but is saved by the caller
     saveget.save_pobox(pobox)
+
+
+def push_cards_along(correspondence, pobox):
+    """Called to push cards if events played_this_card or new_card show the current card should be moved. """
+    correspondence['card_current'] = card_id =  correspondence['cardlist_unplayed'].pop()  
+    correspondence['cardlist_played'].append(card_id)                
+    from_tel, to_tel = correspondence['from_tel'], correspondence['to_tel']
+    postcard = saveget.get_postcard(card_id)   
+    pobox['viewer_data'][from_tel] = dict(
+        card_id = card_id,
+        play_count = 0,
+        profile_url = postcard['profile_url'],
+        image_url = postcard['image_url'],
+        audio_url = postcard['audio_url'],
+        to_tel = to_tel
+    )    
+
 
 
 

@@ -10,6 +10,7 @@ from . import tests
 
 
 def update_viewer_data(pobox, viewer_data):       
+    #  --->>>>>>>>> This function now distributed, and driven by sqs events!!!
     for (sending_tel, to_tel) in pobox['correspondents_list']:          # sending_tel is the <from_tel> that originated the postcard
         correspondence = saveget.get_correspondence(sending_tel, to_tel)
         unplayed_card_list = correspondence['cardlist_unplayed']
@@ -41,9 +42,6 @@ def update_viewer_data(pobox, viewer_data):
 
 
 
-    # clear the box_flag.  All state is maintained at the server in response to 
-    # played_it messages, so server knows to set the flag or not.
-
     
 
 
@@ -52,6 +50,8 @@ def update_viewer_data(pobox, viewer_data):
         
 
 def return_playable_viewer_data(request, pobox_id):
+    # ---->>>>  This now just returns what is stored in pobox.viewer_data, and ALSO clear the flag!
+    # But allow the request to get an update regardless.... or make that the default for now???
     if 'test' in pobox_id:    
         viewer_data = _make_playable_viewer_data_for_testing()
     else:
@@ -63,6 +63,7 @@ def return_playable_viewer_data(request, pobox_id):
 
 
 def played_this_card(request, pobox_id, card_id):
+    # ------->>>>>>> This should now just enque an event, and exit
     if 'test' in pobox_id:
         return HttpResponse(content=json.dumps(f'Testing, got: pobox_id: {pobox_id};  card_id: {card_id}'))
     card = saveget.get_postcard(card_id)

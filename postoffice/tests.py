@@ -22,7 +22,7 @@ class PostcardProcessing(TestCase):
         self.assertEqual(sender['version'], 1)
         self.assertEqual(sender['name_of_from_tel'], 'm b e r')
 
-    def xtest_create_new_correspondence(self):
+    def test_create_new_correspondence(self):
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
         correspondence = postcards.create_new_correspondence_update_morsel(sender, self.twilio_phone_number)
         # card_id='a first card'

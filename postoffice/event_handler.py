@@ -29,6 +29,8 @@ def interpret_one_event(event):
         case 'text_was_entered':
             message = handle_entered_text_event(from_tel, to_tel, event['text'])
             return message
+        case 'played_it':
+            
         case _:
             """ Send admin an error message or in test raise exception"""
             message = f'whoops, do not recognize command {event_type}.'
@@ -72,6 +74,21 @@ def handle_entered_text_event(from_tel, to_tel, text):
 
     else:
         return f"Do not recognize commmand '{text}'. Send '?' for more help."
+
+
+def handle_played_it_event(event):
+    pobox_id = event['pobox_id']
+    card_id = event['card_id']
+    pobox = saveget.get_pobox(pobox_id)
+    card = saveget.get_postcard(card_id)
+    card['play_count'] += 1
+    card['pobox_id'] = pobox_id
+    from_tel, to_tel = card['correspondence']
+    correspondence = saveget.get_correspondence(from_tel, to_tel)
+    if correspondence['cardlist_unplayed'] != []:
+        postcards.push_cards_along(correspondence, pobox)
+    saveget.save_correspondence(correspondence)
+    saveget.save_pobox(pobox)
 
 
 

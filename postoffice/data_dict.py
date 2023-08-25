@@ -31,21 +31,21 @@ f'pobox/pobox_{pobox_id}':
     'key_operator': from_tel              
     'heard_from': -> time.time() of last check-in from player
     'played_a_card': -> time.time() of last postbox.played_it
-    'box_flag': -> Boolean   
     'viewer_data: -> 
-        (from_tel, to_tel):
+        from_tel: ->
             'card_id': -> 
             'play_count' -> 
             'profile_url': -> 
             'image_url': -> 
             'audio_url': -> 
             'audio_duration': -> 
+            'to_tel': -> to_tel
 
     
 f'card/card_{postcard_id}':
     'version': -> start at 1
     'card_id':  -> card_id, 
-    'plays':  -> default 0, then updated from Recently_Played_Cards_V1 when archived  ---> change this?                                  
+    'play_count':  -> default 0, then updated from Recently_Played_Cards_V1 when archived  ---> change this?                                  
     'correspondence': (from_tel, to_tel)
     'sent_at': -> time.time() when made and stored in S3 and referenced in post_office  
     'image_url': 

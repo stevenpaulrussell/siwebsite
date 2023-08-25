@@ -61,7 +61,6 @@ def new_pobox_id(from_tel, to_tel, correspondence): # -> nake correspondence lik
         key_operator=from_tel, 
         heard_from=None,
         played_a_card = None,
-        box_flag = True,
         viewer_data = dict()   
         )
     sender = saveget.get_sender(from_tel)
