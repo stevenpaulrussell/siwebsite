@@ -46,15 +46,17 @@ def pobox_id_if_good_passkey(from_tel, passkey):
         correspondence = saveget.get_correspondence(from_tel, to_tel)
         pobox_id = correspondence['pobox_id']   # user maybe recovering a pobox_id that already exists
         if not pobox_id:                        # But if there is no pobox_id so no pobox, 
-            pobox_id = new_pobox_id(from_tel, to_tel, correspondence)   # make one, then update sender & correspondence, & save the pobox
+            pobox_id = new_pobox_id(correspondence)   # make one, then update sender & correspondence, & save the pobox
         return pobox_id
 
 
-def new_pobox_id(from_tel, to_tel, correspondence): # -> nake correspondence like an object, able to id iteself for storage
+def new_pobox_id(correspondence): # -> nake correspondence like an object, able to id iteself for storage
     """With new uuid, initialize the pobox and an empty viewer_data, then update viewer_data from the correspondence"""
+    from_tel = correspondence['from_tel']
+    to_tel = correspondence['to_tel']
     pobox_id = str(uuid.uuid4())
     correspondence['pobox_id'] = pobox_id
-    # make pobox and an empty viewer data, which will contain nothing until a call from postbox  
+    # make pobox and an empty viewer data  
     pobox = dict(
         version=1, 
         pobox_id=pobox_id, 
@@ -66,7 +68,7 @@ def new_pobox_id(from_tel, to_tel, correspondence): # -> nake correspondence lik
     sender = saveget.get_sender(from_tel)
     sender['morsel'][to_tel]['have_viewer'] = 'HaveViewer'
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
-    populate_new_pobox_view_data(from_tel, to_tel, pobox, correspondence)  # Setup viewer_data entry 
+    populate_new_pobox_view_data(from_tel, to_tel, pobox, correspondence)  # Populate viewer_data entry 
     saveget.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
     saveget.save_correspondence(correspondence)
     return pobox_id

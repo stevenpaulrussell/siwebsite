@@ -22,8 +22,19 @@ from twitalk.free_tier import mms_to_free_tier
 from saveget import saveget
 from postoffice import event_handler, connects
 from postoffice.views import new_pobox_id, pobox_id_if_good_passkey
-from postbox.views import update_viewer_data
+
+
+
+
+# from postbox.views import update_viewer_data
+
+
+
+
+
+
 from postmaster.views import tickles
+
 
 from .sender_object_for_tests import TwiSim, pp
 data_source = os.environ['POSTBOX_DATA_SOURCE']

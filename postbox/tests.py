@@ -25,9 +25,14 @@ def make_two_sender_viewer_data():
     # Sender1 sends to a second twilio number
     event_handler.interpret_one_event(Sender1.newrecipient_postcard('twil1'))
 
-    # Sender0 makes a viewer.  This sets up the pobox, the viewer_data, putting a card in viewer_data, returning pobox_id
-    sender0 = saveget.get_sender(Sender0.mobile)
-    pobox_id = postofficeviews.new_pobox_id(sender0, sender0_twil0)
+    # # Sender0 makes a viewer.  This sets up the pobox, the viewer_data, putting a card in viewer_data, returning pobox_id
+    # sender0 = saveget.get_sender(Sender0.mobile)
+    # pobox_id = postofficeviews.new_pobox_id(sender0, sender0_twil0)
+
+    # Get a viewer for sender0's correspondence (from_tel, to_tel)
+    correspondence = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
+    pobox_id = postofficeviews.new_pobox_id(correspondence)
+
     # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
     event_handler.interpret_one_event(Sender0.newpostcard_haveviewer('twil0'))
 
