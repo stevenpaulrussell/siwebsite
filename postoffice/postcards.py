@@ -68,7 +68,7 @@ def create_new_correspondence_update_morsel(sender, to_tel):
         version = 1,
         name_of_from_tel = sender['name_of_from_tel'],
         name_of_to_tel = 'kith or kin',
-        pobox_id = from_tel,  # pobox_id is assigned by 'connect' commands
+        pobox_id = None,     # pobox_id is assigned by 'connect' commands.  
         most_recent_arrival_timestamp = time.time(),
         cardlist_played = [],
         card_current = None,

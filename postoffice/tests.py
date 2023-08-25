@@ -149,68 +149,72 @@ class ConnectCases(TestCase):
     def setUp(self):
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
-        # self.sender_mobile_number = '+1_sender_mobile_number'
-        # self.twilio_phone_number = 'twilio_number_1'
-        # self.profile_url = 'sender_selfie_url'
-        # self.wip = dict(image_timestamp='image_timestamp', image_url='image_url', 
-        #             audio_timestamp='audio_timestamp', audio_url='audio_url'
-        # )
-        # self.msg = dict(sent_at='sent_at', wip=self.wip)
-        self.A = utils_4_testing.make_sender_values('A')
-        self.msg = dict(sent_at='sent_at', wip=self.A.wip)
+        A = utils_4_testing.make_sender_values('A')
+        # make a first sender, named 'A'
+        msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
+        postcards.new_postcard(A.from_tel, A.to_tel, msg)
     
     def test_make_a_new_pobox(self):
-        specifics = dict(context='NewSenderFirst', profile_url=self.A.profile_url)
-        self.msg.update(specifics)
-        postcards.new_postcard(self.A.from_tel, self.A.to_tel, self.msg)
+        # Remake A's stuff!
+        A = utils_4_testing.make_sender_values('A')
         # Connect to a viewer
-        correspondence = saveget.get_correspondence(self.A.from_tel, self.A.to_tel)
+        correspondence = saveget.get_correspondence(A.from_tel, A.to_tel)
         pobox_id = views.new_pobox_id(correspondence)
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = pobox['viewer_data']
-        self.assertIn(self.A.from_tel, viewer_data)
-        self.assertEqual(viewer_data[self.A.from_tel]['profile_url'], self.A.profile_url)
-        print(viewer_data[self.A.from_tel])
+        self.assertIn(A.from_tel, viewer_data)
+        self.assertEqual(viewer_data[A.from_tel]['profile_url'], A.profile_url)
 
-    def xtest_second_new_sender_connect_to_existing_pobox(self):
-        # Setup first sender and pobox
-        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
-        self.msg.update(specifics)
-        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)
-        pobox_id = views.new_pobox_id(correspondence)
+    def test_second_new_sender_connect_to_existing_pobox(self):
+        # Repeat setting up A and pobox
+        A = utils_4_testing.make_sender_values('A')
+        correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
+        pobox_id_A = views.new_pobox_id(correspondenceA)
         # Setup second sender
-        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
-        self.msg.update(specifics)
-        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        B = utils_4_testing.make_sender_values('B')
+        msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
+        postcards.new_postcard(B.from_tel, B.to_tel, msg)
+        # connect B as requester...
+        msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
+                                    A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
+        pobox = saveget.get_pobox(pobox_id)
+        viewer_data = pobox['viewer_data']
+        new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        self.assertEqual(pobox_id, new_correspondenceB['pobox_id'])
+        self.assertIn('Successfully connected', msg)
+        self.assertIn(B.from_tel, viewer_data)
+        self.assertIsNone(viewer_data[B.from_tel]['card_id'])       # B's first card is not carried over
+        self.assertIsNotNone(viewer_data[A.from_tel]['card_id'])    # A's first card was carried over
 
-
-
-        # ============>   fix up 'setup' of sender0, 1, maybe 2 to make this cleaner.  Maybe have this as a seperate distant utility?
-        # =============> use an object-producer even a function
-
-
-
-
-    def xtest_disconnect_from_one_pobox_connect_to_another_existing_pobox(self):
-        pass
-
-
-    def xtest_disconnect_from_viewer(self):  # Test x'd because the disconnect is not implemented now!!!
-        # Setup and connect a sender to a viewer
-        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
-        self.msg.update(specifics)
-        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-        sender = saveget.get_sender(self.sender_mobile_number)
-        # Connect to a viewer
-        set_pobox_id = views.new_pobox_id(sender, to_tel=self.twilio_phone_number)
-        # Disconnect from the viewer
-        # old_pobox_id =  sender['conn'][self.twilio_phone_number]['pobox_id']
-        connects.disconnect_from_viewer(sender, self.twilio_phone_number)
-        # See what happened
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, 
-                                                    self.twilio_phone_number)
-        possible_pobox_id =  correspondence['pobox_id']
-        self.assertIsNotNone(set_pobox_id)
-        self.assertIsNone(possible_pobox_id)
+    def test_disconnect_from_one_pobox_connect_to_another_existing_pobox(self):
+        # Repeat setting up A and pobox
+        A = utils_4_testing.make_sender_values('A')
+        correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
+        pobox_id_A = views.new_pobox_id(correspondenceA)
+        # Repeat setting up second sender B
+        B = utils_4_testing.make_sender_values('B')
+        msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
+        B_card_id_0 =  postcards.new_postcard(B.from_tel, B.to_tel, msg)
+        # Now setup a viewer and pobox for B
+        correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        pobox_id_B = views.new_pobox_id(correspondenceB)
+        # Repeat the connection... 
+        msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
+                                    A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
+        # B sends a second card
+        B = utils_4_testing.make_sender_values('B', card_number=1)
+        msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
+        B_card_id_1 = postcards.new_postcard(B.from_tel, B.to_tel, msg)
+        # Get the results!  A and B send to pobox_A, while pobox_B has no one sending to it.
+        pobox_A = saveget.get_pobox(pobox_id_A)
+        viewer_data_A = pobox_A['viewer_data']
+        pobox_B = saveget.get_pobox(pobox_id_B)
+        viewer_data_B = pobox_B['viewer_data']
+        new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        print(f'line 215 in tests, new_correspondenceB: {new_correspondenceB}')
+        # self.assertNotEqual(correspondenceB, new_correspondenceB)
+        self.assertEqual(pobox_id_A, new_correspondenceB['pobox_id'])
+        self.assertIn(A.from_tel, viewer_data_A)
+        self.assertIn(B.from_tel, viewer_data_A)
+        self.assertEqual({}, viewer_data_B)
 
