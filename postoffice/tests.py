@@ -5,6 +5,7 @@ from django.test import TestCase
 from filer import views as filerviews 
 from twitalk.tests import SiWebCarepostUser
 from saveget import saveget
+from siwebsite_project import utils_4_testing
 
 from . import postcards, connects, views
 
@@ -148,32 +149,48 @@ class ConnectCases(TestCase):
     def setUp(self):
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
-        self.sender_mobile_number = '+1_sender_mobile_number'
-        self.twilio_phone_number = 'twilio_number_1'
-        self.profile_url = 'sender_selfie_url'
-        self.wip = dict(image_timestamp='image_timestamp', image_url='image_url', 
-                    audio_timestamp='audio_timestamp', audio_url='audio_url'
-        )
-        self.msg = dict(sent_at='sent_at', wip=self.wip)
-
+        # self.sender_mobile_number = '+1_sender_mobile_number'
+        # self.twilio_phone_number = 'twilio_number_1'
+        # self.profile_url = 'sender_selfie_url'
+        # self.wip = dict(image_timestamp='image_timestamp', image_url='image_url', 
+        #             audio_timestamp='audio_timestamp', audio_url='audio_url'
+        # )
+        # self.msg = dict(sent_at='sent_at', wip=self.wip)
+        self.A = utils_4_testing.make_sender_values('A')
+        self.msg = dict(sent_at='sent_at', wip=self.A.wip)
+    
     def test_make_a_new_pobox(self):
-        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        specifics = dict(context='NewSenderFirst', profile_url=self.A.profile_url)
         self.msg.update(specifics)
-        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        postcards.new_postcard(self.A.from_tel, self.A.to_tel, self.msg)
         # Connect to a viewer
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)
+        correspondence = saveget.get_correspondence(self.A.from_tel, self.A.to_tel)
         pobox_id = views.new_pobox_id(correspondence)
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = pobox['viewer_data']
-        self.assertIn(self.sender_mobile_number, viewer_data)
-        self.assertEqual(viewer_data[self.sender_mobile_number]['profile_url'], self.profile_url)
-
-
-
-
+        self.assertIn(self.A.from_tel, viewer_data)
+        self.assertEqual(viewer_data[self.A.from_tel]['profile_url'], self.A.profile_url)
+        print(viewer_data[self.A.from_tel])
 
     def xtest_second_new_sender_connect_to_existing_pobox(self):
-        pass
+        # Setup first sender and pobox
+        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)
+        pobox_id = views.new_pobox_id(correspondence)
+        # Setup second sender
+        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+
+
+
+        # ============>   fix up 'setup' of sender0, 1, maybe 2 to make this cleaner.  Maybe have this as a seperate distant utility?
+        # =============> use an object-producer even a function
+
+
+
 
     def xtest_disconnect_from_one_pobox_connect_to_another_existing_pobox(self):
         pass
