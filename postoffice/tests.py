@@ -173,14 +173,15 @@ class ConnectCases(TestCase):
         # Setup second sender
         B = utils_4_testing.make_sender_values('B')
         msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
-        postcards.new_postcard(B.from_tel, B.to_tel, msg)
+        B_card_id_0 =  postcards.new_postcard(B.from_tel, B.to_tel, msg)
+        correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
         # connect B as requester...
         msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
                                     A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
-        pobox = saveget.get_pobox(pobox_id)
-        viewer_data = pobox['viewer_data']
+        pobox_A = saveget.get_pobox(pobox_id_A)
+        viewer_data = pobox_A['viewer_data']
         new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
-        self.assertEqual(pobox_id, new_correspondenceB['pobox_id'])
+        self.assertEqual(pobox_id_A, new_correspondenceB['pobox_id'])
         self.assertIn('Successfully connected', msg)
         self.assertIn(B.from_tel, viewer_data)
         self.assertIsNone(viewer_data[B.from_tel]['card_id'])       # B's first card is not carried over
@@ -195,10 +196,10 @@ class ConnectCases(TestCase):
         B = utils_4_testing.make_sender_values('B')
         msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
         B_card_id_0 =  postcards.new_postcard(B.from_tel, B.to_tel, msg)
-        # Now setup a viewer and pobox for B
         correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        # Now setup a viewer and pobox for B
         pobox_id_B = views.new_pobox_id(correspondenceB)
-        # Repeat the connection... 
+        # Do a connect, but now the requester has a pobox 
         msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
                                     A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
         # B sends a second card
@@ -211,10 +212,10 @@ class ConnectCases(TestCase):
         pobox_B = saveget.get_pobox(pobox_id_B)
         viewer_data_B = pobox_B['viewer_data']
         new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
-        print(f'line 215 in tests, new_correspondenceB: {new_correspondenceB}')
-        # self.assertNotEqual(correspondenceB, new_correspondenceB)
         self.assertEqual(pobox_id_A, new_correspondenceB['pobox_id'])
         self.assertIn(A.from_tel, viewer_data_A)
         self.assertIn(B.from_tel, viewer_data_A)
         self.assertEqual({}, viewer_data_B)
 
+    def xtest_finish_disconnect_of_old_pobox(self):
+        self.assertFalse('connects.delete_requester_from_former_pobox still needs work')

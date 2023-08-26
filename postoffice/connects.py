@@ -14,44 +14,30 @@ def connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, command_string
     return _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_from_tel, requester_to_tel)
     
 def _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_from_tel, requester_to_tel):
-    # This split to enable unit testing
+    # This split from the validity checking to enable unit testing
     requesting_correspondence = saveget.get_correspondence(requesting_from_tel, requester_to_tel)
     accepting_correspondence = saveget.get_correspondence(from_tel, to_tel)
-    requesters_former_pobox_id = requesting_correspondence['pobox_id']    
-    acceptors_pobox_id = accepting_correspondence['pobox_id'] 
-    update_the_requesting_correspondence_and_morsel(from_tel, to_tel, requesting_from_tel, requester_to_tel)
-    update_the_requesting_pobox(requesting_from_tel, requesters_former_pobox_id)
-    update_the_accepting_pobox(requesting_from_tel, acceptors_pobox_id)
+    delete_requester_from_former_pobox(requesting_from_tel, requesting_correspondence['pobox_id'])
+    add_requester_to_accepting_pobox(requesting_from_tel, accepting_correspondence)
+    update_the_requesting_morsel(requesting_from_tel, requester_to_tel, new_recipient=accepting_correspondence['name_of_to_tel'])
+    # Update the correspondence so requester points to acceptor pobox
+    requesting_correspondence['name_of_to_tel'] = accepting_correspondence['name_of_to_tel']
+    requesting_correspondence['pobox_id'] = accepting_correspondence['pobox_id']
+    saveget.save_correspondence(requesting_correspondence)
+    saveget.save_correspondence(accepting_correspondence)
     #  -> Send message to both from_tels about the connection, the naming, and how to change.
     return f'Successfully connected {requesting_from_tel} to {from_tel}'
+ 
 
-
-def check_the_connect_command(command_string):
-    cmd, requesting_from_tel, passkey_literal, passkey = [word.strip() for word in command_string.split(' ')]
-    found_key, requester_to_tel = get_passkey(requesting_from_tel)     # Raises TypeError if no passkey
-    assert(found_key == passkey)
-    assert cmd == 'connect'
-    assert passkey_literal == 'passkey'
-    assert len(passkey) == 4
-    return requesting_from_tel, requester_to_tel
-     
-
-def update_the_requesting_correspondence_and_morsel(from_tel, to_tel, requesting_from_tel, requester_to_tel):
-    requesting_correspondence = saveget.get_correspondence(requesting_from_tel, requester_to_tel)
-    accepting_correspondence = saveget.get_correspondence(from_tel, to_tel)
-    target_pobox_id = accepting_correspondence['pobox_id']
-    target_name = accepting_correspondence['name_of_to_tel']
-    requesting_correspondence['pobox_id'] = target_pobox_id
-    requesting_correspondence['name_of_to_tel'] = target_name
-    saveget.save_correspondence(requesting_correspondence)
+def update_the_requesting_morsel(requesting_from_tel, requester_to_tel, new_recipient):
     requester = saveget.get_sender(requesting_from_tel)
-    requester['morsel'][requester_to_tel]['name_of_to_tel'] = target_name
-    saveget.update_sender_and_morsel(requester)     # Update the morsel to reflect 
+    requester['morsel'][requester_to_tel]['name_of_to_tel'] = new_recipient
+    saveget.update_sender_and_morsel(requester)     
 
 
-def update_the_accepting_pobox(requesting_from_tel, acceptors_pobox_id):
+def add_requester_to_accepting_pobox(requesting_from_tel, accepting_correspondence):
     """Add viewer_data format to the accepting pobox. """
-    accepting_pobox = saveget.get_pobox(acceptors_pobox_id)
+    accepting_pobox = saveget.get_pobox(accepting_correspondence['pobox_id'])
     viewer_data = accepting_pobox['viewer_data']
     viewer_data[requesting_from_tel] = dict(
         card_id = None  # This and other parameters assigned when the first card is sent using the re-assigned correspondence
@@ -59,7 +45,7 @@ def update_the_accepting_pobox(requesting_from_tel, acceptors_pobox_id):
     saveget.save_pobox(accepting_pobox)
 
     
-def update_the_requesting_pobox(requesting_from_tel, requesters_former_pobox_id):
+def delete_requester_from_former_pobox(requesting_from_tel, requesters_former_pobox_id):
     """Delete viewer_data from requesting pobox if (there is one!), and then delete the pobox if viewer_data is empty"""
     if not requesters_former_pobox_id:
         print(f'\n\n====>Debug in line 66 postoffice.connects, have no pobox_id for from_tel {requesting_from_tel}\n\n')
@@ -72,14 +58,6 @@ def update_the_requesting_pobox(requesting_from_tel, requesters_former_pobox_id)
             assert(requesters_former_pobox['key_operator']==requesting_from_tel)
         except AssertionError:
             raise
-        
-        print('UUUUUUUUUUUUUUUU')
-
-
-
-
-
-
 
 
 def get_passkey(from_tel):
