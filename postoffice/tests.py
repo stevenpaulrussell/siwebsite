@@ -149,14 +149,12 @@ class ConnectCases(TestCase):
     def setUp(self):
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
-        A = utils_4_testing.make_sender_values('A')
-        # make a first sender, named 'A'
-        msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
-        postcards.new_postcard(A.from_tel, A.to_tel, msg)
     
     def xtest_make_a_new_pobox(self):
-        # Remake A's stuff!
+        # First sender completes sign-up
         A = utils_4_testing.make_sender_values('A')
+        msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
+        postcards.new_postcard(A.from_tel, A.to_tel, msg)
         # Connect to a viewer
         correspondence = saveget.get_correspondence(A.from_tel, A.to_tel)
         pobox_id = views.new_pobox_id(correspondence)
@@ -166,8 +164,10 @@ class ConnectCases(TestCase):
         self.assertEqual(viewer_data[A.from_tel]['profile_url'], A.profile_url)
 
     def xtest_second_new_sender_connect_to_existing_pobox(self):
-        # Repeat setting up A and pobox
+        # First sender completes sign-up
         A = utils_4_testing.make_sender_values('A')
+        msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
+        postcards.new_postcard(A.from_tel, A.to_tel, msg)
         correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
         pobox_id_A = views.new_pobox_id(correspondenceA)
         # Setup second sender
@@ -188,8 +188,10 @@ class ConnectCases(TestCase):
         self.assertIsNotNone(viewer_data[A.from_tel]['card_id'])    # A's first card was carried over
 
     def test_disconnect_from_one_pobox_connect_to_another_existing_pobox(self):
-        # Repeat setting up A and pobox
+        # First sender completes sign-up
         A = utils_4_testing.make_sender_values('A')
+        msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
+        postcards.new_postcard(A.from_tel, A.to_tel, msg)
         correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
         pobox_id_A = views.new_pobox_id(correspondenceA)
         # Repeat setting up second sender B
@@ -202,16 +204,18 @@ class ConnectCases(TestCase):
         # Do a connect, but now the requester has a pobox 
         msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
                                     A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
-        # B sends a second card
+        # B sends a second card, now with 'HaveViewer' set as context by twitalk using morsel
+        morselB = saveget.get_sender(B.from_tel)['morsel'][B.to_tel] 
         B = utils_4_testing.make_sender_values('B', card_number=1)
-        msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
+        msg = dict(sent_at='sent_at', wip=B.wip, context='HaveViewer', profile_url=B.profile_url)
         B_card_id_1 = postcards.new_postcard(B.from_tel, B.to_tel, msg)
         # Get the results!  A and B send to pobox_A, while pobox_B has no one sending to it.
         pobox_A = saveget.get_pobox(pobox_id_A)
         viewer_data_A = pobox_A['viewer_data']
         pobox_B = saveget.get_pobox(pobox_id_B)
         viewer_data_B = pobox_B['viewer_data']
-        new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel, debug_string='\nline 214 test')
+        self.assertEqual(morselB['have_viewer'], 'HaveViewer')
         self.assertEqual(pobox_id_A, new_correspondenceB['pobox_id'])
         self.assertIn(A.from_tel, viewer_data_A)
         self.assertIn(B.from_tel, viewer_data_A)

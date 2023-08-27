@@ -110,17 +110,23 @@ def update_pobox_new_card(correspondence):
     pobox = saveget.get_pobox(correspondence['pobox_id'])
     from_tel = correspondence['from_tel'] 
     viewer_data_item = pobox['viewer_data'][from_tel]    # from_tel key was set when pobox_id was assigned...
-    if viewer_data_item['play_count'] > 0:
-        push_cards_along(correspondence, pobox)
+    try:
+        if viewer_data_item['play_count'] > 0:
+            push_cards_along(correspondence, pobox)
+    except KeyError:  # no viewer_data for this sender because this is the first card
+        push_cards_along(correspondence, pobox, initializing=True)
     # correspondence is changed, but is saved by the caller
     saveget.save_pobox(pobox)
 
 
-def push_cards_along(correspondence, pobox):
+def push_cards_along(correspondence, pobox, initializing=False):
     """Called to push cards if events played_this_card or new_card show the current card should be moved. """
-    correspondence['card_current'] = card_id =  correspondence['cardlist_unplayed'].pop()  
-    correspondence['cardlist_played'].append(card_id)                
     from_tel, to_tel = correspondence['from_tel'], correspondence['to_tel']
+    if initializing:
+        pass   # No card to move from [card_current] into cardlist_played
+    else:
+        correspondence['cardlist_played'].append(correspondence['card_current']) 
+    card_id = correspondence['card_current'] =  correspondence['cardlist_unplayed'].pop()               
     postcard = saveget.get_postcard(card_id)   
     pobox['viewer_data'][from_tel] = dict(
         card_id = card_id,

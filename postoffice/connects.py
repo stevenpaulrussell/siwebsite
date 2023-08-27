@@ -7,7 +7,7 @@ from saveget import saveget
 def connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, command_string):
     """Check the command integrity, change the requester correspondence, change the acceptor pobox and the requestor pobox if there is one."""
     try:
-        requesting_from_tel, requester_to_tel = check_the_connect_command(command_string)
+        requesting_from_tel, requester_to_tel = get_passkey(command_string)
     except (ValueError, AssertionError, TypeError):
         return f'Sorry, there is some problem with, "{command_string}". Try "?" for help.'
     # This split to enable unit testing
@@ -23,10 +23,6 @@ def _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_fr
     # Update the correspondence so requester points to acceptor pobox
     requesting_correspondence['name_of_to_tel'] = accepting_correspondence['name_of_to_tel']
     requesting_correspondence['pobox_id'] = accepting_correspondence['pobox_id']
-
-    print(f'\nUpdated correspondence...')
-    print(f'accepting:\n{accepting_correspondence}')
-    print(f'requesting:\n{requesting_correspondence}\n')
 
     saveget.save_correspondence(requesting_correspondence)
     saveget.save_correspondence(accepting_correspondence)
