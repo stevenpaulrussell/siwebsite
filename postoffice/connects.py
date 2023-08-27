@@ -58,6 +58,8 @@ def delete_requester_from_former_pobox(requesting_from_tel, requesters_former_po
             assert(requesters_former_pobox['key_operator']==requesting_from_tel)
         except AssertionError:
             raise
+        viewer_data.pop(requesting_from_tel)
+        saveget.save_pobox(requesters_former_pobox)
 
 
 def get_passkey(from_tel):

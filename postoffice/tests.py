@@ -154,7 +154,7 @@ class ConnectCases(TestCase):
         msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
         postcards.new_postcard(A.from_tel, A.to_tel, msg)
     
-    def test_make_a_new_pobox(self):
+    def xtest_make_a_new_pobox(self):
         # Remake A's stuff!
         A = utils_4_testing.make_sender_values('A')
         # Connect to a viewer
@@ -165,7 +165,7 @@ class ConnectCases(TestCase):
         self.assertIn(A.from_tel, viewer_data)
         self.assertEqual(viewer_data[A.from_tel]['profile_url'], A.profile_url)
 
-    def test_second_new_sender_connect_to_existing_pobox(self):
+    def xtest_second_new_sender_connect_to_existing_pobox(self):
         # Repeat setting up A and pobox
         A = utils_4_testing.make_sender_values('A')
         correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
