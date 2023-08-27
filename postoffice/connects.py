@@ -17,7 +17,8 @@ def _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_fr
     # This split from the validity checking to enable unit testing
     requesting_correspondence = saveget.get_correspondence(requesting_from_tel, requester_to_tel)
     accepting_correspondence = saveget.get_correspondence(from_tel, to_tel)
-    delete_requester_from_former_pobox(requesting_from_tel, requesting_correspondence['pobox_id'])
+    if requesting_correspondence['pobox_id']:
+        delete_requester_from_former_pobox(requesting_from_tel, requesting_correspondence['pobox_id'])
     add_requester_to_accepting_pobox(requesting_from_tel, accepting_correspondence)
     update_the_requesting_morsel(requesting_from_tel, requester_to_tel, new_recipient=accepting_correspondence['name_of_to_tel'])
     # Update the correspondence so requester points to acceptor pobox
@@ -48,19 +49,15 @@ def add_requester_to_accepting_pobox(requesting_from_tel, accepting_corresponden
     
 def delete_requester_from_former_pobox(requesting_from_tel, requesters_former_pobox_id):
     """Delete viewer_data from requesting pobox if (there is one!), and then delete the pobox if viewer_data is empty"""
-    if not requesters_former_pobox_id:
-        print(f'\n\n====>Debug in line 66 postoffice.connects, have no pobox_id for from_tel {requesting_from_tel}\n\n')
-        return
-    else:
-        requesters_former_pobox = saveget.get_pobox(requesters_former_pobox_id)
-        try:
-            viewer_data = requesters_former_pobox['viewer_data']
-            assert(len(viewer_data)==1)
-            assert(requesters_former_pobox['key_operator']==requesting_from_tel)
-        except AssertionError:
-            raise
-        viewer_data.pop(requesting_from_tel)
-        saveget.save_pobox(requesters_former_pobox)
+    requesters_former_pobox = saveget.get_pobox(requesters_former_pobox_id)
+    try:
+        viewer_data = requesters_former_pobox['viewer_data']
+        assert(len(viewer_data)==1)
+        assert(requesters_former_pobox['key_operator']==requesting_from_tel)
+    except AssertionError:
+        raise
+    viewer_data.pop(requesting_from_tel)
+    saveget.save_pobox(requesters_former_pobox)
 
 
 def get_passkey(from_tel):
