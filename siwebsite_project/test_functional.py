@@ -22,23 +22,18 @@ from twitalk.free_tier import mms_to_free_tier
 from saveget import saveget
 from postoffice import event_handler, connects
 from postoffice.views import new_pobox_id, pobox_id_if_good_passkey
-
-
-
-
-# from postbox.views import update_viewer_data
-
-
-
-
-
-
 from postmaster.views import tickles
 
 
 from .sender_object_for_tests import TwiSim, pp
 data_source = os.environ['POSTBOX_DATA_SOURCE']
 CMD_URL = filerviews.EVENT_URL
+
+
+"""
+Simulate use.  Sender0 uses a single to_tel and makes a viewer for recipient KinA.
+Sender1 uses two to_tels, sending to both KinA and KinB.
+"""
 
 def display_sender(from_tel, comment=None):
     if comment:
@@ -94,6 +89,13 @@ class OneCmdTests(TestCase):
         http_response = tickles('request_dummy')
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
+        # Sender stored state info in the original carepost. Now it is in correspondence:
+        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
+        print(f'debug line 94 correspondence0toA:\n {correspondence0toA}\n')
+        sender0_first_card = correspondence0toA['card_current']
+        sender0_unplayed_queue = correspondence0toA['cardlist_unplayed']
+        self.assertIsNotNone(sender0_first_card)
+        self.assertEqual(sender0_unplayed_queue), []
         self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])
         self.assertIn('using new to_tel', admin_msgs[1])
 
@@ -104,24 +106,26 @@ class OneCmdTests(TestCase):
         tickles('request_dummy')
         sender0 = saveget.get_sender(Sender0.mobile)
         sender1 = saveget.get_sender(Sender1.mobile)
+
+
+
         # sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
-
-
-
 
         #   -----> Substantial change required. What is the logic of these tests???
 
         # Check that all is as expected
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
-        self.assertIsNone(sender1['conn'][sender1_twil0]['pobox_id'])
-        self.assertIsNone(sender1['conn'][sender1_twil1]['pobox_id'])
-        sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
-        sender1_card = saveget.get_postcard(sender1_card_id)
-        self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
+        self.assertEqual(sender1['morsel'][sender1_twil0]['name_of_to_tel'], 'kith or kin')
+        self.assertEqual(sender1['morsel'][sender1_twil1]['have_viewer'], False)
+
+        # sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
+        # sender1_card = saveget.get_postcard(sender1_card_id)
+        # self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
+
         # display_sender(Sender0.mobile, 'sender0 before setting any viewer')
         # display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
-        # Sender0 gets a passkey to enable making a viewer.  
+        # Sender0 gets a passkey to enable making a viewer for 'KinA'.  
         sender0 = saveget.get_sender(Sender0.mobile)
         sender0_passkey_msg = mms_to_free_tier(time.time(), Sender0.mobile, sender0_twil0, 'passkey', None, None)    # nq_sqs happens 
         sender0_passkey =  sender0_passkey_msg.split('"')[1]
@@ -136,25 +140,26 @@ class OneCmdTests(TestCase):
         # with @csrf_exempt, this post gets a status code 200 not 403!
         response2 = requests.post(redirected_url)
 
-        sender0_postbox_id =  redirected_url.split('/postbox/')[-1]
+        KinA_postbox_id =  redirected_url.split('/postbox/')[-1]
         pobox_id_again = pobox_id_if_good_passkey(Sender0.mobile, sender0_passkey)
-        sender0_viewer_data = saveget.get_viewer_data(sender0_postbox_id)
+        KinA_pobox = saveget.get_pobox(KinA_postbox_id)
+        KinA_viewer_data = KinA_pobox['viewer_data']
 
         # And check the results
-        self.assertEqual(sender0_postbox_id, pobox_id_again)
+        self.assertEqual(KinA_postbox_id, pobox_id_again)
         self.assertIsNone(pobox_id_if_good_passkey(Sender0.mobile, 'some wrong twilio number'))
-        self.assertIn(Sender0.mobile, sender0_viewer_data)
-        self.assertIn('meta', sender0_viewer_data)
-        self.assertEqual(sender0_viewer_data['meta']['pobox_id'], sender0_postbox_id)
-        self.assertIn('player', redirected_url)
+        self.assertIn(Sender0.mobile, KinA_viewer_data)
+        KinA_sender0_viewer_data = KinA_viewer_data[Sender0.mobile]
+        print(f'debug ==> {KinA_sender0_viewer_data}')
+        self.assertEqual(KinA_sender0_viewer_data['profile_url'], Sender0.profile_url)
 
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         filerviews.send_an_sqs_message(Sender0.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy')
 
-        # Check the results
-        sender0 = saveget.get_sender(Sender0.mobile)
-        sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
+        # Check the results.  
+        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
+        sender0_first_card_id = correspondence0toA['']
         pobox = saveget.get_pobox(sender0_postbox_id)
         self.assertNotEqual(sender0_first_card_id, sender0_second_card_id)
         self.assertIn(sender0_second_card_id, pobox['cardlists'][Sender0.mobile])
