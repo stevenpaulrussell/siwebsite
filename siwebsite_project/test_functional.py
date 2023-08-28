@@ -35,6 +35,7 @@ Simulate use.  Sender0 uses a single to_tel and makes a viewer for recipient Kin
 Sender1 uses two to_tels, sending to both KinA and KinB.
 """
 
+
 def display_sender(from_tel, comment=None):
     if comment:
         print('\n\n','='*20)
@@ -71,11 +72,9 @@ class OneCmdTests(TestCase):
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
 
-
     def test_backend_using_simulation_of_two_senders(self):
         # Show reminder message
         print(f'\n====> lines displaying state in test_functional are commented out.  Change for inspection!\n')
-
         # Remember useful constants
         Sender0 = TwiSim('Mr0')
         Sender1 = TwiSim('Ms1')
@@ -83,50 +82,57 @@ class OneCmdTests(TestCase):
         sender1_twil1 = Sender1.twi_directory['twil1']
         sender0_twil0 = Sender0.twi_directory['twil0']
 
+        def get_2_senders():
+            return saveget.get_sender(Sender0.mobile), saveget.get_sender(Sender1.mobile)
+
+        def get_3_corresponds():
+            correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
+            correspondence1toA = saveget.get_correspondence(Sender1.mobile, sender0_twil0)
+            correspondence1toB = saveget.get_correspondence(Sender1.mobile, sender1_twil0)
+            return correspondence0toA, correspondence1toA, correspondence1toB
+        
         # Sender0 and Sender1 sign up, neither has a viewer yet. 
         filerviews.send_an_sqs_message(Sender0.newsender_firstpostcard(), CMD_URL)
         filerviews.send_an_sqs_message(Sender1.newsender_firstpostcard(), CMD_URL)
         http_response = tickles('request_dummy')
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
-        # Sender stored state info in the original carepost. Now it is in correspondence:
-        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-        print(f'debug line 94 correspondence0toA:\n {correspondence0toA}\n')
-        sender0_first_card = correspondence0toA['card_current']
-        sender0_unplayed_queue = correspondence0toA['cardlist_unplayed']
-        self.assertIsNotNone(sender0_first_card)
-        self.assertEqual(sender0_unplayed_queue), []
         self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])
         self.assertIn('using new to_tel', admin_msgs[1])
+
+        # Sender stored state info in the original carepost. Now it is in correspondence:
+        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
+        card_in_play, sender0_unplayed_queue = correspondence0toA['card_current'], correspondence0toA['cardlist_unplayed']
+        self.assertEqual(len(sender0_unplayed_queue), 1)
+        self.assertIsNone(card_in_play)       # The card sent remains in the unplayed queue until a viewer is established
 
         # Sender1 sends to a second twilio number
         filerviews.send_an_sqs_message(Sender1.newrecipient_postcard('twil1'), CMD_URL)
         # Sender1 sends a second card to the first twilio number
         filerviews.send_an_sqs_message(Sender1.newpostcard_noviewer('twil0'), CMD_URL)
         tickles('request_dummy')
-        sender0 = saveget.get_sender(Sender0.mobile)
-        sender1 = saveget.get_sender(Sender1.mobile)
+
+        sender0, sender1 = get_2_senders()
+    
+        # Check that all is as expected: No viewer, 3 cards sent, each on a different (from_tel, to_tel) pair, a 'correspondence'
+        # The morsel that is part of sender records the existence of these, and the content for now is only each correspondence.
+
+        # =============> Add tests to exhibit the above statement!
 
 
-
-        # sender0_first_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
-
-        #   -----> Substantial change required. What is the logic of these tests???
-
-        # Check that all is as expected
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
         self.assertEqual(sender1['morsel'][sender1_twil0]['name_of_to_tel'], 'kith or kin')
         self.assertEqual(sender1['morsel'][sender1_twil1]['have_viewer'], False)
 
+        #  =========> Change the below to show correspondence, make this sort of a theory of ops
+
         # sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         # sender1_card = saveget.get_postcard(sender1_card_id)
         # self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
-
         # display_sender(Sender0.mobile, 'sender0 before setting any viewer')
         # display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
         # Sender0 gets a passkey to enable making a viewer for 'KinA'.  
-        sender0 = saveget.get_sender(Sender0.mobile)
         sender0_passkey_msg = mms_to_free_tier(time.time(), Sender0.mobile, sender0_twil0, 'passkey', None, None)    # nq_sqs happens 
         sender0_passkey =  sender0_passkey_msg.split('"')[1]
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
