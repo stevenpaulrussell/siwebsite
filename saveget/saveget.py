@@ -27,6 +27,10 @@ def delete_pobox(pobox):
     pobox_id = pobox['pobox_id']
     filerviews._delete_a_thing_using_key(key=f'pobox/pobox_{pobox_id}')
 
+def get_viewer_data(pobox_id):
+    pobox = get_pobox(pobox_id)
+    return pobox['viewer_data']
+
 
 def get_postcard(card_id):
     return filerviews._load_a_thing_using_key(key=f'card/card_{card_id}')

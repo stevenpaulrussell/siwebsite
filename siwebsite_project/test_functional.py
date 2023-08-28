@@ -142,21 +142,19 @@ class OneCmdTests(TestCase):
         # In this test script, the request is redirected to the player, and that updates viewer data from the poboc
         redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'from_tel': Sender0.mobile, 'passkey': sender0_passkey})
         redirected_url = redirect_response.url
-
-        # with @csrf_exempt, this post gets a status code 200 not 403!
+        # Needed @csrf_exempt in the code so that post gets a status code 200 not 403, and returns the json encoded viewer_data
         response2 = requests.post(redirected_url)
-
         KinA_postbox_id =  redirected_url.split('/postbox/')[-1]
         pobox_id_again = pobox_id_if_good_passkey(Sender0.mobile, sender0_passkey)
         KinA_pobox = saveget.get_pobox(KinA_postbox_id)
         KinA_viewer_data = KinA_pobox['viewer_data']
+        KinA_sender0_viewer_data = KinA_viewer_data[Sender0.mobile]
 
         # And check the results
+        self.assertEqual(response2.status_code, 200)
         self.assertEqual(KinA_postbox_id, pobox_id_again)
         self.assertIsNone(pobox_id_if_good_passkey(Sender0.mobile, 'some wrong twilio number'))
         self.assertIn(Sender0.mobile, KinA_viewer_data)
-        KinA_sender0_viewer_data = KinA_viewer_data[Sender0.mobile]
-        print(f'debug ==> {KinA_sender0_viewer_data}')
         self.assertEqual(KinA_sender0_viewer_data['profile_url'], Sender0.profile_url)
 
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
@@ -165,15 +163,18 @@ class OneCmdTests(TestCase):
 
         # Check the results.  
         correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-        sender0_first_card_id = correspondence0toA['']
-        pobox = saveget.get_pobox(sender0_postbox_id)
+        sender0_first_card_id = correspondence0toA['card_current']
+        sender0_second_card_id = correspondence0toA['cardlist_unplayed'][0]
+        sender0_pobox_id = correspondence0toA['pobox_id']
+        pobox = saveget.get_pobox(sender0_pobox_id)
         self.assertNotEqual(sender0_first_card_id, sender0_second_card_id)
-        self.assertIn(sender0_second_card_id, pobox['cardlists'][Sender0.mobile])
+        #==============> Test that these cards are really cards!  Above test not very conclusive!
+
 
         # updating viewer_data changes nothing becaue the card in viewer_data remains unplayed
-        update_viewer_data(pobox, sender0_viewer_data)
-        secondcard_pobox = saveget.get_pobox(sender0_postbox_id)
-        secondcard_viewer_data = saveget.get_viewer_data(sender0_postbox_id)
+        # update_viewer_data(pobox, sender0_viewer_data)
+        secondcard_pobox = saveget.get_pobox(sender0_pobox_id)
+        secondcard_viewer_data = saveget.get_viewer_data(sender0_pobox_id)
         self.assertIn(sender0_second_card_id, secondcard_pobox['cardlists'][Sender0.mobile])
         self.assertIn(sender0_first_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
         self.assertNotIn(sender0_second_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
