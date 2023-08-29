@@ -8,7 +8,7 @@ from saveget import saveget
 def connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, command_string):
     """Check the command integrity, change the requester correspondence, change the acceptor pobox and the requestor pobox if there is one."""
     try:
-        requesting_from_tel, requester_to_tel = get_passkey(from_tel)
+        requesting_from_tel, requester_to_tel = check_the_connect_command(command_string)
     except (ValueError, AssertionError, TypeError):
         if os.environ['TEST'] == 'True':
             raise
@@ -34,6 +34,15 @@ def _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_fr
     print(f"================> debug line 32 connects  {from_tel, to_tel, requesting_from_tel, requester_to_tel}")
     return f'Successfully connected {requesting_from_tel} to {from_tel}'
  
+def check_the_connect_command(command_string):
+    cmd, requesting_from_tel, passkey_literal, passkey = [word.strip() for word in command_string.split(' ')]
+    found_key, requester_to_tel = get_passkey(requesting_from_tel)     # Raises TypeError if no passkey
+    assert(found_key == passkey)
+    assert cmd == 'connect'
+    assert passkey_literal == 'passkey'
+    assert len(passkey) == 4
+    return requesting_from_tel, requester_to_tel
+     
 
 def update_the_requesting_morsel(requesting_from_tel, requester_to_tel, new_recipient):
     requester = saveget.get_sender(requesting_from_tel)
