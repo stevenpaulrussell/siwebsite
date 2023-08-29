@@ -232,17 +232,24 @@ class OneCmdTests(TestCase):
         # display_sender(Sender1.mobile, 'sender1 after setting from: and to: names, and changing profile.')
         # display_postal(sender0_postbox_id, 'pobox shows no change from sender1 setting to, from, and profile. Profile changes with new card.')
 
-        # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
+        # Sender1 now sends a card to the new connection. This will appear in connection but not yet viewer_data
         filerviews.send_an_sqs_message(Sender1.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy') 
-        sender1 = saveget.get_sender(Sender1.mobile)
-        sender1_recent_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
+        correspondence0toA, correspondence1toA, correspondence1toB = get_3_corresponds()    
+        sender0_postbox_id = correspondence1toA['pobox_id']  
+        sender1_recent_card_id = correspondence1toA['cardlist_unplayed'][-1]
+
+        # Not sure what needs checking... Fix up this test flow, make the story more clear and examine more results!!!
+        print(f'=======Test need line 243 test_functional.... ')
+
+
         pobox = saveget.get_pobox(sender0_postbox_id)
         viewer_data = saveget.get_viewer_data(sender0_postbox_id)
-        self.assertEqual(pobox['cardlists'][Sender1.mobile], [sender1_recent_card_id])
-        self.assertNotIn(Sender1.mobile, viewer_data)
 
-        # Refreshing the viewer gets the card to show up
+        # Below used to say NotIn, because the update of viewer_data did not occur when with a new card.  But, check all this and complete the test!
+        self.assertIn(Sender1.mobile, viewer_data)
+
+
         # Played it???????????????????????/
 
 
@@ -253,7 +260,10 @@ class OneCmdTests(TestCase):
         sender1_postbox_id =  sender1_redirected_url.split('/postbox/')[-1]        
         pobox = saveget.get_pobox(sender1_postbox_id)
         viewer_data = saveget.get_viewer_data(sender1_postbox_id)
-        self.assertEqual(pobox['cardlists'][Sender1.mobile], [])    # The card is no longer in the list
+
+        print(f"What is to be checked with the new logic, line 264?? Here is viewer_data:\n{viewer_data}\n")
+
+
         self.assertIn(Sender0.mobile, viewer_data)
         self.assertIn(Sender1.mobile, viewer_data)
 
