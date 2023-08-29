@@ -87,24 +87,27 @@ class OneCmdTests(TestCase):
 
         def get_3_corresponds():
             correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-            correspondence1toA = saveget.get_correspondence(Sender1.mobile, sender0_twil0)
-            correspondence1toB = saveget.get_correspondence(Sender1.mobile, sender1_twil0)
+            correspondence1toA = saveget.get_correspondence(Sender1.mobile, sender1_twil0)
+            correspondence1toB = saveget.get_correspondence(Sender1.mobile, sender1_twil1)
             return correspondence0toA, correspondence1toA, correspondence1toB
         
+
         # Sender0 and Sender1 sign up, neither has a viewer yet. 
         filerviews.send_an_sqs_message(Sender0.newsender_firstpostcard(), CMD_URL)
         filerviews.send_an_sqs_message(Sender1.newsender_firstpostcard(), CMD_URL)
         http_response = tickles('request_dummy')
+        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
+        correspondence1toA = saveget.get_correspondence(Sender1.mobile, sender1_twil0)
+        sender0_card_in_play, sender0_unplayed_queue = correspondence0toA['card_current'], correspondence0toA['cardlist_unplayed']
+        sender1_unplayed_queue = correspondence0toA['cardlist_unplayed']
+
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
         self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])
         self.assertIn('using new to_tel', admin_msgs[1])
-
-        # Sender stored state info in the original carepost. Now it is in correspondence:
-        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-        card_in_play, sender0_unplayed_queue = correspondence0toA['card_current'], correspondence0toA['cardlist_unplayed']
         self.assertEqual(len(sender0_unplayed_queue), 1)
-        self.assertIsNone(card_in_play)       # The card sent remains in the unplayed queue until a viewer is established
+        self.assertEqual(len(sender1_unplayed_queue), 1)
+        self.assertIsNone(sender0_card_in_play)       # A card sent remains in the unplayed queue until a viewer is established
 
         # Sender1 sends to a second twilio number
         filerviews.send_an_sqs_message(Sender1.newrecipient_postcard('twil1'), CMD_URL)
@@ -118,8 +121,8 @@ class OneCmdTests(TestCase):
         # The morsel that is part of sender records the existence of these, and the content for now is only each correspondence.
 
         # =============> Add tests to exhibit the above statement!
-
-
+        correspondence0toA, correspondence1toA, correspondence1toB = get_3_corresponds()     
+        self.assertEqual(len(correspondence1toB['cardlist_unplayed']), 1)  # Now have the 3 correspondence, each with a card in the wait queue -- cardlist_unplayed
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
         self.assertEqual(sender1['morsel'][sender1_twil0]['name_of_to_tel'], 'kith or kin')
         self.assertEqual(sender1['morsel'][sender1_twil1]['have_viewer'], False)
@@ -160,24 +163,21 @@ class OneCmdTests(TestCase):
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         filerviews.send_an_sqs_message(Sender0.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy')
-
-        # Check the results.  
         correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
         sender0_first_card_id = correspondence0toA['card_current']
         sender0_second_card_id = correspondence0toA['cardlist_unplayed'][0]
         sender0_pobox_id = correspondence0toA['pobox_id']
         pobox = saveget.get_pobox(sender0_pobox_id)
-        self.assertNotEqual(sender0_first_card_id, sender0_second_card_id)
-        #==============> Test that these cards are really cards!  Above test not very conclusive!
 
+        # Check the results.  
+        self.assertIn(sender0_second_card_id, correspondence0toA['cardlist_unplayed'])
 
         # updating viewer_data changes nothing becaue the card in viewer_data remains unplayed
         # update_viewer_data(pobox, sender0_viewer_data)
         secondcard_pobox = saveget.get_pobox(sender0_pobox_id)
         secondcard_viewer_data = saveget.get_viewer_data(sender0_pobox_id)
-        self.assertIn(sender0_second_card_id, secondcard_pobox['cardlists'][Sender0.mobile])
-        self.assertIn(sender0_first_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
-        self.assertNotIn(sender0_second_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
+        self.assertEqual(sender0_first_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
+        self.assertNotEqual(sender0_second_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
 
         # display_sender(Sender0.mobile, f'sender0 after setting up a viewer and sending a second card')
         # display_postal(sender0_postbox_id, f'pobox after sender0 sent that second card')
@@ -192,12 +192,15 @@ class OneCmdTests(TestCase):
         cmd = f'connect {Sender1.mobile} passkey {sender1_passkey}'
         sender0_msg_back = mms_to_free_tier(time.time(), Sender0.mobile, sender0_twil0, cmd, None, None)   # nq_sqs happens 
         self.assertIn(f'Your command <{cmd}> is queued for processing', sender0_msg_back)
-
         tickles('request_dummy')  # again, tickle needed from some source to get the postmaster side to notice the changes
 
-        sender1 = saveget.get_sender(Sender1.mobile)
-        self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], sender0_postbox_id)    # Now, sender1 has a pobox_id associated with the connection
-        self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], sender0['conn'][sender0_twil0]['pobox_id'])
+
+
+
+
+        correspondence0toA, correspondence1toA, correspondence1toB = get_3_corresponds()      
+        self.assertEqual(correspondence1toA['pobox_id'], sender0_pobox_id)    # Now, sender1 has a pobox_id associated with the connection
+        self.assertEqual(correspondence1toA['pobox_id'], correspondence0toA['pobox_id'])
 
         # display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox --- no change to sender0')
         # display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox. Note the change to pobox_id')

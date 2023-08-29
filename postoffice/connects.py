@@ -1,14 +1,17 @@
 
 import time
 import uuid
+import os
 
 from saveget import saveget
 
 def connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, command_string):
     """Check the command integrity, change the requester correspondence, change the acceptor pobox and the requestor pobox if there is one."""
     try:
-        requesting_from_tel, requester_to_tel = get_passkey(command_string)
+        requesting_from_tel, requester_to_tel = get_passkey(from_tel)
     except (ValueError, AssertionError, TypeError):
+        if os.environ['TEST'] == 'True':
+            raise
         return f'Sorry, there is some problem with, "{command_string}". Try "?" for help.'
     # This split to enable unit testing
     return _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_from_tel, requester_to_tel)
@@ -28,6 +31,7 @@ def _connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, requesting_fr
     saveget.save_correspondence(requesting_correspondence)
     saveget.save_correspondence(accepting_correspondence)
     #  -> Send message to both from_tels about the connection, the naming, and how to change.
+    print(f"================> debug line 32 connects  {from_tel, to_tel, requesting_from_tel, requester_to_tel}")
     return f'Successfully connected {requesting_from_tel} to {from_tel}'
  
 
