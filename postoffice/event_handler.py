@@ -9,25 +9,25 @@ from . import postcards, connects
 
 
 def interpret_one_event(event):
-    from_tel = event['from_tel']
-    to_tel = event['to_tel']
+    tel_id = event['tel_id']
+    svc_id = event['svc_id']
     event_type = event['event_type']
     match event_type:
         case 'new_postcard':
-            postcards.new_postcard(from_tel, to_tel, event)
+            postcards.new_postcard(tel_id, svc_id, event)
             return 
         case 'profile':
-            sender = saveget.get_sender(from_tel)
+            sender = saveget.get_sender(tel_id)
             sender['profile_url'] = event['profile_url']
             saveget.update_sender_and_morsel(sender)
             return f'OK, your profile image has been updated.'
         case 'passkey':
             passkey=event['passkey']
-            to_store = dict(from_tel=from_tel, to_tel=to_tel, passkey=event['passkey'], expire=event['expire'])
+            to_store = dict(tel_id=tel_id, svc_id=svc_id, passkey=event['passkey'], expire=event['expire'])
             saveget.save_passkey_dictionary(to_store)
             return f'Your passkey <{passkey}> is now good. It will expire 24 hours from now.'
         case 'text_was_entered':
-            message = handle_entered_text_event(from_tel, to_tel, event['text'])
+            message = handle_entered_text_event(tel_id, svc_id, event['text'])
             return message
         case 'played_it':
             handle_played_it_event(event)            
@@ -35,9 +35,9 @@ def interpret_one_event(event):
             """ Send admin an error message or in test raise exception"""
             message = f'whoops, do not recognize command {event_type}.'
 
-def handle_entered_text_event(from_tel, to_tel, text): 
+def handle_entered_text_event(tel_id, svc_id, text): 
     if 'connect' in text:
-        result = connects.connect_joining_sender_to_lead_sender_pobox(from_tel, to_tel, text)
+        result = connects.connect_joining_sender_to_lead_sender_pobox(tel_id, svc_id, text)
         return result
 
     if 'from:' in text:
@@ -48,13 +48,13 @@ def handle_entered_text_event(from_tel, to_tel, text):
             if os.environ['TEST'] == 'True':
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
-        sender = saveget.get_sender(from_tel)
-        if sender['name_of_from_tel'] == postcards.create_default_using_from_tel(from_tel):      # Had been using the default name, so change all
-            sender['name_of_from_tel'] = name
-            for each_to_tel in sender['morsel']:
-                sender['morsel'][each_to_tel]['name_of_from_tel'] = name
+        sender = saveget.get_sender(tel_id)
+        if sender['sender_moniker'] == postcards.create_default_using_tel_id(tel_id):      # Had been using the default name, so change all
+            sender['sender_moniker'] = name
+            for each_svc_id in sender['morsel']:
+                sender['morsel'][each_svc_id]['sender_moniker'] = name
         else:
-            sender['morsel'][to_tel]['from'] = name
+            sender['morsel'][svc_id]['from'] = name
         saveget.update_sender_and_morsel(sender)
         return f'You will now be identified to others in your sending group by {name} rather than by your sending telephone number.'
 
@@ -66,9 +66,9 @@ def handle_entered_text_event(from_tel, to_tel, text):
             if os.environ['TEST'] == 'True':
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
-        sender = saveget.get_sender(from_tel)
-        former_name = sender['morsel'][to_tel]['name_of_to_tel']
-        sender['morsel'][to_tel]['name_of_to_tel'] = new_name
+        sender = saveget.get_sender(tel_id)
+        former_name = sender['morsel'][svc_id]['recipient_moniker']
+        sender['morsel'][svc_id]['recipient_moniker'] = new_name
         saveget.update_sender_and_morsel(sender)
         return f'Renamed recipient {former_name} to {new_name}'
 
@@ -83,11 +83,11 @@ def handle_played_it_event(event):
     card = saveget.get_postcard(card_id)
     card['play_count'] += 1
     card['pobox_id'] = pobox_id
-    from_tel, to_tel = card['correspondence']
-    correspondence = saveget.get_correspondence(from_tel, to_tel)
-    if correspondence['cardlist_unplayed'] != []:
-        postcards.push_cards_along(correspondence, pobox)
-    saveget.save_correspondence(correspondence)
+    tel_id, svc_id = card['polink']
+    polink = saveget.get_polink(tel_id, svc_id)
+    if polink['cardlist_unplayed'] != []:
+        postcards.push_cards_along(polink, pobox)
+    saveget.save_polink(polink)
     saveget.save_pobox(pobox)
 
 

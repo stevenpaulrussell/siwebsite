@@ -9,21 +9,21 @@
 
 # senders
 """
-f'free_tier/{from_tel}':                # These are written by postmaster, read by twitalk.
-    f'{to_tel}':  
+f'free_tier/{tel_id}':                # These are written by postmaster, read by twitalk.
+    f'{svc_id}':  
         'from': -> sender name if key 'from' is present     # Use to customize sms to sender
         'to': -> recipient name if key is present           # Use to customize sms to sender
         'have_viewer': -> False or 'HaveViewer'             # Senders without <have_viewer> get cleared in 6 days (?)
 
 
-f'new_sender/{from_tel}':               # Written and read, by twitalk and and deleted by postmaster
+f'new_sender/{tel_id}':               # Written and read, by twitalk and and deleted by postmaster
          -> image, audio, profile, new_sender_ready       
 
 """
 
 # wip     
 """
-f'wip/{from_tel}/{to_tel}':    `# Written, read, and deleted by twitalk for state store
+f'wip/{tel_id}/{svc_id}':    `# Written, read, and deleted by twitalk for state store
     'image_timestamp': 
     'image_url':
     'audio_timestamp':          
@@ -33,7 +33,7 @@ f'wip/{from_tel}/{to_tel}':    `# Written, read, and deleted by twitalk for stat
 
 # event SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
 """ 
-....  json dict: from_tel:, to_tel:, event:, **message
+....  json dict: tel_id:, svc_id:, event:, **message
 event:
     first_postcard
         wip:
@@ -50,7 +50,7 @@ event:
 """
 # # command SQS.  Includes explicit commands from sms and implicit commands, for now only 'new_sender'
 # """ 
-# ....  json dict: from_tel:, to_tel:, cmd:, **message
+# ....  json dict: tel_id:, svc_id:, cmd:, **message
 # cmd:
 #     first_postcard
 #         wip:
@@ -78,7 +78,7 @@ string
 # new_sender message keys
 """
 new_sender
-    from_tel_msg
+    tel_id_msg
         'New sender welcome: image recvd'
         'New sender: Request first image & link to instructions'
         'New sender ask to call & make recording & link to instructions.'
@@ -88,10 +88,10 @@ new_sender
         'New sender instructions link on unexpected call to twilio.'
 
     nq_admin_message
-        'New sender <{from_tel}>, image OK' 
-        'New sender <{from_tel}>, missing plain image.'
-        'New sender <{from_tel}> error: expect audio, in mms'
-        'New sender <{from_tel}> error: expect profile'
+        'New sender <{tel_id}>, image OK' 
+        'New sender <{tel_id}>, missing plain image.'
+        'New sender <{tel_id}> error: expect audio, in mms'
+        'New sender <{tel_id}> error: expect profile'
         'New sender unexpected call to twilio.'
 
     twilio speaks
@@ -106,7 +106,7 @@ new_sender
 # free_tier message keys
 """
 free_tier
-    from_tel_msg
+    tel_id_msg
         'Free tier help: Link to instructions'
         'Your command <{text}> is queued for processing... you will hear back!'
         'Your profile will be updated shortly, and you will be notified.'

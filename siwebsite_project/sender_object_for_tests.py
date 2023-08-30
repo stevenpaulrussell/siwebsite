@@ -21,8 +21,8 @@ class TwiSim:
     def _cmd_common(self, twinumber, **message):
         message['event_type'] = 'text_was_entered'
         message['sent_at'] = time.time()
-        message['from_tel'] = self.mobile
-        message['to_tel'] = self.twi_directory[twinumber]
+        message['tel_id'] = self.mobile
+        message['svc_id'] = self.twi_directory[twinumber]
         return message
 
     def _make_wip(self):
@@ -83,9 +83,9 @@ class TwiSim:
         sqs_message['expire'] = time.time() + 24*60*60
         return sqs_message
 
-    def connect(self, twilnumber, requestor_from_tel, passkey):
+    def connect(self, twilnumber, requestor_tel_id, passkey):
         sqs_message = self._cmd_common(twilnumber)
-        sqs_message['text'] = f'connect {requestor_from_tel} passkey {passkey}'
+        sqs_message['text'] = f'connect {requestor_tel_id} passkey {passkey}'
         return sqs_message
 
 pp = pprint.PrettyPrinter(indent=2)

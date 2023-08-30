@@ -21,23 +21,23 @@ class PostcardProcessing(TestCase):
     def test_create_new_sender(self):
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
         self.assertEqual(sender['version'], 1)
-        self.assertEqual(sender['name_of_from_tel'], 'm b e r')
+        self.assertEqual(sender['sender_moniker'], 'm b e r')
 
-    def test_create_new_correspondence(self):
+    def test_create_new_polink(self):
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-        correspondence = postcards.create_new_correspondence_update_morsel(sender, self.twilio_phone_number)
-        self.assertEqual(correspondence['name_of_to_tel'], 'kith or kin')
-        self.assertEqual(correspondence['card_current'], None)
-        self.assertEqual(correspondence['cardlist_unplayed'], [])
-        self.assertEqual(correspondence['pobox_id'], None)
+        polink = postcards.create_new_polink_update_morsel(sender, self.twilio_phone_number)
+        self.assertEqual(polink['recipient_moniker'], 'kith or kin')
+        self.assertEqual(polink['card_current'], None)
+        self.assertEqual(polink['cardlist_unplayed'], [])
+        self.assertEqual(polink['pobox_id'], None)
 
     def test_make_morsel_no_postbox(self):
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-        correspondence = postcards.create_new_correspondence_update_morsel(sender, self.twilio_phone_number)
+        polink = postcards.create_new_polink_update_morsel(sender, self.twilio_phone_number)
         #  card_id='a first card'
         morsel = saveget.make_morsel(sender)
-        self.assertEqual(morsel[self.twilio_phone_number]['name_of_from_tel'], 'm b e r')
-        self.assertEqual(morsel[self.twilio_phone_number]['name_of_to_tel'], 'kith or kin')
+        self.assertEqual(morsel[self.twilio_phone_number]['sender_moniker'], 'm b e r')
+        self.assertEqual(morsel[self.twilio_phone_number]['recipient_moniker'], 'kith or kin')
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
         
     def test_create_postcard(self):
@@ -45,8 +45,8 @@ class PostcardProcessing(TestCase):
         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
         wip = dict(image_timestamp=test_time - 1, image_url='image_url',
                     audio_timestamp=test_time - 1, audio_url='audio_url')
-        card_id = postcards.create_postcard(sender, from_tel=self.sender_mobile_number,
-                            to_tel=self.twilio_phone_number, wip=wip, sent_at=test_time)
+        card_id = postcards.create_postcard(sender, tel_id=self.sender_mobile_number,
+                            svc_id=self.twilio_phone_number, wip=wip, sent_at=test_time)
         postcard = saveget.get_postcard(card_id)
         self.assertAlmostEqual(postcard['sent_at'], test_time)
 
@@ -60,19 +60,19 @@ class HelperFunctionTests(TestCase):
         self.profile_url = 'sender_selfie_url'
 
     def test_get_passkey_when_absent(self):
-        passkey__to_tel__tuple = connects.get_passkey(from_tel=self.sender_mobile_number)
-        self.assertIsNone(passkey__to_tel__tuple)
+        passkey__svc_id__tuple = connects.get_passkey(tel_id=self.sender_mobile_number)
+        self.assertIsNone(passkey__svc_id__tuple)
       
     def test_get_passkey_when_present(self):
-        connects._set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number)
-        passkey, to_tel = connects.get_passkey(from_tel=self.sender_mobile_number)
+        connects._set_passkey(tel_id=self.sender_mobile_number, svc_id=self.twilio_phone_number)
+        passkey, svc_id = connects.get_passkey(tel_id=self.sender_mobile_number)
         self.assertEqual(len(passkey), 4)
-        self.assertEqual(to_tel, self.twilio_phone_number)
+        self.assertEqual(svc_id, self.twilio_phone_number)
    
     def test_get_passkey_when_expired(self):
-        connects._set_passkey(from_tel=self.sender_mobile_number, to_tel=self.twilio_phone_number, duration=-1)
-        passkey__to_tel__tuple = connects.get_passkey(from_tel=self.sender_mobile_number)
-        self.assertIsNone(passkey__to_tel__tuple)
+        connects._set_passkey(tel_id=self.sender_mobile_number, svc_id=self.twilio_phone_number, duration=-1)
+        passkey__svc_id__tuple = connects.get_passkey(tel_id=self.sender_mobile_number)
+        self.assertIsNone(passkey__svc_id__tuple)
     
 
 class NewPostcardCases(TestCase):
@@ -92,12 +92,12 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-        # Did sender, morsel, and correspondence get written properly?
+        # Did sender, morsel, and polink get written properly?
         sender = saveget.get_sender(self.sender_mobile_number)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)    
+        polink = saveget.get_polink(self.sender_mobile_number, self.twilio_phone_number)    
         self.assertEqual(sender['morsel'], morsel)
-        self.assertIsNone(correspondence['pobox_id'])
+        self.assertIsNone(polink['pobox_id'])
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
 
@@ -105,18 +105,18 @@ class NewPostcardCases(TestCase):
         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)    
+        polink = saveget.get_polink(self.sender_mobile_number, self.twilio_phone_number)    
         # card_lists before pobox made:
-        cardlist_unplayed_before_pobox = correspondence['cardlist_unplayed'].copy()
-        card_current_before_pobox = correspondence['card_current']
-        pobox_id = views.new_pobox_id(correspondence)
+        cardlist_unplayed_before_pobox = polink['cardlist_unplayed'].copy()
+        card_current_before_pobox = polink['card_current']
+        pobox_id = views.new_pobox_id(polink)
         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
-        cardlist_unplayed = correspondence['cardlist_unplayed']
-        card_current = correspondence['card_current']
+        polink = saveget.get_polink(self.sender_mobile_number, self.twilio_phone_number)        
+        cardlist_unplayed = polink['cardlist_unplayed']
+        card_current = polink['card_current']
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = pobox['viewer_data']
-        self.assertEqual(correspondence['pobox_id'], pobox_id)
+        self.assertEqual(polink['pobox_id'], pobox_id)
         self.assertIn(self.twilio_phone_number, morsel)
         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
         self.assertEqual(len(cardlist_unplayed_before_pobox), 1)
@@ -132,15 +132,15 @@ class NewPostcardCases(TestCase):
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
         sender_begin = saveget.get_sender(self.sender_mobile_number)
-        correspondence_begin = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
-        pobox_id = views.new_pobox_id(correspondence_begin)
+        polink_begin = saveget.get_polink(self.sender_mobile_number, self.twilio_phone_number)        
+        pobox_id = views.new_pobox_id(polink_begin)
         # Send a second postcard. This should now occupy cardlist_unplayed
         specifics = dict(context='HaveViewer', profile_url=self.profile_url)
         self.msg.update(specifics)
         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
         # See what happened
-        correspondence = saveget.get_correspondence(self.sender_mobile_number, self.twilio_phone_number)        
-        cardlist = correspondence['cardlist_unplayed']
+        polink = saveget.get_polink(self.sender_mobile_number, self.twilio_phone_number)        
+        cardlist = polink['cardlist_unplayed']
         pobox = saveget.get_pobox(pobox_id)
         self.assertEqual(len(cardlist), 1)  # 2 cards sent, but the first is now in card_current
 
@@ -153,71 +153,71 @@ class ConnectCases(TestCase):
         # First sender completes sign-up
         A = utils_4_testing.make_sender_values('A')
         msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
-        postcards.new_postcard(A.from_tel, A.to_tel, msg)
+        postcards.new_postcard(A.tel_id, A.svc_id, msg)
         # Connect to a viewer
-        correspondence = saveget.get_correspondence(A.from_tel, A.to_tel)
-        pobox_id = views.new_pobox_id(correspondence)
+        polink = saveget.get_polink(A.tel_id, A.svc_id)
+        pobox_id = views.new_pobox_id(polink)
         pobox = saveget.get_pobox(pobox_id)
         viewer_data = pobox['viewer_data']
-        self.assertIn(A.from_tel, viewer_data)
-        self.assertEqual(viewer_data[A.from_tel]['profile_url'], A.profile_url)
+        self.assertIn(A.tel_id, viewer_data)
+        self.assertEqual(viewer_data[A.tel_id]['profile_url'], A.profile_url)
 
     def test_second_new_sender_connect_to_existing_pobox(self):
         # First sender completes sign-up
         A = utils_4_testing.make_sender_values('A')
         msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
-        postcards.new_postcard(A.from_tel, A.to_tel, msg)
-        correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
-        pobox_id_A = views.new_pobox_id(correspondenceA)
+        postcards.new_postcard(A.tel_id, A.svc_id, msg)
+        polinkA = saveget.get_polink(A.tel_id, A.svc_id)
+        pobox_id_A = views.new_pobox_id(polinkA)
         # Setup second sender
         B = utils_4_testing.make_sender_values('B')
         msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
-        B_card_id_0 =  postcards.new_postcard(B.from_tel, B.to_tel, msg)
-        correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        B_card_id_0 =  postcards.new_postcard(B.tel_id, B.svc_id, msg)
+        polinkB = saveget.get_polink(B.tel_id, B.svc_id)
         # connect B as requester...
-        msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
-                                    A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
+        msg = connects._connect_joining_sender_to_lead_sender_pobox(A.tel_id, \
+                                    A.svc_id, requesting_tel_id=B.tel_id, requester_svc_id=B.svc_id)
         pobox_A = saveget.get_pobox(pobox_id_A)
         viewer_data = pobox_A['viewer_data']
-        new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
-        self.assertEqual(pobox_id_A, new_correspondenceB['pobox_id'])
+        new_polinkB = saveget.get_polink(B.tel_id, B.svc_id)
+        self.assertEqual(pobox_id_A, new_polinkB['pobox_id'])
         self.assertIn('Successfully connected', msg)
-        self.assertIn(B.from_tel, viewer_data)
-        self.assertIsNone(viewer_data[B.from_tel]['card_id'])       # B's first card is not carried over
-        self.assertIsNotNone(viewer_data[A.from_tel]['card_id'])    # A's first card was carried over
+        self.assertIn(B.tel_id, viewer_data)
+        self.assertIsNone(viewer_data[B.tel_id]['card_id'])       # B's first card is not carried over
+        self.assertIsNotNone(viewer_data[A.tel_id]['card_id'])    # A's first card was carried over
 
     def test_disconnect_from_one_pobox_connect_to_another_existing_pobox(self):
         # First sender completes sign-up
         A = utils_4_testing.make_sender_values('A')
         msg = dict(sent_at='sent_at', wip=A.wip, context='NewSenderFirst', profile_url=A.profile_url)
-        postcards.new_postcard(A.from_tel, A.to_tel, msg)
-        correspondenceA = saveget.get_correspondence(A.from_tel, A.to_tel)
-        pobox_id_A = views.new_pobox_id(correspondenceA)
+        postcards.new_postcard(A.tel_id, A.svc_id, msg)
+        polinkA = saveget.get_polink(A.tel_id, A.svc_id)
+        pobox_id_A = views.new_pobox_id(polinkA)
         # Repeat setting up second sender B
         B = utils_4_testing.make_sender_values('B')
         msg = dict(sent_at='sent_at', wip=B.wip, context='NewSenderFirst', profile_url=B.profile_url)
-        B_card_id_0 =  postcards.new_postcard(B.from_tel, B.to_tel, msg)
-        correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        B_card_id_0 =  postcards.new_postcard(B.tel_id, B.svc_id, msg)
+        polinkB = saveget.get_polink(B.tel_id, B.svc_id)
         # Now setup a viewer and pobox for B
-        pobox_id_B = views.new_pobox_id(correspondenceB)
+        pobox_id_B = views.new_pobox_id(polinkB)
         # Do a connect, but now the requester has a pobox 
-        msg = connects._connect_joining_sender_to_lead_sender_pobox(A.from_tel, \
-                                    A.to_tel, requesting_from_tel=B.from_tel, requester_to_tel=B.to_tel)
+        msg = connects._connect_joining_sender_to_lead_sender_pobox(A.tel_id, \
+                                    A.svc_id, requesting_tel_id=B.tel_id, requester_svc_id=B.svc_id)
         # B sends a second card, now with 'HaveViewer' set as context by twitalk using morsel
-        morselB = saveget.get_sender(B.from_tel)['morsel'][B.to_tel] 
+        morselB = saveget.get_sender(B.tel_id)['morsel'][B.svc_id] 
         B = utils_4_testing.make_sender_values('B', card_number=1)
         msg = dict(sent_at='sent_at', wip=B.wip, context='HaveViewer', profile_url=B.profile_url)
-        B_card_id_1 = postcards.new_postcard(B.from_tel, B.to_tel, msg)
+        B_card_id_1 = postcards.new_postcard(B.tel_id, B.svc_id, msg)
         # Get the results!  A and B send to pobox_A, while pobox_B has no one sending to it.
         pobox_A = saveget.get_pobox(pobox_id_A)
         viewer_data_A = pobox_A['viewer_data']
         pobox_B = saveget.get_pobox(pobox_id_B)
         viewer_data_B = pobox_B['viewer_data']
-        new_correspondenceB = saveget.get_correspondence(B.from_tel, B.to_tel)
+        new_polinkB = saveget.get_polink(B.tel_id, B.svc_id)
         self.assertEqual(morselB['have_viewer'], 'HaveViewer')
-        self.assertEqual(pobox_id_A, new_correspondenceB['pobox_id'])
-        self.assertIn(A.from_tel, viewer_data_A)
-        self.assertIn(B.from_tel, viewer_data_A)
+        self.assertEqual(pobox_id_A, new_polinkB['pobox_id'])
+        self.assertIn(A.tel_id, viewer_data_A)
+        self.assertIn(B.tel_id, viewer_data_A)
         self.assertEqual({}, viewer_data_B)
 
     def test_finish_disconnect_of_old_pobox(self):

@@ -25,9 +25,9 @@ def run_from_event_queue():
         event_list.append(event)
         message = interpret_one_event(event)
         if message:
-            from_tel = event['from_tel']
-            to_tel = event['to_tel']
-            twilio_cmds.sms_back(from_tel=from_tel, to_tel=to_tel, message_key=message)
+            tel_id = event['tel_id']
+            svc_id = event['svc_id']
+            twilio_cmds.sms_back(tel_id=tel_id, svc_id=svc_id, message_key=message)
     return event_list  
 
 

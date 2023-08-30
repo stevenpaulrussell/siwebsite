@@ -31,20 +31,20 @@ CMD_URL = filerviews.EVENT_URL
 
 
 """
-Simulate use.  Sender0 uses a single to_tel and makes a viewer for recipient KinA.
-Sender1 uses two to_tels, sending to both KinA and KinB.
+Simulate use.  Sender0 uses a single svc_id and makes a viewer for recipient KinA.
+Sender1 uses two svc_ids, sending to both KinA and KinB.
 """
 
 
-def display_sender(from_tel, comment=None):
+def display_sender(tel_id, comment=None):
     if comment:
         print('\n\n','='*20)
         print(comment)
-    sender = saveget.get_sender(from_tel)
-    morsel = filerviews.load_from_free_tier(from_tel)
-    print(f'\nsender <{from_tel}>:')
+    sender = saveget.get_sender(tel_id)
+    morsel = filerviews.load_from_free_tier(tel_id)
+    print(f'\nsender <{tel_id}>:')
     pp.pprint(sender)
-    print(f'\nmorsel <{from_tel}>:')
+    print(f'\nmorsel <{tel_id}>:')
     pp.pprint(morsel)
 
 def display_postal(pobox_id, comment=None):
@@ -86,25 +86,25 @@ class OneCmdTests(TestCase):
             return saveget.get_sender(Sender0.mobile), saveget.get_sender(Sender1.mobile)
 
         def get_3_corresponds():
-            correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-            correspondence1toA = saveget.get_correspondence(Sender1.mobile, sender1_twil0)
-            correspondence1toB = saveget.get_correspondence(Sender1.mobile, sender1_twil1)
-            return correspondence0toA, correspondence1toA, correspondence1toB
+            polink0toA = saveget.get_polink(Sender0.mobile, sender0_twil0)
+            polink1toA = saveget.get_polink(Sender1.mobile, sender1_twil0)
+            polink1toB = saveget.get_polink(Sender1.mobile, sender1_twil1)
+            return polink0toA, polink1toA, polink1toB
         
 
         # Sender0 and Sender1 sign up, neither has a viewer yet. 
         filerviews.send_an_sqs_message(Sender0.newsender_firstpostcard(), CMD_URL)
         filerviews.send_an_sqs_message(Sender1.newsender_firstpostcard(), CMD_URL)
         http_response = tickles('request_dummy')
-        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-        correspondence1toA = saveget.get_correspondence(Sender1.mobile, sender1_twil0)
-        sender0_card_in_play, sender0_unplayed_queue = correspondence0toA['card_current'], correspondence0toA['cardlist_unplayed']
-        sender1_unplayed_queue = correspondence0toA['cardlist_unplayed']
+        polink0toA = saveget.get_polink(Sender0.mobile, sender0_twil0)
+        polink1toA = saveget.get_polink(Sender1.mobile, sender1_twil0)
+        sender0_card_in_play, sender0_unplayed_queue = polink0toA['card_current'], polink0toA['cardlist_unplayed']
+        sender1_unplayed_queue = polink0toA['cardlist_unplayed']
 
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
         self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])
-        self.assertIn('using new to_tel', admin_msgs[1])
+        self.assertIn('using new svc_id', admin_msgs[1])
         self.assertEqual(len(sender0_unplayed_queue), 1)
         self.assertEqual(len(sender1_unplayed_queue), 1)
         self.assertIsNone(sender0_card_in_play)       # A card sent remains in the unplayed queue until a viewer is established
@@ -117,21 +117,21 @@ class OneCmdTests(TestCase):
 
         sender0, sender1 = get_2_senders()
     
-        # Check that all is as expected: No viewer, 3 cards sent, each on a different (from_tel, to_tel) pair, a 'correspondence'
-        # The morsel that is part of sender records the existence of these, and the content for now is only each correspondence.
+        # Check that all is as expected: No viewer, 3 cards sent, each on a different (tel_id, svc_id) pair, a 'polink'
+        # The morsel that is part of sender records the existence of these, and the content for now is only each polink.
 
         # =============> Add tests to exhibit the above statement!
-        correspondence0toA, correspondence1toA, correspondence1toB = get_3_corresponds()     
-        self.assertEqual(len(correspondence1toB['cardlist_unplayed']), 1)  # Now have the 3 correspondence, each with a card in the wait queue -- cardlist_unplayed
+        polink0toA, polink1toA, polink1toB = get_3_corresponds()     
+        self.assertEqual(len(polink1toB['cardlist_unplayed']), 1)  # Now have the 3 polink, each with a card in the wait queue -- cardlist_unplayed
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
-        self.assertEqual(sender1['morsel'][sender1_twil0]['name_of_to_tel'], 'kith or kin')
+        self.assertEqual(sender1['morsel'][sender1_twil0]['recipient_moniker'], 'kith or kin')
         self.assertEqual(sender1['morsel'][sender1_twil1]['have_viewer'], False)
 
-        #  =========> Change the below to show correspondence, make this sort of a theory of ops
+        #  =========> Change the below to show polink, make this sort of a theory of ops
 
         # sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         # sender1_card = saveget.get_postcard(sender1_card_id)
-        # self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
+        # self.assertEqual(sender1_card['tel_id'], Sender1.mobile)
         # display_sender(Sender0.mobile, 'sender0 before setting any viewer')
         # display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
@@ -143,7 +143,7 @@ class OneCmdTests(TestCase):
 
         # Now postoffice side works, it would not without the tickle  This sets up the pobox, returning pobox_id.  
         # In this test script, the request is redirected to the player, and that updates viewer data from the poboc
-        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'from_tel': Sender0.mobile, 'passkey': sender0_passkey})
+        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender0.mobile, 'passkey': sender0_passkey})
         redirected_url = redirect_response.url
         # Needed @csrf_exempt in the code so that post gets a status code 200 not 403, and returns the json encoded viewer_data
         response2 = requests.post(redirected_url)
@@ -163,14 +163,14 @@ class OneCmdTests(TestCase):
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         filerviews.send_an_sqs_message(Sender0.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy')
-        correspondence0toA = saveget.get_correspondence(Sender0.mobile, sender0_twil0)
-        sender0_first_card_id = correspondence0toA['card_current']
-        sender0_second_card_id = correspondence0toA['cardlist_unplayed'][0]
-        sender0_pobox_id = correspondence0toA['pobox_id']
+        polink0toA = saveget.get_polink(Sender0.mobile, sender0_twil0)
+        sender0_first_card_id = polink0toA['card_current']
+        sender0_second_card_id = polink0toA['cardlist_unplayed'][0]
+        sender0_pobox_id = polink0toA['pobox_id']
         pobox = saveget.get_pobox(sender0_pobox_id)
 
         # Check the results.  
-        self.assertIn(sender0_second_card_id, correspondence0toA['cardlist_unplayed'])
+        self.assertIn(sender0_second_card_id, polink0toA['cardlist_unplayed'])
 
         # updating viewer_data changes nothing becaue the card in viewer_data remains unplayed
         # update_viewer_data(pobox, sender0_viewer_data)
@@ -198,9 +198,9 @@ class OneCmdTests(TestCase):
 
 
 
-        correspondence0toA, correspondence1toA, correspondence1toB = get_3_corresponds()      
-        self.assertEqual(correspondence1toA['pobox_id'], sender0_pobox_id)    # Now, sender1 has a pobox_id associated with the connection
-        self.assertEqual(correspondence1toA['pobox_id'], correspondence0toA['pobox_id'])
+        polink0toA, polink1toA, polink1toB = get_3_corresponds()      
+        self.assertEqual(polink1toA['pobox_id'], sender0_pobox_id)    # Now, sender1 has a pobox_id associated with the connection
+        self.assertEqual(polink1toA['pobox_id'], polink0toA['pobox_id'])
 
         # display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox --- no change to sender0')
         # display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox. Note the change to pobox_id')
@@ -215,7 +215,7 @@ class OneCmdTests(TestCase):
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
         tickles('request_dummy')
 
-        sender1_redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'from_tel': Sender1.mobile, 'passkey': sender1_passkey})
+        sender1_redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender1.mobile, 'passkey': sender1_passkey})
         sender1_redirected_url = sender1_redirect_response.url
         self.assertEqual(redirected_url, sender1_redirected_url)
 
@@ -235,9 +235,9 @@ class OneCmdTests(TestCase):
         # Sender1 now sends a card to the new connection. This will appear in connection but not yet viewer_data
         filerviews.send_an_sqs_message(Sender1.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy') 
-        correspondence0toA, correspondence1toA, correspondence1toB = get_3_corresponds()    
-        sender0_postbox_id = correspondence1toA['pobox_id']  
-        sender1_recent_card_id = correspondence1toA['cardlist_unplayed'][-1]
+        polink0toA, polink1toA, polink1toB = get_3_corresponds()    
+        sender0_postbox_id = polink1toA['pobox_id']  
+        sender1_recent_card_id = polink1toA['cardlist_unplayed'][-1]
 
         # Not sure what needs checking... Fix up this test flow, make the story more clear and examine more results!!!
         print(f'=======Test need line 243 test_functional.... ')
@@ -312,7 +312,7 @@ class OneCmdTests(TestCase):
         # Sender0 connects Sender1 to the viewer:
         # First make the passkey, checking msg back
         event_handler.interpret_one_event(Sender1.passkey('twil0'))
-        sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+        sender1_passkey, svc_id_used = connects.get_passkey(Sender1.mobile)
 
         # Issue the connect command and inspect the results
         sender0_msg_back = event_handler.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
@@ -348,7 +348,7 @@ class OneCmdTests(TestCase):
         passkey = saveget.get_passkey_dictionary(Sender0.mobile)['passkey']
         sender0 = saveget.get_sender(Sender0.mobile)
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
-        response = pobox_id_if_good_passkey(request=None, from_tel=Sender0.mobile, passkey=passkey)
+        response = pobox_id_if_good_passkey(request=None, tel_id=Sender0.mobile, passkey=passkey)
         got_pobox_id = json.loads(response.content)
         self.assertEqual(expected_pobox_id, got_pobox_id)
 
@@ -398,7 +398,7 @@ def run_simulation_of_two_senders():
     # Sender0 connects Sender1 to the viewer:
     # First make the passkey, checking msg back
     event_handler.interpret_one_event(Sender1.passkey('twil0'))
-    sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+    sender1_passkey, svc_id_used = connects.get_passkey(Sender1.mobile)
 
     # Issue the connect command and inspect the results
     sender0_msg_back = event_handler.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))

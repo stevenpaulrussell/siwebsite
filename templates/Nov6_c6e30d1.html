@@ -33,12 +33,12 @@
     <p>Push the button below to refresh! Maybe you have a new card!</p>
     <button type="button" onclick="play_ended()" style="height:40px; width:80px; color:tomato">REFRESH</button>
     <p>Push the button above to refresh!  Nancy's postcards will be getting stuck.</p>
-    {% for from_tel, a_card in data_items.items %} 
-        <audio id='{{a_card.postcard_audio_id}}'  onplay="profile_clicked('{{from_tel}}')" onended="play_ended('{{from_tel}}')">
+    {% for tel_id, a_card in data_items.items %} 
+        <audio id='{{a_card.postcard_audio_id}}'  onplay="profile_clicked('{{tel_id}}')" onended="play_ended('{{tel_id}}')">
             <source src="{{a_card.card_audio_url}}" />
         </audio>
         <img 
-            id="{{from_tel}}"
+            id="{{tel_id}}"
             class="profile_image{{a_card.times_played}}"
             postcard_audio_id="{{a_card.postcard_audio_id}}"
             src="{{a_card.profile_photo_url}}"

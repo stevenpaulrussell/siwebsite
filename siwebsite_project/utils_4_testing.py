@@ -1,7 +1,7 @@
 class make_sender_values():
     def __init__(self, name, card_number=0):
-        self.from_tel = f'{name}__from_tel'
-        self.to_tel = f'{name}__to_tel'
+        self.tel_id = f'{name}__tel_id'
+        self.svc_id = f'{name}__svc_id'
         self.profile_url = f'{name}__profile'
         self.image_url = f'{name}__image_{card_number}'
         self.audio_url = f'{name}__audio_{card_number}'

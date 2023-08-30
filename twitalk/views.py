@@ -24,54 +24,54 @@ DEFAULT_TWILIO_NUMBER = '+18326626430'
 #  Entry points. A postcard is made by mms  ->accept_media<-  for the photo, and  voice call  ->twi_recorder<-  for the audio
 @csrf_exempt
 def accept_media(request):      # mms entry point, image only for now!!
-    from_tel_msg = None
+    tel_id_msg = None
     try:
         postdata = request.POST
-        timestamp, from_tel, to_tel, text = extract_request_values(postdata)
+        timestamp, tel_id, svc_id, text = extract_request_values(postdata)
         media_type = postdata.get('MediaContentType0', 'no_media/no_media').split('/')[0]
         if media_type not in ('image', 'no_media'):   
-            from_tel_msg = lines.line('Send instructions for mms, got media <{media_type}>, expe', media_type=media_type)
+            tel_id_msg = lines.line('Send instructions for mms, got media <{media_type}>, expe', media_type=media_type)
             filerviews.nq_admin_message(message="""note issues to error SQS""")
         else:
             image_url = postdata.get('MediaUrl0', None)
-            free_tier_morsel = filerviews.load_from_free_tier(from_tel)   
+            free_tier_morsel = filerviews.load_from_free_tier(tel_id)   
             if free_tier_morsel:  
-                from_tel_msg =  mms_to_free_tier(timestamp, from_tel, to_tel, text, image_url, free_tier_morsel)
+                tel_id_msg =  mms_to_free_tier(timestamp, tel_id, svc_id, text, image_url, free_tier_morsel)
             else:
-                from_tel_msg =  mms_from_new_sender(timestamp, from_tel, to_tel, text, image_url)
+                tel_id_msg =  mms_from_new_sender(timestamp, tel_id, svc_id, text, image_url)
     except Exception as E:
         filerviews.nq_admin_message(message="""note issues to error SQS""")
         if os.environ['TEST'] == 'True': 
             raise
-    assert(from_tel_msg)
-    return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{from_tel_msg}</Response>')
+    assert(tel_id_msg)
+    return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{tel_id_msg}</Response>')
 
 
 @csrf_exempt
 def twi_recorder(request):      # voice recording entry point
-    from_tel_msg = None
+    tel_id_msg = None
     try:
         postdata = request.POST
-        timestamp, from_tel, to_tel, text = extract_request_values(postdata)
-        free_tier_morsel = filerviews.load_from_free_tier(from_tel)  
+        timestamp, tel_id, svc_id, text = extract_request_values(postdata)
+        free_tier_morsel = filerviews.load_from_free_tier(tel_id)  
         if free_tier_morsel:
-            from_tel_msg = recorder_to_free_tier(timestamp, from_tel, to_tel, free_tier_morsel, postdata)
+            tel_id_msg = recorder_to_free_tier(timestamp, tel_id, svc_id, free_tier_morsel, postdata)
         else:
-            from_tel_msg = recorder_from_new_sender(timestamp, from_tel, to_tel, postdata)
+            tel_id_msg = recorder_from_new_sender(timestamp, tel_id, svc_id, postdata)
     except Exception as E:
         filerviews.nq_admin_message(message="""note issues to error SQS""")
         if os.environ['TEST'] == 'True': 
             raise
-    assert(from_tel_msg)
-    return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{from_tel_msg}</Response>')
+    assert(tel_id_msg)
+    return HttpResponse(content=f'<?xml version="1.0" encoding="UTF-8"?><Response>{tel_id_msg}</Response>')
            
 
 def extract_request_values(postdata):
-    from_tel = postdata['From']
-    to_tel = postdata['To']
+    tel_id = postdata['From']
+    svc_id = postdata['To']
     timestamp = time.time() - float(postdata.get('test_timeshift', '0'))
     text = postdata.get('Body', '').lower().strip()
-    return timestamp, from_tel, to_tel, text
+    return timestamp, tel_id, svc_id, text
 
 
 

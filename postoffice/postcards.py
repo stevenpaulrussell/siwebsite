@@ -8,66 +8,66 @@ from filer import lines
 from saveget import saveget
 
 
-def new_postcard(from_tel, to_tel, event):
+def new_postcard(tel_id, svc_id, event):
     wip = event['wip']
     sent_at = event['sent_at']
     match event['context']:          # The detailed ordering requires the apparent duplication below
         case 'NewSenderFirst':
             profile_url = event['profile_url']
-            sender = create_new_sender(from_tel, profile_url)
-            correspondence = create_new_correspondence_update_morsel(sender, to_tel)
-            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
-            correspondence['cardlist_unplayed'].append(card_id)
+            sender = create_new_sender(tel_id, profile_url)
+            polink = create_new_polink_update_morsel(sender, svc_id)
+            card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
+            polink['cardlist_unplayed'].append(card_id)
             
         case 'NewRecipientFirst':
-            sender = saveget.get_sender(from_tel)
-            correspondence = create_new_correspondence_update_morsel(sender, to_tel)
-            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
-            correspondence['cardlist_unplayed'].append(card_id)
+            sender = saveget.get_sender(tel_id)
+            polink = create_new_polink_update_morsel(sender, svc_id)
+            card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
+            polink['cardlist_unplayed'].append(card_id)
 
         case 'NoViewer':
-            sender = saveget.get_sender(from_tel)
-            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = saveget.get_correspondence(from_tel, to_tel)
-            correspondence['cardlist_unplayed'].append(card_id)
+            sender = saveget.get_sender(tel_id)
+            card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
+            polink = saveget.get_polink(tel_id, svc_id)
+            polink['cardlist_unplayed'].append(card_id)
 
         case 'HaveViewer':
             """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
-            sender = saveget.get_sender(from_tel)
-            card_id = create_postcard(sender, from_tel, to_tel, wip, sent_at)
-            correspondence = saveget.get_correspondence(from_tel, to_tel)
-            correspondence['cardlist_unplayed'].append(card_id)
-            update_pobox_new_card(correspondence)
+            sender = saveget.get_sender(tel_id)
+            card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
+            polink = saveget.get_polink(tel_id, svc_id)
+            polink['cardlist_unplayed'].append(card_id)
+            update_pobox_new_card(polink)
 
     saveget.update_sender_and_morsel(sender)    
-    saveget.save_correspondence(correspondence)
+    saveget.save_polink(polink)
     if event['context'] == 'NewSenderFirst':
         saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
 
-def create_new_sender(from_tel, profile_url):
-    name_of_from_tel =  create_default_using_from_tel(from_tel)
+def create_new_sender(tel_id, profile_url):
+    sender_moniker =  create_default_using_tel_id(tel_id)
     sender = dict(
         version = 1,
-        from_tel = from_tel,
+        tel_id = tel_id,
         profile_url = profile_url,
-        name_of_from_tel = name_of_from_tel,  
-        morsel = {}             # morsel made by each create_new_correspondence 
+        sender_moniker = sender_moniker,  
+        morsel = {}             # morsel made by each create_new_polink 
     )
     return sender
 
-def create_default_using_from_tel(from_tel):  # Set as a call so later can test if the user is changing from the default
-    return f'{from_tel[-4]} {from_tel[-3]} {from_tel[-2]} {from_tel[-1]}'
+def create_default_using_tel_id(tel_id):  # Set as a call so later can test if the user is changing from the default
+    return f'{tel_id[-4]} {tel_id[-3]} {tel_id[-2]} {tel_id[-1]}'
 
 
-def create_new_correspondence_update_morsel(sender, to_tel):
-    from_tel = sender['from_tel']
-    correspondence = dict(
-        from_tel = from_tel,
-        to_tel = to_tel,
+def create_new_polink_update_morsel(sender, svc_id):
+    tel_id = sender['tel_id']
+    polink = dict(
+        tel_id = tel_id,
+        svc_id = svc_id,
         version = 1,
-        name_of_from_tel = sender['name_of_from_tel'],
-        name_of_to_tel = 'kith or kin',
+        sender_moniker = sender['sender_moniker'],
+        recipient_moniker = 'kith or kin',
         pobox_id = None,     # pobox_id is assigned by 'connect' commands.  
         most_recent_arrival_timestamp = time.time(),
         cardlist_played = [],
@@ -75,26 +75,26 @@ def create_new_correspondence_update_morsel(sender, to_tel):
         cardlist_unplayed = []
     )
     morsel = sender['morsel']
-    morsel[to_tel] = dict(
-        name_of_from_tel=sender['name_of_from_tel'],
-        name_of_to_tel = 'kith or kin',
+    morsel[svc_id] = dict(
+        sender_moniker=sender['sender_moniker'],
+        recipient_moniker = 'kith or kin',
         have_viewer = False
     )
-    msg = 'Sender {from_tel} using new to_tel {to_tel}.'
-    new_corr_msg = lines.line(msg, from_tel=from_tel, to_tel=to_tel)
+    msg = 'Sender {tel_id} using new svc_id {svc_id}.'
+    new_corr_msg = lines.line(msg, tel_id=tel_id, svc_id=svc_id)
     filerviews.nq_admin_message(new_corr_msg)
-    return correspondence
+    return polink
 
 
-def create_postcard(sender, from_tel, to_tel, wip, sent_at):
+def create_postcard(sender, tel_id, svc_id, wip, sent_at):
     """Make a postcard from received event data"""
     card_id = str(uuid.uuid4())
     card = dict(
         version = 1,
         card_id = card_id, 
         play_count = 0,                                  
-        from_tel = from_tel,
-        to_tel = to_tel,
+        tel_id = tel_id,
+        svc_id = svc_id,
         sent_at = sent_at,    
         recent_play = None,
         image_url = wip['image_url'],
@@ -105,36 +105,36 @@ def create_postcard(sender, from_tel, to_tel, wip, sent_at):
     return card_id
 
 
-def update_pobox_new_card(correspondence):
+def update_pobox_new_card(polink):
     """Called when a new card has arrived and a viewer exists. Update the viewer_data only if the current card has not played. """
-    pobox = saveget.get_pobox(correspondence['pobox_id'])
-    from_tel = correspondence['from_tel'] 
-    viewer_data_item = pobox['viewer_data'][from_tel]    # from_tel key was set when pobox_id was assigned...
+    pobox = saveget.get_pobox(polink['pobox_id'])
+    tel_id = polink['tel_id'] 
+    viewer_data_item = pobox['viewer_data'][tel_id]    # tel_id key was set when pobox_id was assigned...
     try:
         if viewer_data_item['play_count'] > 0:
-            push_cards_along(correspondence, pobox)
+            push_cards_along(polink, pobox)
     except KeyError:  # no viewer_data for this sender because this is the first card
-        push_cards_along(correspondence, pobox, initializing=True)
-    # correspondence is changed, but is saved by the caller
+        push_cards_along(polink, pobox, initializing=True)
+    # polink is changed, but is saved by the caller
     saveget.save_pobox(pobox)
 
 
-def push_cards_along(correspondence, pobox, initializing=False):
+def push_cards_along(polink, pobox, initializing=False):
     """Called to push cards if events played_this_card or new_card show the current card should be moved. """
-    from_tel, to_tel = correspondence['from_tel'], correspondence['to_tel']
+    tel_id, svc_id = polink['tel_id'], polink['svc_id']
     if initializing:
         pass   # No card to move from [card_current] into cardlist_played
     else:
-        correspondence['cardlist_played'].append(correspondence['card_current']) 
-    card_id = correspondence['card_current'] =  correspondence['cardlist_unplayed'].pop()               
+        polink['cardlist_played'].append(polink['card_current']) 
+    card_id = polink['card_current'] =  polink['cardlist_unplayed'].pop()               
     postcard = saveget.get_postcard(card_id)   
-    pobox['viewer_data'][from_tel] = dict(
+    pobox['viewer_data'][tel_id] = dict(
         card_id = card_id,
         play_count = 0,
         profile_url = postcard['profile_url'],
         image_url = postcard['image_url'],
         audio_url = postcard['audio_url'],
-        to_tel = to_tel
+        svc_id = svc_id
     )    
 
 

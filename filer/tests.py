@@ -15,41 +15,41 @@ from . import twilio_cmds
 class FilerViewS3FunctionsWork(TestCase):
     def setUp(self) -> None:
         views.clear_the_read_bucket()
-        self.new_from_tel = '+12135551212'
-        self.new_to_tel = '+13105551212'
+        self.new_tel_id = '+12135551212'
+        self.new_svc_id = '+13105551212'
 
     def test_missing_key_raises_exception_in____load_a_thing_using_key(self):
         with self.assertRaises(views.S3KeyNotFound):
-            res = views._load_a_thing_using_key(self.new_from_tel)
+            res = views._load_a_thing_using_key(self.new_tel_id)
 
     def test_load_from_free_tier_returns_None_on_missing_key(self):
-        res = views.load_from_free_tier(self.new_from_tel)
+        res = views.load_from_free_tier(self.new_tel_id)
         self.assertEqual(res, None)
 
     def test__update_free_tier_works_to_initiate(self):
-        views.update_free_tier(from_tel=self.new_from_tel, to_tel=self.new_to_tel)
-        res = views.load_from_free_tier(self.new_from_tel)
+        views.update_free_tier(tel_id=self.new_tel_id, svc_id=self.new_svc_id)
+        res = views.load_from_free_tier(self.new_tel_id)
         self.assertIsInstance(res, dict)
-        self.assertEqual(res[self.new_to_tel]['from'], '1 2 1 2')
-        self.assertEqual(res[self.new_to_tel]['to'], 'a kith or kin')
+        self.assertEqual(res[self.new_svc_id]['from'], '1 2 1 2')
+        self.assertEqual(res[self.new_svc_id]['to'], 'a kith or kin')
        
     def test_load_from_new_sender_returns_image_on_missing_key(self):
-        res = views.load_from_new_sender(self.new_from_tel)
+        res = views.load_from_new_sender(self.new_tel_id)
         self.assertIsNone(res)
 
     def test_load_wip_returns_empty_dict_on_missing_key(self):
-        res = views.load_wip(self.new_from_tel, self.new_to_tel)
+        res = views.load_wip(self.new_tel_id, self.new_svc_id)
         self.assertEqual(res, {})
 
     def test__save_new_sender_works_fine(self):
-        views.save_new_sender(self.new_from_tel, expect='audio')
-        res = views.load_from_new_sender(self.new_from_tel)
+        views.save_new_sender(self.new_tel_id, expect='audio')
+        res = views.load_from_new_sender(self.new_tel_id)
         self.assertEqual(res, 'audio')
 
     def test__save_wip_works_fine(self):
         test_wip = dict(image_timestamp='image_timestamp', image_url='image_url')
-        views.save_wip(self.new_from_tel, self.new_to_tel, test_wip)
-        res = views.load_wip(self.new_from_tel, self.new_to_tel)
+        views.save_wip(self.new_tel_id, self.new_svc_id, test_wip)
+        res = views.load_wip(self.new_tel_id, self.new_svc_id)
         self.assertEqual(res, test_wip)
 
 
@@ -81,22 +81,22 @@ class FilerViewSQS_Utility_FunctionsWork(TestCase):
 
 class NQ_Functions_Put_Content_In_SQS(TestCase):
     def setUp(self) -> None:
-        self.from_tel = '+12135551212'
-        self.to_tel = '+13105551212'
+        self.tel_id = '+12135551212'
+        self.svc_id = '+13105551212'
         self.url1 = 'url1'
         self.url2 = 'url2'
 
     def test_nq_postcard(self):
         now = time.time()
         wip =  dict(image_timestamp=now, image_url=self.url1, audio_timestamp=now, audio_url=self.url2)
-        views.save_wip(self.from_tel, self.to_tel, wip)               
-        S3_wip_before = views.load_wip(self.from_tel, self.to_tel)
+        views.save_wip(self.tel_id, self.svc_id, wip)               
+        S3_wip_before = views.load_wip(self.tel_id, self.svc_id)
         # call to nq_postcard writes to sqs and deletes wip from S3
-        views.nq_postcard(self.from_tel, self.to_tel, wip=wip, context='HaveViewer')
-        S3_wip_after = views.load_wip(self.from_tel, self.to_tel)
+        views.nq_postcard(self.tel_id, self.svc_id, wip=wip, context='HaveViewer')
+        S3_wip_after = views.load_wip(self.tel_id, self.svc_id)
         postcard_message = views.get_an_sqs_message()
-        self.assertIn('from_tel', postcard_message)
-        self.assertIn('to_tel', postcard_message)
+        self.assertIn('tel_id', postcard_message)
+        self.assertIn('svc_id', postcard_message)
         self.assertIn('context', postcard_message)
         self.assertIn('sent_at', postcard_message)
         self.assertEqual(S3_wip_after, {})
@@ -125,8 +125,8 @@ class Can_Make_Needed_Strings_in_Lines(TestCase):
 
 class Twilio_Cmds_Testing(TestCase):
     def setUp(self) -> None:
-        self.from_tel = '+12135551212'
-        self.to_tel = '+13105551212'
+        self.tel_id = '+12135551212'
+        self.svc_id = '+13105551212'
         
     def xtest_sms_to_some_telephone_number(self):
         """This test does an actual sms send using twilio, so it is marked as 'xtest_... to not run."""
@@ -138,7 +138,7 @@ class Twilio_Cmds_Testing(TestCase):
     def test_sms_back_in_TEST_env_queues_msg_to_TEST_SQS_aka_twilio3tests(self):
         message_key = 'testing sms back'
         keys = dict(keysize='just one key')
-        no_res = twilio_cmds.sms_back(self.from_tel, self.to_tel, message_key, **keys)
+        no_res = twilio_cmds.sms_back(self.tel_id, self.svc_id, message_key, **keys)
         queued_sms_msg = views.get_an_sqs_message(views.ADMIN_URL)
         self.assertIsInstance(queued_sms_msg, dict)
         self.assertEqual(queued_sms_msg['message_key'], message_key)

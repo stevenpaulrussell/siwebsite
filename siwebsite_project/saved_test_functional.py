@@ -17,15 +17,15 @@ from postmaster.views import tickles, get_a_pobox_id
 from .sender_object_for_tests import TwiSim, pp
 data_source = os.environ['POSTBOX_DATA_SOURCE']
 
-def display_sender(from_tel, comment=None):
+def display_sender(tel_id, comment=None):
     if comment:
         print('\n\n','='*20)
         print(comment)
-    sender = saveget.get_sender(from_tel)
-    morsel = filerviews.load_from_free_tier(from_tel)
-    print(f'\nsender <{from_tel}>:')
+    sender = saveget.get_sender(tel_id)
+    morsel = filerviews.load_from_free_tier(tel_id)
+    print(f'\nsender <{tel_id}>:')
     pp.pprint(sender)
-    print(f'\nmorsel <{from_tel}>:')
+    print(f'\nmorsel <{tel_id}>:')
     pp.pprint(morsel)
 
 def display_postal(pobox_id, comment=None):
@@ -79,7 +79,7 @@ class OneCmdTests(TestCase):
         self.assertIsNone(sender1['conn'][sender1_twil1]['pobox_id'])
         sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         sender1_card = saveget.get_postcard(sender1_card_id)
-        self.assertEqual(sender1_card['from_tel'], Sender1.mobile)
+        self.assertEqual(sender1_card['tel_id'], Sender1.mobile)
         display_sender(Sender0.mobile, 'sender0 before setting any viewer')
         display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
@@ -128,8 +128,8 @@ class OneCmdTests(TestCase):
         # Sender0 connects Sender1 to the viewer:
         # First make the passkey, checking msg back
         event_handler.interpret_one_event(Sender1.passkey('twil0'))
-        sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
-        self.assertEqual(to_tel_used, sender1_twil0)
+        sender1_passkey, svc_id_used = connects.get_passkey(Sender1.mobile)
+        self.assertEqual(svc_id_used, sender1_twil0)
         self.assertEqual(sender1['conn'][sender1_twil0]['pobox_id'], None)        # sender1 set no viewer, and sender0 hasn't issued the connect
 
         # Issue the connect command and inspect the results
@@ -212,7 +212,7 @@ class OneCmdTests(TestCase):
         # Sender0 connects Sender1 to the viewer:
         # First make the passkey, checking msg back
         event_handler.interpret_one_event(Sender1.passkey('twil0'))
-        sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+        sender1_passkey, svc_id_used = connects.get_passkey(Sender1.mobile)
 
         # Issue the connect command and inspect the results
         sender0_msg_back = event_handler.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
@@ -248,7 +248,7 @@ class OneCmdTests(TestCase):
         passkey = saveget.get_passkey_dictionary(Sender0.mobile)['passkey']
         sender0 = saveget.get_sender(Sender0.mobile)
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
-        response = pobox_id_if_good_passkey(request=None, from_tel=Sender0.mobile, passkey=passkey)
+        response = pobox_id_if_good_passkey(request=None, tel_id=Sender0.mobile, passkey=passkey)
         got_pobox_id = json.loads(response.content)
         self.assertEqual(expected_pobox_id, got_pobox_id)
 
@@ -298,7 +298,7 @@ def run_simulation_of_two_senders():
     # Sender0 connects Sender1 to the viewer:
     # First make the passkey, checking msg back
     event_handler.interpret_one_event(Sender1.passkey('twil0'))
-    sender1_passkey, to_tel_used = connects.get_passkey(Sender1.mobile)
+    sender1_passkey, svc_id_used = connects.get_passkey(Sender1.mobile)
 
     # Issue the connect command and inspect the results
     sender0_msg_back = event_handler.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))

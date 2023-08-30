@@ -11,9 +11,9 @@ from . import tests
 
 # def update_viewer_data(pobox, viewer_data):       
 #     #  --->>>>>>>>> This function now distributed, and driven by sqs events!!!
-#     for (sending_tel, to_tel) in pobox['correspondents_list']:          # sending_tel is the <from_tel> that originated the postcard
-#         correspondence = saveget.get_correspondence(sending_tel, to_tel)
-#         unplayed_card_list = correspondence['cardlist_unplayed']
+#     for (sending_tel, svc_id) in pobox['correspondents_list']:          # sending_tel is the <tel_id> that originated the postcard
+#         polink = saveget.get_polink(sending_tel, svc_id)
+#         unplayed_card_list = polink['cardlist_unplayed']
 #         if not unplayed_card_list:     
 #             continue    # No new cards in pobox
 
@@ -31,7 +31,7 @@ from . import tests
 #                 saveget.save_postcard(retiring_card)
 #         # Fill in with a new playable, either first one, or one has been retired 
 #         new_card_id, pobox['cardlists'][sending_tel] = unplayed_card_list[0], cardlist[1:]  # swap a card from pobox to viewer_data
-#         #  ---> Instruct server to update the lists on the correspondence.  ??
+#         #  ---> Instruct server to update the lists on the polink.  ??
 #         new_card = saveget.get_postcard(new_card_id)
 #         playable['card_id'] = new_card_id
 #         playable['play_count'] = 0
@@ -65,10 +65,10 @@ def _make_playable_viewer_data_for_testing():
         raise EnvironmentError
     saveget.clear_sqs_and_s3_for_testing
     viewer_data = tests.make_two_sender_viewer_data()
-    for from_tel in viewer_data:
-        viewer_data[from_tel]['profile_url'] = img2    
-        viewer_data[from_tel]['image_url'] = img1      
-        viewer_data[from_tel]['audio_url'] = audio1     
+    for tel_id in viewer_data:
+        viewer_data[tel_id]['profile_url'] = img2    
+        viewer_data[tel_id]['image_url'] = img1      
+        viewer_data[tel_id]['audio_url'] = audio1     
     return viewer_data
 
 

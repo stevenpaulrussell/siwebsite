@@ -75,14 +75,14 @@ class DevelopmentTestsOfPlayerLookingAtStateSimulationOfTwoSenders(TestCase):
 
         # Sender0 gets a passkey (simulation, not testing twitalk)
         event_handler.interpret_one_event(Sender0.passkey('twil0'))
-        sender0_passkey, to_tel_used = connects.get_passkey(Sender0.mobile)
+        sender0_passkey, svc_id_used = connects.get_passkey(Sender0.mobile)
 
         # Sender0 could use the passkey to get connected to the already established pobox
         # Check that the 'RPC' call from player.views.get_a_pobox_id would work!
         # Postponing running the 'validate_me' from player.views:  Dont know how to handle the form,
         #    and the untested part is small.
         expected_pobox_id = sender0['conn'][sender0_twil0]['pobox_id']
-        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'from_tel': Sender0.mobile, 'passkey': sender0_passkey})
+        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender0.mobile, 'passkey': sender0_passkey})
         redirected_url = redirect_response.url
         redirected_postbox_id =  redirected_url.split('/postbox/')[-1]
         self.assertEqual(redirect_response.status_code, 200)
