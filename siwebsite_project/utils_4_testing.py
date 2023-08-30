@@ -12,4 +12,11 @@ class make_sender_values():
             audio_url = self.audio_url
         )
 
-        
+class MintaSender():
+    def __init__(self, tel_id_number='1', svc_id_letter='A'):
+        self.tel_id = f'+{tel_id_number}'
+        self.svc_id = f'+{svc_id_letter}'
+        self.profile_url = f'{tel_id_number}_pro'
+        self.sender_moniker = self.tel_id
+
+            

@@ -3,11 +3,11 @@ f'sender/{tel_id}':
     'version': -> start at 1
     'tel_id': -> tel_id      
     'profile_url': ->
-    'sender_moniker': -> default to tel_id derivation, change by text command
+    'sender_moniker': -> default to {create_default_using_tel_id(tel_id)}
     'morsel': ->     
         [svc_id]: ->
-            'sender_moniker': -> sender name if key 'from' is present
-            'recipient_moniker': -> recipient name if key is present
+            'sender_moniker': -> 
+            'recipient_moniker': -> copy from boxlink at viewer_data update
             'have_viewer': -> False or 'HaveViewer'   
 
         
@@ -15,13 +15,13 @@ f'boxlink/boxlink_{tel_id, svc_id}':
     'version': -> start at 1
     'tel_id': -> tel_id
     'svc_id': -> svc_id
-    'sender_moniker':  -> default to {tel_id}['from'], change by text command  
-    'recipient_moniker': ->  default to 'kith or kin', change by text command       
+    'sender_moniker':  -> copied from sender  
+    'recipient_moniker': ->  default to 'kith or kin'       
     'profile_url': -> copied from sender when boxlink is created.  
-    'pobox_id': -> pobox_id.  Use tel_id for postcards sent with no pobox_id
+    'pobox_id': -> pobox_id.  default None
     'most_recent_arrival_timestamp': -> time_stamp       # Enable nudges and alarms
     'cardlist_played': -> [postcard_id,]        # queue, newest at -1
-    'card_current': -> postcard_id              # card in_play, *** or None if just being initialized.
+    'card_current': ->  postcard_id             # None at start 
     'cardlist_unplayed': -> [postcard_id,]      # queue, newest at -1.  Often empty!
 
 
