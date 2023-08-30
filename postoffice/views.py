@@ -43,19 +43,19 @@ def pobox_id_if_good_passkey(tel_id, passkey):
     except (TypeError, AssertionError):   
         return None
     else:
-        polink = saveget.get_polink(tel_id, svc_id)
-        pobox_id = polink['pobox_id']   # user maybe recovering a pobox_id that already exists
+        boxlink = saveget.get_boxlink(tel_id, svc_id)
+        pobox_id = boxlink['pobox_id']   # user maybe recovering a pobox_id that already exists
         if not pobox_id:                        # But if there is no pobox_id so no pobox, 
-            pobox_id = new_pobox_id(polink)   # make one, then update sender & polink, & save the pobox
+            pobox_id = new_pobox_id(boxlink)   # make one, then update sender & boxlink, & save the pobox
         return pobox_id
 
 
-def new_pobox_id(polink): # -> nake polink like an object, able to id iteself for storage
-    """With new uuid, initialize the pobox and an empty viewer_data, then update viewer_data from the polink"""
-    tel_id = polink['tel_id']
-    svc_id = polink['svc_id']
+def new_pobox_id(boxlink): # -> nake boxlink like an object, able to id iteself for storage
+    """With new uuid, initialize the pobox and an empty viewer_data, then update viewer_data from the boxlink"""
+    tel_id = boxlink['tel_id']
+    svc_id = boxlink['svc_id']
     pobox_id = str(uuid.uuid4())
-    polink['pobox_id'] = pobox_id
+    boxlink['pobox_id'] = pobox_id
     # make pobox and an empty viewer data  
     pobox = dict(
         version=1, 
@@ -68,17 +68,17 @@ def new_pobox_id(polink): # -> nake polink like an object, able to id iteself fo
     sender = saveget.get_sender(tel_id)
     sender['morsel'][svc_id]['have_viewer'] = 'HaveViewer'
     saveget.update_sender_and_morsel(sender)    # pobox_id is set
-    populate_new_pobox_view_data(tel_id, svc_id, pobox, polink)  # Populate viewer_data entry 
+    populate_new_pobox_view_data(tel_id, svc_id, pobox, boxlink)  # Populate viewer_data entry 
     saveget.save_pobox(pobox)         # pobox is made and immediately used to update the new viewer_data
-    saveget.save_polink(polink)
+    saveget.save_boxlink(boxlink)
     return pobox_id
 
 
-def populate_new_pobox_view_data(tel_id, svc_id, pobox, polink):
-    # populate with card tsken from polink['cardlist_unplayed']
-    """General update for a single polink, responding to a single event: new_postbox, connect, new_card, card_played."""
-    cardlist_unplayed = polink['cardlist_unplayed']
-    card_id = polink['card_current'] = cardlist_unplayed.pop()
+def populate_new_pobox_view_data(tel_id, svc_id, pobox, boxlink):
+    # populate with card tsken from boxlink['cardlist_unplayed']
+    """General update for a single boxlink, responding to a single event: new_postbox, connect, new_card, card_played."""
+    cardlist_unplayed = boxlink['cardlist_unplayed']
+    card_id = boxlink['card_current'] = cardlist_unplayed.pop()
     postcard = saveget.get_postcard(card_id)
     pobox['viewer_data'][tel_id] = dict(
         card_id = card_id,

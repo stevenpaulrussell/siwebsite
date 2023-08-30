@@ -29,9 +29,9 @@ def make_two_sender_viewer_data():
     # sender0 = saveget.get_sender(Sender0.mobile)
     # pobox_id = postofficeviews.new_pobox_id(sender0, sender0_twil0)
 
-    # Get a viewer for sender0's polink (tel_id, svc_id)
-    polink = saveget.get_polink(Sender0.mobile, sender0_twil0)
-    pobox_id = postofficeviews.new_pobox_id(polink)
+    # Get a viewer for sender0's boxlink (tel_id, svc_id)
+    boxlink = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+    pobox_id = postofficeviews.new_pobox_id(boxlink)
 
     # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
     event_handler.interpret_one_event(Sender0.newpostcard_haveviewer('twil0'))

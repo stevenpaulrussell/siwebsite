@@ -39,19 +39,19 @@ def save_postcard(postcard):
     filerviews._save_a_thing_using_key(thing=postcard, key=f'card/card_{card_id}')
 
 
-def get_polink(tel_id, svc_id, debug_string=None):
-    key=f'polink/polink_{(tel_id, svc_id)}'
+def get_boxlink(tel_id, svc_id, debug_string=None):
+    key=f'boxlink/boxlink_{(tel_id, svc_id)}'
     result = filerviews._load_a_thing_using_key(key=key)
     if debug_string:
-        print(f'\nget_polink debug {debug_string}... got: {tel_id, svc_id, result["pobox_id"]}')
+        print(f'\nget_boxlink debug {debug_string}... got: {tel_id, svc_id, result["pobox_id"]}')
     return result
-def save_polink(polink, debug_string=None):
-    tel_id = polink['tel_id']
-    svc_id = polink['svc_id']
-    key=f'polink/polink_{(tel_id, svc_id)}'
-    filerviews._save_a_thing_using_key(thing=polink, key=key)
+def save_boxlink(boxlink, debug_string=None):
+    tel_id = boxlink['tel_id']
+    svc_id = boxlink['svc_id']
+    key=f'boxlink/boxlink_{(tel_id, svc_id)}'
+    filerviews._save_a_thing_using_key(thing=boxlink, key=key)
     if debug_string:
-        print(f'\nsave_polink debug {debug_string}... saving: {tel_id, svc_id, polink["pobox_id"]}')
+        print(f'\nsave_boxlink debug {debug_string}... saving: {tel_id, svc_id, boxlink["pobox_id"]}')
 
 
 

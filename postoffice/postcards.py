@@ -15,32 +15,32 @@ def new_postcard(tel_id, svc_id, event):
         case 'NewSenderFirst':
             profile_url = event['profile_url']
             sender = create_new_sender(tel_id, profile_url)
-            polink = create_new_polink_update_morsel(sender, svc_id)
+            boxlink = create_new_boxlink_update_morsel(sender, svc_id)
             card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
-            polink['cardlist_unplayed'].append(card_id)
+            boxlink['cardlist_unplayed'].append(card_id)
             
         case 'NewRecipientFirst':
             sender = saveget.get_sender(tel_id)
-            polink = create_new_polink_update_morsel(sender, svc_id)
+            boxlink = create_new_boxlink_update_morsel(sender, svc_id)
             card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
-            polink['cardlist_unplayed'].append(card_id)
+            boxlink['cardlist_unplayed'].append(card_id)
 
         case 'NoViewer':
             sender = saveget.get_sender(tel_id)
             card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
-            polink = saveget.get_polink(tel_id, svc_id)
-            polink['cardlist_unplayed'].append(card_id)
+            boxlink = saveget.get_boxlink(tel_id, svc_id)
+            boxlink['cardlist_unplayed'].append(card_id)
 
         case 'HaveViewer':
             """Postcard put into pobox but update_viewer_data not called:  Viewer learns of card on its regular update."""
             sender = saveget.get_sender(tel_id)
             card_id = create_postcard(sender, tel_id, svc_id, wip, sent_at)
-            polink = saveget.get_polink(tel_id, svc_id)
-            polink['cardlist_unplayed'].append(card_id)
-            update_pobox_new_card(polink)
+            boxlink = saveget.get_boxlink(tel_id, svc_id)
+            boxlink['cardlist_unplayed'].append(card_id)
+            update_pobox_new_card(boxlink)
 
     saveget.update_sender_and_morsel(sender)    
-    saveget.save_polink(polink)
+    saveget.save_boxlink(boxlink)
     if event['context'] == 'NewSenderFirst':
         saveget.delete_twilio_new_sender(sender)        # Delete the old twilio entry after the 'morsel' is available
 
@@ -52,7 +52,7 @@ def create_new_sender(tel_id, profile_url):
         tel_id = tel_id,
         profile_url = profile_url,
         sender_moniker = sender_moniker,  
-        morsel = {}             # morsel made by each create_new_polink 
+        morsel = {}             # morsel made by each create_new_boxlink 
     )
     return sender
 
@@ -60,9 +60,9 @@ def create_default_using_tel_id(tel_id):  # Set as a call so later can test if t
     return f'{tel_id[-4]} {tel_id[-3]} {tel_id[-2]} {tel_id[-1]}'
 
 
-def create_new_polink_update_morsel(sender, svc_id):
+def create_new_boxlink_update_morsel(sender, svc_id):
     tel_id = sender['tel_id']
-    polink = dict(
+    boxlink = dict(
         tel_id = tel_id,
         svc_id = svc_id,
         version = 1,
@@ -83,7 +83,7 @@ def create_new_polink_update_morsel(sender, svc_id):
     msg = 'Sender {tel_id} using new svc_id {svc_id}.'
     new_corr_msg = lines.line(msg, tel_id=tel_id, svc_id=svc_id)
     filerviews.nq_admin_message(new_corr_msg)
-    return polink
+    return boxlink
 
 
 def create_postcard(sender, tel_id, svc_id, wip, sent_at):
@@ -105,28 +105,28 @@ def create_postcard(sender, tel_id, svc_id, wip, sent_at):
     return card_id
 
 
-def update_pobox_new_card(polink):
+def update_pobox_new_card(boxlink):
     """Called when a new card has arrived and a viewer exists. Update the viewer_data only if the current card has not played. """
-    pobox = saveget.get_pobox(polink['pobox_id'])
-    tel_id = polink['tel_id'] 
+    pobox = saveget.get_pobox(boxlink['pobox_id'])
+    tel_id = boxlink['tel_id'] 
     viewer_data_item = pobox['viewer_data'][tel_id]    # tel_id key was set when pobox_id was assigned...
     try:
         if viewer_data_item['play_count'] > 0:
-            push_cards_along(polink, pobox)
+            push_cards_along(boxlink, pobox)
     except KeyError:  # no viewer_data for this sender because this is the first card
-        push_cards_along(polink, pobox, initializing=True)
-    # polink is changed, but is saved by the caller
+        push_cards_along(boxlink, pobox, initializing=True)
+    # boxlink is changed, but is saved by the caller
     saveget.save_pobox(pobox)
 
 
-def push_cards_along(polink, pobox, initializing=False):
+def push_cards_along(boxlink, pobox, initializing=False):
     """Called to push cards if events played_this_card or new_card show the current card should be moved. """
-    tel_id, svc_id = polink['tel_id'], polink['svc_id']
+    tel_id, svc_id = boxlink['tel_id'], boxlink['svc_id']
     if initializing:
         pass   # No card to move from [card_current] into cardlist_played
     else:
-        polink['cardlist_played'].append(polink['card_current']) 
-    card_id = polink['card_current'] =  polink['cardlist_unplayed'].pop()               
+        boxlink['cardlist_played'].append(boxlink['card_current']) 
+    card_id = boxlink['card_current'] =  boxlink['cardlist_unplayed'].pop()               
     postcard = saveget.get_postcard(card_id)   
     pobox['viewer_data'][tel_id] = dict(
         card_id = card_id,

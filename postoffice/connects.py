@@ -6,7 +6,7 @@ import os
 from saveget import saveget
 
 def connect_joining_sender_to_lead_sender_pobox(tel_id, svc_id, command_string):
-    """Check the command integrity, change the requester polink, change the acceptor pobox and the requestor pobox if there is one."""
+    """Check the command integrity, change the requester boxlink, change the acceptor pobox and the requestor pobox if there is one."""
     try:
         requesting_tel_id, requester_svc_id = check_the_connect_command(command_string)
     except (ValueError, AssertionError, TypeError):
@@ -18,18 +18,18 @@ def connect_joining_sender_to_lead_sender_pobox(tel_id, svc_id, command_string):
     
 def _connect_joining_sender_to_lead_sender_pobox(tel_id, svc_id, requesting_tel_id, requester_svc_id):
     # This split from the validity checking to enable unit testing
-    requesting_polink = saveget.get_polink(requesting_tel_id, requester_svc_id)
-    accepting_polink = saveget.get_polink(tel_id, svc_id)
-    if requesting_polink['pobox_id']:
-        delete_requester_from_former_pobox(requesting_tel_id, requesting_polink['pobox_id'])
-    add_requester_to_accepting_pobox(requesting_tel_id, accepting_polink)
-    update_the_requesting_morsel(requesting_tel_id, requester_svc_id, new_recipient=accepting_polink['recipient_moniker'])
-    # Update the polink so requester points to acceptor pobox
-    requesting_polink['recipient_moniker'] = accepting_polink['recipient_moniker']
-    requesting_polink['pobox_id'] = accepting_polink['pobox_id']
+    requesting_boxlink = saveget.get_boxlink(requesting_tel_id, requester_svc_id)
+    accepting_boxlink = saveget.get_boxlink(tel_id, svc_id)
+    if requesting_boxlink['pobox_id']:
+        delete_requester_from_former_pobox(requesting_tel_id, requesting_boxlink['pobox_id'])
+    add_requester_to_accepting_pobox(requesting_tel_id, accepting_boxlink)
+    update_the_requesting_morsel(requesting_tel_id, requester_svc_id, new_recipient=accepting_boxlink['recipient_moniker'])
+    # Update the boxlink so requester points to acceptor pobox
+    requesting_boxlink['recipient_moniker'] = accepting_boxlink['recipient_moniker']
+    requesting_boxlink['pobox_id'] = accepting_boxlink['pobox_id']
 
-    saveget.save_polink(requesting_polink)
-    saveget.save_polink(accepting_polink)
+    saveget.save_boxlink(requesting_boxlink)
+    saveget.save_boxlink(accepting_boxlink)
     #  -> Send message to both tel_ids about the connection, the naming, and how to change.
     print(f"================> debug line 32 connects  {tel_id, svc_id, requesting_tel_id, requester_svc_id}")
     return f'Successfully connected {requesting_tel_id} to {tel_id}'
@@ -50,12 +50,12 @@ def update_the_requesting_morsel(requesting_tel_id, requester_svc_id, new_recipi
     saveget.update_sender_and_morsel(requester)     
 
 
-def add_requester_to_accepting_pobox(requesting_tel_id, accepting_polink):
+def add_requester_to_accepting_pobox(requesting_tel_id, accepting_boxlink):
     """Add viewer_data format to the accepting pobox. """
-    accepting_pobox = saveget.get_pobox(accepting_polink['pobox_id'])
+    accepting_pobox = saveget.get_pobox(accepting_boxlink['pobox_id'])
     viewer_data = accepting_pobox['viewer_data']
     viewer_data[requesting_tel_id] = dict(
-        card_id = None  # This and other parameters assigned when the first card is sent using the re-assigned polink
+        card_id = None  # This and other parameters assigned when the first card is sent using the re-assigned boxlink
     )
     saveget.save_pobox(accepting_pobox)
 

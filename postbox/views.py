@@ -12,8 +12,8 @@ from . import tests
 # def update_viewer_data(pobox, viewer_data):       
 #     #  --->>>>>>>>> This function now distributed, and driven by sqs events!!!
 #     for (sending_tel, svc_id) in pobox['correspondents_list']:          # sending_tel is the <tel_id> that originated the postcard
-#         polink = saveget.get_polink(sending_tel, svc_id)
-#         unplayed_card_list = polink['cardlist_unplayed']
+#         boxlink = saveget.get_boxlink(sending_tel, svc_id)
+#         unplayed_card_list = boxlink['cardlist_unplayed']
 #         if not unplayed_card_list:     
 #             continue    # No new cards in pobox
 
@@ -31,7 +31,7 @@ from . import tests
 #                 saveget.save_postcard(retiring_card)
 #         # Fill in with a new playable, either first one, or one has been retired 
 #         new_card_id, pobox['cardlists'][sending_tel] = unplayed_card_list[0], cardlist[1:]  # swap a card from pobox to viewer_data
-#         #  ---> Instruct server to update the lists on the polink.  ??
+#         #  ---> Instruct server to update the lists on the boxlink.  ??
 #         new_card = saveget.get_postcard(new_card_id)
 #         playable['card_id'] = new_card_id
 #         playable['play_count'] = 0

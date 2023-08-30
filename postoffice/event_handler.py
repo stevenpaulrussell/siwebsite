@@ -83,11 +83,11 @@ def handle_played_it_event(event):
     card = saveget.get_postcard(card_id)
     card['play_count'] += 1
     card['pobox_id'] = pobox_id
-    tel_id, svc_id = card['polink']
-    polink = saveget.get_polink(tel_id, svc_id)
-    if polink['cardlist_unplayed'] != []:
-        postcards.push_cards_along(polink, pobox)
-    saveget.save_polink(polink)
+    tel_id, svc_id = card['boxlink']
+    boxlink = saveget.get_boxlink(tel_id, svc_id)
+    if boxlink['cardlist_unplayed'] != []:
+        postcards.push_cards_along(boxlink, pobox)
+    saveget.save_boxlink(boxlink)
     saveget.save_pobox(pobox)
 
 

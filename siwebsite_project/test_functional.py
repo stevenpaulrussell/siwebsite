@@ -86,20 +86,20 @@ class OneCmdTests(TestCase):
             return saveget.get_sender(Sender0.mobile), saveget.get_sender(Sender1.mobile)
 
         def get_3_corresponds():
-            polink0toA = saveget.get_polink(Sender0.mobile, sender0_twil0)
-            polink1toA = saveget.get_polink(Sender1.mobile, sender1_twil0)
-            polink1toB = saveget.get_polink(Sender1.mobile, sender1_twil1)
-            return polink0toA, polink1toA, polink1toB
+            boxlink0toA = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+            boxlink1toA = saveget.get_boxlink(Sender1.mobile, sender1_twil0)
+            boxlink1toB = saveget.get_boxlink(Sender1.mobile, sender1_twil1)
+            return boxlink0toA, boxlink1toA, boxlink1toB
         
 
         # Sender0 and Sender1 sign up, neither has a viewer yet. 
         filerviews.send_an_sqs_message(Sender0.newsender_firstpostcard(), CMD_URL)
         filerviews.send_an_sqs_message(Sender1.newsender_firstpostcard(), CMD_URL)
         http_response = tickles('request_dummy')
-        polink0toA = saveget.get_polink(Sender0.mobile, sender0_twil0)
-        polink1toA = saveget.get_polink(Sender1.mobile, sender1_twil0)
-        sender0_card_in_play, sender0_unplayed_queue = polink0toA['card_current'], polink0toA['cardlist_unplayed']
-        sender1_unplayed_queue = polink0toA['cardlist_unplayed']
+        boxlink0toA = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+        boxlink1toA = saveget.get_boxlink(Sender1.mobile, sender1_twil0)
+        sender0_card_in_play, sender0_unplayed_queue = boxlink0toA['card_current'], boxlink0toA['cardlist_unplayed']
+        sender1_unplayed_queue = boxlink0toA['cardlist_unplayed']
 
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
@@ -117,17 +117,17 @@ class OneCmdTests(TestCase):
 
         sender0, sender1 = get_2_senders()
     
-        # Check that all is as expected: No viewer, 3 cards sent, each on a different (tel_id, svc_id) pair, a 'polink'
-        # The morsel that is part of sender records the existence of these, and the content for now is only each polink.
+        # Check that all is as expected: No viewer, 3 cards sent, each on a different (tel_id, svc_id) pair, a 'boxlink'
+        # The morsel that is part of sender records the existence of these, and the content for now is only each boxlink.
 
         # =============> Add tests to exhibit the above statement!
-        polink0toA, polink1toA, polink1toB = get_3_corresponds()     
-        self.assertEqual(len(polink1toB['cardlist_unplayed']), 1)  # Now have the 3 polink, each with a card in the wait queue -- cardlist_unplayed
+        boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()     
+        self.assertEqual(len(boxlink1toB['cardlist_unplayed']), 1)  # Now have the 3 boxlink, each with a card in the wait queue -- cardlist_unplayed
         self.assertEqual(sender1['profile_url'], 'profile_Ms1')
         self.assertEqual(sender1['morsel'][sender1_twil0]['recipient_moniker'], 'kith or kin')
         self.assertEqual(sender1['morsel'][sender1_twil1]['have_viewer'], False)
 
-        #  =========> Change the below to show polink, make this sort of a theory of ops
+        #  =========> Change the below to show boxlink, make this sort of a theory of ops
 
         # sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
         # sender1_card = saveget.get_postcard(sender1_card_id)
@@ -163,14 +163,14 @@ class OneCmdTests(TestCase):
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         filerviews.send_an_sqs_message(Sender0.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy')
-        polink0toA = saveget.get_polink(Sender0.mobile, sender0_twil0)
-        sender0_first_card_id = polink0toA['card_current']
-        sender0_second_card_id = polink0toA['cardlist_unplayed'][0]
-        sender0_pobox_id = polink0toA['pobox_id']
+        boxlink0toA = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+        sender0_first_card_id = boxlink0toA['card_current']
+        sender0_second_card_id = boxlink0toA['cardlist_unplayed'][0]
+        sender0_pobox_id = boxlink0toA['pobox_id']
         pobox = saveget.get_pobox(sender0_pobox_id)
 
         # Check the results.  
-        self.assertIn(sender0_second_card_id, polink0toA['cardlist_unplayed'])
+        self.assertIn(sender0_second_card_id, boxlink0toA['cardlist_unplayed'])
 
         # updating viewer_data changes nothing becaue the card in viewer_data remains unplayed
         # update_viewer_data(pobox, sender0_viewer_data)
@@ -198,9 +198,9 @@ class OneCmdTests(TestCase):
 
 
 
-        polink0toA, polink1toA, polink1toB = get_3_corresponds()      
-        self.assertEqual(polink1toA['pobox_id'], sender0_pobox_id)    # Now, sender1 has a pobox_id associated with the connection
-        self.assertEqual(polink1toA['pobox_id'], polink0toA['pobox_id'])
+        boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()      
+        self.assertEqual(boxlink1toA['pobox_id'], sender0_pobox_id)    # Now, sender1 has a pobox_id associated with the connection
+        self.assertEqual(boxlink1toA['pobox_id'], boxlink0toA['pobox_id'])
 
         # display_sender(Sender0.mobile, 'sender0 after sender0 connects sender1 to his postbox --- no change to sender0')
         # display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox. Note the change to pobox_id')
@@ -235,9 +235,9 @@ class OneCmdTests(TestCase):
         # Sender1 now sends a card to the new connection. This will appear in connection but not yet viewer_data
         filerviews.send_an_sqs_message(Sender1.newpostcard_haveviewer('twil0'), CMD_URL)
         tickles('request_dummy') 
-        polink0toA, polink1toA, polink1toB = get_3_corresponds()    
-        sender0_postbox_id = polink1toA['pobox_id']  
-        sender1_recent_card_id = polink1toA['cardlist_unplayed'][-1]
+        boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()    
+        sender0_postbox_id = boxlink1toA['pobox_id']  
+        sender1_recent_card_id = boxlink1toA['cardlist_unplayed'][-1]
 
         # Not sure what needs checking... Fix up this test flow, make the story more clear and examine more results!!!
         print(f'=======Test need line 243 test_functional.... ')
