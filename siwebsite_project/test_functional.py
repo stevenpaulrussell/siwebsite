@@ -26,6 +26,8 @@ from postmaster.views import tickles
 
 
 from .sender_object_for_tests import TwiSim, pp
+from .utils_4_testing import New_Tests_Sender
+
 data_source = os.environ['POSTBOX_DATA_SOURCE']
 CMD_URL = filerviews.EVENT_URL
 
@@ -76,19 +78,22 @@ class OneCmdTests(TestCase):
         # Show reminder message
         print(f'\n====> lines displaying state in test_functional are commented out.  Change for inspection!\n')
         # Remember useful constants
-        Sender0 = TwiSim('Mr0')
-        Sender1 = TwiSim('Ms1')
-        sender1_twil0 = Sender1.twi_directory['twil0']
-        sender1_twil1 = Sender1.twi_directory['twil1']
-        sender0_twil0 = Sender0.twi_directory['twil0']
+        A_Sender = New_Tests_Sender()
+        B_Sender = New_Tests_Sender()
+
+        # Sender0 = TwiSim('Mr0')
+        # Sender1 = TwiSim('Ms1')
+        # sender1_twil0 = Sender1.twi_directory['twil0']
+        # sender1_twil1 = Sender1.twi_directory['twil1']
+        # sender0_twil0 = Sender0.twi_directory['twil0']
 
         def get_2_senders():
-            return saveget.get_sender(Sender0.mobile), saveget.get_sender(Sender1.mobile)
+            return saveget.get_sender(A_Sender.tel_id), saveget.get_sender(B_Sender.tel_id)
 
         def get_3_corresponds():
-            boxlink0toA = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
-            boxlink1toA = saveget.get_boxlink(Sender1.mobile, sender1_twil0)
-            boxlink1toB = saveget.get_boxlink(Sender1.mobile, sender1_twil1)
+            boxlink0toA = saveget.get_boxlink(A_Sender.tel_id, sender0_twil0)
+            boxlink1toA = saveget.get_boxlink(B_Sender.tel_id, sender1_twil0)
+            boxlink1toB = saveget.get_boxlink(B_Sender.tel_id, sender1_twil1)
             return boxlink0toA, boxlink1toA, boxlink1toB
         
 

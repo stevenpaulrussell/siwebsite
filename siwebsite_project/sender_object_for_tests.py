@@ -1,4 +1,4 @@
-"""To be replaced by sender_object_for_tests"""
+"""To be replaced by utils_4_testing"""
 
 
 

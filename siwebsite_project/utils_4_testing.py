@@ -11,10 +11,12 @@ class New_Tests_Sender():
         New_Tests_Sender.last_tel_id_number = 0
         New_Tests_Sender.last_card_number = 0
 
-    def __init__(self, svc_id_letter='A'):
+    def __init__(self):
         New_Tests_Sender.last_tel_id_number += 1
         self.tel_id = f'+ab{New_Tests_Sender.last_tel_id_number}'
-        self.svc_id = f'+{svc_id_letter}'
+        self.svc_A = 'svc_A'
+        self.svc_B = 'svc_B'
+        self.svc_C = 'svc_C'
         self.profile_url = f'{self.tel_id}_profile'
 
     def new_card_wip(self, now = time.time()):
