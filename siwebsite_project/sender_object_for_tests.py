@@ -1,3 +1,7 @@
+"""To be replaced by sender_object_for_tests"""
+
+
+
 import time
 import uuid
 import pprint

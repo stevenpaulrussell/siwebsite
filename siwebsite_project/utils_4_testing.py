@@ -1,3 +1,5 @@
+"""Use this to replace sender_object_for_tests, making the tests easier to read."""
+
 import time
 
 class New_Tests_Sender():
