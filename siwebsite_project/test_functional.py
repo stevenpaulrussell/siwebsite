@@ -73,13 +73,15 @@ class OneCmdTests(TestCase):
     def setUp(self) -> None:
         filerviews.clear_the_read_bucket()
         filerviews.clear_the_sqs_queue_TEST_SQS()
+        # reset New_Tests_Sender
+        New_Tests_Sender.reset()
 
     def test_backend_using_simulation_of_two_senders(self):
         # Show reminder message
         print(f'\n====> lines displaying state in test_functional are commented out.  Change for inspection!\n')
         # Remember useful constants
-        A_Sender = New_Tests_Sender()
-        B_Sender = New_Tests_Sender()
+        Sender_0 = New_Tests_Sender()
+        Sender_1 = New_Tests_Sender()
 
         # Sender0 = TwiSim('Mr0')
         # Sender1 = TwiSim('Ms1')
@@ -88,21 +90,25 @@ class OneCmdTests(TestCase):
         # sender0_twil0 = Sender0.twi_directory['twil0']
 
         def get_2_senders():
-            return saveget.get_sender(A_Sender.tel_id), saveget.get_sender(B_Sender.tel_id)
+            return saveget.get_sender(Sender_0.tel_id), saveget.get_sender(Sender_1.tel_id)
 
         def get_3_corresponds():
-            boxlink0toA = saveget.get_boxlink(A_Sender.tel_id, sender0_twil0)
-            boxlink1toA = saveget.get_boxlink(B_Sender.tel_id, sender1_twil0)
-            boxlink1toB = saveget.get_boxlink(B_Sender.tel_id, sender1_twil1)
+            boxlink0toA = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
+            boxlink1toA = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_A)
+            boxlink1toB = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_B)
             return boxlink0toA, boxlink1toA, boxlink1toB
         
 
         # Sender0 and Sender1 sign up, neither has a viewer yet. 
-        filerviews.send_an_sqs_message(Sender0.newsender_firstpostcard(), CMD_URL)
-        filerviews.send_an_sqs_message(Sender1.newsender_firstpostcard(), CMD_URL)
+        msg0 = dict(wip=Sender_0.new_card_wip(), context='NewSenderFirst', profile_url=Sender_0.profile_url, \
+                    tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg0, CMD_URL)
+        msg1 = dict(wip=Sender_1.new_card_wip(), context='NewSenderFirst', profile_url=Sender_1.profile_url, \
+                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg1, CMD_URL)
         http_response = tickles('request_dummy')
-        boxlink0toA = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
-        boxlink1toA = saveget.get_boxlink(Sender1.mobile, sender1_twil0)
+        boxlink0toA = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
+        boxlink1toA = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_A)
         sender0_card_in_play, sender0_unplayed_queue = boxlink0toA['card_current'], boxlink0toA['cardlist_unplayed']
         sender1_unplayed_queue = boxlink0toA['cardlist_unplayed']
 
@@ -115,9 +121,13 @@ class OneCmdTests(TestCase):
         self.assertIsNone(sender0_card_in_play)       # A card sent remains in the unplayed queue until a viewer is established
 
         # Sender1 sends to a second twilio number
-        filerviews.send_an_sqs_message(Sender1.newrecipient_postcard('twil1'), CMD_URL)
+        msg1 = dict(wip=Sender_1.new_card_wip(), context='NewRecipientFirst', profile_url=Sender_1.profile_url, \
+                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_B, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg1, CMD_URL)
         # Sender1 sends a second card to the first twilio number
-        filerviews.send_an_sqs_message(Sender1.newpostcard_noviewer('twil0'), CMD_URL)
+        msg1 = dict(wip=Sender_1.new_card_wip(), context='NoViewer', profile_url=Sender_1.profile_url, \
+                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg1, CMD_URL)
         tickles('request_dummy')
 
         sender0, sender1 = get_2_senders()
@@ -128,9 +138,23 @@ class OneCmdTests(TestCase):
         # =============> Add tests to exhibit the above statement!
         boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()     
         self.assertEqual(len(boxlink1toB['cardlist_unplayed']), 1)  # Now have the 3 boxlink, each with a card in the wait queue -- cardlist_unplayed
-        self.assertEqual(sender1['profile_url'], 'profile_Ms1')
-        self.assertEqual(sender1['morsel'][sender1_twil0]['recipient_moniker'], 'kith or kin')
-        self.assertEqual(sender1['morsel'][sender1_twil1]['have_viewer'], False)
+        self.assertEqual(sender1['profile_url'], '+..2_profile')
+        self.assertEqual(sender1['morsel'][Sender_1.svc_A]['recipient_moniker'], 'kith or kin')
+        self.assertEqual(sender1['morsel'][Sender_1.svc_B]['have_viewer'], False)
+
+
+        
+
+        # TESTS PASSING TO HERE:  PROJECT IS SWITCHING TO UTILS_4_TESTING FROM SENDER_OBJECT
+
+
+
+
+
+
+
+
+
 
         #  =========> Change the below to show boxlink, make this sort of a theory of ops
 

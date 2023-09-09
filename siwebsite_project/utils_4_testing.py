@@ -13,7 +13,7 @@ class New_Tests_Sender():
 
     def __init__(self):
         New_Tests_Sender.last_tel_id_number += 1
-        self.tel_id = f'+ab{New_Tests_Sender.last_tel_id_number}'
+        self.tel_id = f'+..{New_Tests_Sender.last_tel_id_number}'
         self.svc_A = 'svc_A'
         self.svc_B = 'svc_B'
         self.svc_C = 'svc_C'
