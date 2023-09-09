@@ -10,139 +10,139 @@ from siwebsite_project import utils_4_testing
 from . import postcards, connects, views
 
 
-# class PostcardProcessing(TestCase):
-#     def setUp(self):
-#         filerviews.clear_the_read_bucket()
-#         filerviews.clear_the_sqs_queue_TEST_SQS()
-#         self.sender_mobile_number = '+1_sender_mobile_number'
-#         self.twilio_phone_number = 'twilio_number_1'
-#         self.profile_url = 'sender_selfie_url'
+class PostcardProcessing(TestCase):
+    def setUp(self):
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.sender_mobile_number = '+1_sender_mobile_number'
+        self.twilio_phone_number = 'twilio_number_1'
+        self.profile_url = 'sender_selfie_url'
 
-#     def test_create_new_sender(self):
-#         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-#         self.assertEqual(sender['version'], 1)
-#         self.assertEqual(sender['sender_moniker'], 'm b e r')
+    def test_create_new_sender(self):
+        sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
+        self.assertEqual(sender['version'], 1)
+        self.assertEqual(sender['sender_moniker'], 'm b e r')
 
-#     def test_create_new_boxlink(self):
-#         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-#         boxlink = postcards.create_new_boxlink_update_morsel(sender, self.twilio_phone_number)
-#         self.assertEqual(boxlink['recipient_moniker'], 'kith or kin')
-#         self.assertEqual(boxlink['card_current'], None)
-#         self.assertEqual(boxlink['cardlist_unplayed'], [])
-#         self.assertEqual(boxlink['pobox_id'], None)
+    def test_create_new_boxlink(self):
+        sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
+        boxlink = postcards.create_new_boxlink_update_morsel(sender, self.twilio_phone_number)
+        self.assertEqual(boxlink['recipient_moniker'], 'kith or kin')
+        self.assertEqual(boxlink['card_current'], None)
+        self.assertEqual(boxlink['cardlist_unplayed'], [])
+        self.assertEqual(boxlink['pobox_id'], None)
 
-#     def test_make_morsel_no_postbox(self):
-#         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-#         boxlink = postcards.create_new_boxlink_update_morsel(sender, self.twilio_phone_number)
-#         #  card_id='a first card'
-#         morsel = saveget.make_morsel(sender)
-#         self.assertEqual(morsel[self.twilio_phone_number]['sender_moniker'], 'm b e r')
-#         self.assertEqual(morsel[self.twilio_phone_number]['recipient_moniker'], 'kith or kin')
-#         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
+    def test_make_morsel_no_postbox(self):
+        sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
+        boxlink = postcards.create_new_boxlink_update_morsel(sender, self.twilio_phone_number)
+        #  card_id='a first card'
+        morsel = saveget.make_morsel(sender)
+        self.assertEqual(morsel[self.twilio_phone_number]['sender_moniker'], 'm b e r')
+        self.assertEqual(morsel[self.twilio_phone_number]['recipient_moniker'], 'kith or kin')
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
         
-#     def test_create_postcard(self):
-#         test_time = time.time()
-#         sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
-#         wip = dict(image_timestamp=test_time - 1, image_url='image_url',
-#                     audio_timestamp=test_time - 1, audio_url='audio_url')
-#         card_id = postcards.create_postcard(sender, tel_id=self.sender_mobile_number,
-#                             svc_id=self.twilio_phone_number, wip=wip, sent_at=test_time)
-#         postcard = saveget.get_postcard(card_id)
-#         self.assertAlmostEqual(postcard['sent_at'], test_time)
+    def test_create_postcard(self):
+        test_time = time.time()
+        sender = postcards.create_new_sender(self.sender_mobile_number, self.profile_url)
+        wip = dict(image_timestamp=test_time - 1, image_url='image_url',
+                    audio_timestamp=test_time - 1, audio_url='audio_url')
+        card_id = postcards.create_postcard(sender, tel_id=self.sender_mobile_number,
+                            svc_id=self.twilio_phone_number, wip=wip, sent_at=test_time)
+        postcard = saveget.get_postcard(card_id)
+        self.assertAlmostEqual(postcard['sent_at'], test_time)
 
 
-# class HelperFunctionTests(TestCase):
-#     def setUp(self):
-#         filerviews.clear_the_read_bucket()
-#         filerviews.clear_the_sqs_queue_TEST_SQS()
-#         self.sender_mobile_number = '+1_sender_mobile_number'
-#         self.twilio_phone_number = 'twilio_number_1'
-#         self.profile_url = 'sender_selfie_url'
+class HelperFunctionTests(TestCase):
+    def setUp(self):
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.sender_mobile_number = '+1_sender_mobile_number'
+        self.twilio_phone_number = 'twilio_number_1'
+        self.profile_url = 'sender_selfie_url'
 
-#     def test_get_passkey_when_absent(self):
-#         passkey__svc_id__tuple = connects.get_passkey(tel_id=self.sender_mobile_number)
-#         self.assertIsNone(passkey__svc_id__tuple)
+    def test_get_passkey_when_absent(self):
+        passkey__svc_id__tuple = connects.get_passkey(tel_id=self.sender_mobile_number)
+        self.assertIsNone(passkey__svc_id__tuple)
       
-#     def test_get_passkey_when_present(self):
-#         connects._set_passkey(tel_id=self.sender_mobile_number, svc_id=self.twilio_phone_number)
-#         passkey, svc_id = connects.get_passkey(tel_id=self.sender_mobile_number)
-#         self.assertEqual(len(passkey), 4)
-#         self.assertEqual(svc_id, self.twilio_phone_number)
+    def test_get_passkey_when_present(self):
+        connects._set_passkey(tel_id=self.sender_mobile_number, svc_id=self.twilio_phone_number)
+        passkey, svc_id = connects.get_passkey(tel_id=self.sender_mobile_number)
+        self.assertEqual(len(passkey), 4)
+        self.assertEqual(svc_id, self.twilio_phone_number)
    
-#     def test_get_passkey_when_expired(self):
-#         connects._set_passkey(tel_id=self.sender_mobile_number, svc_id=self.twilio_phone_number, duration=-1)
-#         passkey__svc_id__tuple = connects.get_passkey(tel_id=self.sender_mobile_number)
-#         self.assertIsNone(passkey__svc_id__tuple)
+    def test_get_passkey_when_expired(self):
+        connects._set_passkey(tel_id=self.sender_mobile_number, svc_id=self.twilio_phone_number, duration=-1)
+        passkey__svc_id__tuple = connects.get_passkey(tel_id=self.sender_mobile_number)
+        self.assertIsNone(passkey__svc_id__tuple)
     
 
-# class NewPostcardCases(TestCase):
-#     def setUp(self):
-#         filerviews.clear_the_read_bucket()
-#         filerviews.clear_the_sqs_queue_TEST_SQS()
-#         self.sender_mobile_number = '+1_sender_mobile_number'
-#         self.twilio_phone_number = 'twilio_number_1'
-#         self.profile_url = 'sender_selfie_url'
-#         self.wip = dict(image_timestamp='image_timestamp', image_url='image_url', 
-#                     audio_timestamp='audio_timestamp', audio_url='audio_url'
-#         )
-#         self.msg = dict(sent_at='sent_at', wip=self.wip)
+class NewPostcardCases(TestCase):
+    def setUp(self):
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        self.sender_mobile_number = '+1_sender_mobile_number'
+        self.twilio_phone_number = 'twilio_number_1'
+        self.profile_url = 'sender_selfie_url'
+        self.wip = dict(image_timestamp='image_timestamp', image_url='image_url', 
+                    audio_timestamp='audio_timestamp', audio_url='audio_url'
+        )
+        self.msg = dict(sent_at='sent_at', wip=self.wip)
 
-#     def test_new_postcard_newsenderfirst(self):
-#         """First postcard from twitalk with new sender, run through new_postcard."""
-#         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
-#         self.msg.update(specifics)
-#         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-#         # Did sender, morsel, and boxlink get written properly?
-#         sender = saveget.get_sender(self.sender_mobile_number)
-#         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
-#         boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)    
-#         self.assertEqual(sender['morsel'], morsel)
-#         self.assertIsNone(boxlink['pobox_id'])
-#         self.assertIn(self.twilio_phone_number, morsel)
-#         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
+    def test_new_postcard_newsenderfirst(self):
+        """First postcard from twitalk with new sender, run through new_postcard."""
+        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        # Did sender, morsel, and boxlink get written properly?
+        sender = saveget.get_sender(self.sender_mobile_number)
+        morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
+        boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)    
+        self.assertEqual(sender['morsel'], morsel)
+        self.assertIsNone(boxlink['pobox_id'])
+        self.assertIn(self.twilio_phone_number, morsel)
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], False)
 
-#     def test_connect_viewer_after_newsenderfirst(self):
-#         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
-#         self.msg.update(specifics)
-#         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-#         boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)    
-#         # card_lists before pobox made:
-#         cardlist_unplayed_before_pobox = boxlink['cardlist_unplayed'].copy()
-#         card_current_before_pobox = boxlink['card_current']
-#         pobox_id = views.new_pobox_id(boxlink)
-#         morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
-#         boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)        
-#         cardlist_unplayed = boxlink['cardlist_unplayed']
-#         card_current = boxlink['card_current']
-#         pobox = saveget.get_pobox(pobox_id)
-#         viewer_data = pobox['viewer_data']
-#         self.assertEqual(boxlink['pobox_id'], pobox_id)
-#         self.assertIn(self.twilio_phone_number, morsel)
-#         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
-#         self.assertEqual(len(cardlist_unplayed_before_pobox), 1)
-#         self.assertIsNone(card_current_before_pobox)
-#         self.assertEqual(len(cardlist_unplayed), 0)
-#         self.assertEqual(card_current, cardlist_unplayed_before_pobox[0])
-#         self.assertIn(self.sender_mobile_number, viewer_data)    
-#         self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
+    def test_connect_viewer_after_newsenderfirst(self):
+        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)    
+        # card_lists before pobox made:
+        cardlist_unplayed_before_pobox = boxlink['cardlist_unplayed'].copy()
+        card_current_before_pobox = boxlink['card_current']
+        pobox_id = views.new_pobox_id(boxlink)
+        morsel =  filerviews.load_from_free_tier(self.sender_mobile_number) 
+        boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)        
+        cardlist_unplayed = boxlink['cardlist_unplayed']
+        card_current = boxlink['card_current']
+        pobox = saveget.get_pobox(pobox_id)
+        viewer_data = pobox['viewer_data']
+        self.assertEqual(boxlink['pobox_id'], pobox_id)
+        self.assertIn(self.twilio_phone_number, morsel)
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
+        self.assertEqual(len(cardlist_unplayed_before_pobox), 1)
+        self.assertIsNone(card_current_before_pobox)
+        self.assertEqual(len(cardlist_unplayed), 0)
+        self.assertEqual(card_current, cardlist_unplayed_before_pobox[0])
+        self.assertIn(self.sender_mobile_number, viewer_data)    
+        self.assertEqual(morsel[self.twilio_phone_number]['have_viewer'], 'HaveViewer')
 
-#     def test_new_postcard_HaveViewer(self):
-#         # Setup sender with first card, connect to a viewer, send a second card
-#         specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
-#         self.msg.update(specifics)
-#         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-#         sender_begin = saveget.get_sender(self.sender_mobile_number)
-#         boxlink_begin = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)        
-#         pobox_id = views.new_pobox_id(boxlink_begin)
-#         # Send a second postcard. This should now occupy cardlist_unplayed
-#         specifics = dict(context='HaveViewer', profile_url=self.profile_url)
-#         self.msg.update(specifics)
-#         postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
-#         # See what happened
-#         boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)        
-#         cardlist = boxlink['cardlist_unplayed']
-#         pobox = saveget.get_pobox(pobox_id)
-#         self.assertEqual(len(cardlist), 1)  # 2 cards sent, but the first is now in card_current
+    def test_new_postcard_HaveViewer(self):
+        # Setup sender with first card, connect to a viewer, send a second card
+        specifics = dict(context='NewSenderFirst', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        sender_begin = saveget.get_sender(self.sender_mobile_number)
+        boxlink_begin = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)        
+        pobox_id = views.new_pobox_id(boxlink_begin)
+        # Send a second postcard. This should now occupy cardlist_unplayed
+        specifics = dict(context='HaveViewer', profile_url=self.profile_url)
+        self.msg.update(specifics)
+        postcards.new_postcard(self.sender_mobile_number, self.twilio_phone_number, self.msg)
+        # See what happened
+        boxlink = saveget.get_boxlink(self.sender_mobile_number, self.twilio_phone_number)        
+        cardlist = boxlink['cardlist_unplayed']
+        pobox = saveget.get_pobox(pobox_id)
+        self.assertEqual(len(cardlist), 1)  # 2 cards sent, but the first is now in card_current
 
 
 class ConnectCases(TestCase):
