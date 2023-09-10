@@ -79,115 +79,98 @@ class OneCmdTests(TestCase):
     def test_backend_using_simulation_of_two_senders(self):
         # Show reminder message
         print(f'\n====> lines displaying state in test_functional are commented out.  Change for inspection!\n')
-        # Remember useful constants
+
         Sender_0 = New_Tests_Sender()
         Sender_1 = New_Tests_Sender()
-
-        # Sender0 = TwiSim('Mr0')
-        # Sender1 = TwiSim('Ms1')
-        # sender1_twil0 = Sender1.twi_directory['twil0']
-        # sender1_twil1 = Sender1.twi_directory['twil1']
-        # sender0_twil0 = Sender0.twi_directory['twil0']
-
         def get_2_senders():
             return saveget.get_sender(Sender_0.tel_id), saveget.get_sender(Sender_1.tel_id)
-
         def get_3_corresponds():
             boxlink0toA = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
             boxlink1toA = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_A)
             boxlink1toB = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_B)
             return boxlink0toA, boxlink1toA, boxlink1toB
         
-
-        # Sender0 and Sender1 sign up, neither has a viewer yet. 
+        # Sender_0 signs up: each sends a postcard, then a profile (following Twilio prompts). 'twi2' sends the NewSenderFirst message on an AWS queue. 
         msg0 = dict(wip=Sender_0.new_card_wip(), context='NewSenderFirst', profile_url=Sender_0.profile_url, \
                     tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at', event_type='new_postcard')
         filerviews.send_an_sqs_message(msg0, CMD_URL)
+        # Sender_1 signs up
         msg1 = dict(wip=Sender_1.new_card_wip(), context='NewSenderFirst', profile_url=Sender_1.profile_url, \
                     tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at', event_type='new_postcard')
         filerviews.send_an_sqs_message(msg1, CMD_URL)
+        # Message processing is started asynchronously
         http_response = tickles('request_dummy')
+        # Get the results....
         boxlink0toA = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
         boxlink1toA = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_A)
         sender0_card_in_play, sender0_unplayed_queue = boxlink0toA['card_current'], boxlink0toA['cardlist_unplayed']
         sender1_unplayed_queue = boxlink0toA['cardlist_unplayed']
-
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
-        self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])
-        self.assertIn('using new svc_id', admin_msgs[1])
+        # Test the results
+        self.assertEqual('new_postcard', cmd_msgs[1]['event_type'])     # Telemetry
+        self.assertIn('using new svc_id', admin_msgs[1])                # Telemetry
         self.assertEqual(len(sender0_unplayed_queue), 1)
         self.assertEqual(len(sender1_unplayed_queue), 1)
         self.assertIsNone(sender0_card_in_play)       # A card sent remains in the unplayed queue until a viewer is established
-
-        # Sender1 sends to a second twilio number
-        msg1 = dict(wip=Sender_1.new_card_wip(), context='NewRecipientFirst', profile_url=Sender_1.profile_url, \
-                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_B, sent_at='sent_at', event_type='new_postcard')
-        filerviews.send_an_sqs_message(msg1, CMD_URL)
-        # Sender1 sends a second card to the first twilio number
-        msg1 = dict(wip=Sender_1.new_card_wip(), context='NoViewer', profile_url=Sender_1.profile_url, \
-                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at', event_type='new_postcard')
-        filerviews.send_an_sqs_message(msg1, CMD_URL)
-        tickles('request_dummy')
-
-        sender0, sender1 = get_2_senders()
-    
-        # Check that all is as expected: No viewer, 3 cards sent, each on a different (tel_id, svc_id) pair, a 'boxlink'
-        # The morsel that is part of sender records the existence of these, and the content for now is only each boxlink.
-
-        # =============> Add tests to exhibit the above statement!
-        boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()     
-        self.assertEqual(len(boxlink1toB['cardlist_unplayed']), 1)  # Now have the 3 boxlink, each with a card in the wait queue -- cardlist_unplayed
-        self.assertEqual(sender1['profile_url'], '+..2_profile')
-        self.assertEqual(sender1['morsel'][Sender_1.svc_A]['recipient_moniker'], 'kith or kin')
-        self.assertEqual(sender1['morsel'][Sender_1.svc_B]['have_viewer'], False)
+        # Check the card contents
+        sender1_first_card_id = sender1_unplayed_queue[0]
+        sender1_first_card = saveget.get_postcard(sender1_first_card_id)
+        self.assertEqual(sender1_first_card['tel_id'], (Sender_1.tel_id))
 
 
         
 
-        # TESTS PASSING TO HERE:  PROJECT IS SWITCHING TO UTILS_4_TESTING FROM SENDER_OBJECT
+        # Sender1 sends to a second twilio number. twi2 notices the first use of that number by this sender
+        msg1 = dict(wip=Sender_1.new_card_wip(), context='NewRecipientFirst', profile_url=Sender_1.profile_url, \
+                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_B, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg1, CMD_URL)
+        # Sender1 sends a second card to the first twilio number. twi2 again notices the context
+        msg1 = dict(wip=Sender_1.new_card_wip(), context='NoViewer', profile_url=Sender_1.profile_url, \
+                    tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg1, CMD_URL)
+        tickles('request_dummy')
+        # Check that all is as expected: No viewer, 3 cards sent, each on a different (tel_id, svc_id) pair, a 'boxlink'
+        # The morsel that is part of sender records the existence of these, and the content for now is only each boxlink.
+        sender0, sender1 = get_2_senders()
+        sender1_morsel = sender1['morsel']
+        sender1_profile = sender1['profile_url']
+        boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()  
+        self.assertEqual(len(boxlink1toB['cardlist_unplayed']), 1)  # Now have the 3 boxlink, each with a card in the wait queue -- cardlist_unplayed
+        self.assertEqual(sender1_profile, '+..2_profile')
+        self.assertEqual(sender1_morsel[Sender_1.svc_A]['recipient_moniker'], 'kith or kin')
+        self.assertEqual(sender1_morsel[Sender_1.svc_B]['have_viewer'], False)
 
-
-
-
-
-
-
-
-
-
-        #  =========> Change the below to show boxlink, make this sort of a theory of ops
-
-        # sender1_card_id = sender1['conn'][sender1_twil0]['recent_card_id']
-        # sender1_card = saveget.get_postcard(sender1_card_id)
-        # self.assertEqual(sender1_card['tel_id'], Sender1.mobile)
         # display_sender(Sender0.mobile, 'sender0 before setting any viewer')
         # display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
 
         # Sender0 gets a passkey to enable making a viewer for 'KinA'.  
-        sender0_passkey_msg = mms_to_free_tier(time.time(), Sender0.mobile, sender0_twil0, 'passkey', None, None)    # nq_sqs happens 
+        sender0_passkey_msg = mms_to_free_tier(time.time(), Sender_0.tel_id, Sender_0.svc_A, 'passkey', None, None)    # nq_sqs happens 
         sender0_passkey =  sender0_passkey_msg.split('"')[1]
+
+        print(f'\nDebug line 148 test_functional passkey_msg: {sender0_passkey_msg}/n{sender0_passkey}\n')
+
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
         http_response = tickles('request_dummy')
 
         # Now postoffice side works, it would not without the tickle  This sets up the pobox, returning pobox_id.  
         # In this test script, the request is redirected to the player, and that updates viewer data from the poboc
-        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender0.mobile, 'passkey': sender0_passkey})
+        redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender_0.tel_id, 'passkey': sender0_passkey})
         redirected_url = redirect_response.url
         # Needed @csrf_exempt in the code so that post gets a status code 200 not 403, and returns the json encoded viewer_data
         response2 = requests.post(redirected_url)
         KinA_postbox_id =  redirected_url.split('/postbox/')[-1]
-        pobox_id_again = pobox_id_if_good_passkey(Sender0.mobile, sender0_passkey)
+        pobox_id_again = pobox_id_if_good_passkey(Sender_0.tel_id, sender0_passkey)
         KinA_pobox = saveget.get_pobox(KinA_postbox_id)
         KinA_viewer_data = KinA_pobox['viewer_data']
-        KinA_sender0_viewer_data = KinA_viewer_data[Sender0.mobile]
+        KinA_sender0_viewer_data = KinA_viewer_data[Sender_0.tel_id]
 
         # And check the results
         self.assertEqual(response2.status_code, 200)
         self.assertEqual(KinA_postbox_id, pobox_id_again)
         self.assertIsNone(pobox_id_if_good_passkey(Sender0.mobile, 'some wrong twilio number'))
-        self.assertIn(Sender0.mobile, KinA_viewer_data)
-        self.assertEqual(KinA_sender0_viewer_data['profile_url'], Sender0.profile_url)
+        self.assertIn(Sender_0.tel_id, KinA_viewer_data)
+        self.assertEqual(KinA_sender0_viewer_data['profile_url'], Sender_0.profile_url)
 
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         filerviews.send_an_sqs_message(Sender0.newpostcard_haveviewer('twil0'), CMD_URL)

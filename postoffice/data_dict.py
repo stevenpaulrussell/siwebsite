@@ -46,7 +46,8 @@ f'card/card_{postcard_id}':
     'version': -> start at 1
     'card_id':  -> card_id, 
     'play_count':  -> default 0, then updated from Recently_Played_Cards_V1 when archived  ---> change this?                                  
-    'boxlink': (tel_id, svc_id)
+    'tel_id': tel_id
+    'svc_id': svc_id
     'sent_at': -> time.time() when made and stored in S3 and referenced in post_office  
     'image_url': 
     'audio_url': 
