@@ -90,7 +90,7 @@ class OneCmdTests(TestCase):
             boxlink1toB = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_B)
             return boxlink0toA, boxlink1toA, boxlink1toB
         
-        # Sender_0 signs up: each sends a postcard, then a profile (following Twilio prompts). 'twi2' sends the NewSenderFirst message on an AWS queue. 
+        # Sender_0 signs up: first sends a postcard, then a profile (following Twilio prompts). 'twi2' sends the NewSenderFirst message on an AWS queue. 
         msg0 = dict(wip=Sender_0.new_card_wip(), context='NewSenderFirst', profile_url=Sender_0.profile_url, \
                     tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at', event_type='new_postcard')
         filerviews.send_an_sqs_message(msg0, CMD_URL)
@@ -104,7 +104,7 @@ class OneCmdTests(TestCase):
         boxlink0toA = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
         boxlink1toA = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_A)
         sender0_card_in_play, sender0_unplayed_queue = boxlink0toA['card_current'], boxlink0toA['cardlist_unplayed']
-        sender1_unplayed_queue = boxlink0toA['cardlist_unplayed']
+        sender1_unplayed_queue = boxlink1toA['cardlist_unplayed']
         events_admins_msgs = json.loads(http_response.content)
         cmd_msgs, admin_msgs = events_admins_msgs['cmd_msgs'], events_admins_msgs['admin_msgs']
         # Test the results
@@ -117,9 +117,6 @@ class OneCmdTests(TestCase):
         sender1_first_card_id = sender1_unplayed_queue[0]
         sender1_first_card = saveget.get_postcard(sender1_first_card_id)
         self.assertEqual(sender1_first_card['tel_id'], (Sender_1.tel_id))
-
-
-        
 
         # Sender1 sends to a second twilio number. twi2 notices the first use of that number by this sender
         msg1 = dict(wip=Sender_1.new_card_wip(), context='NewRecipientFirst', profile_url=Sender_1.profile_url, \
@@ -147,9 +144,6 @@ class OneCmdTests(TestCase):
         # Sender0 gets a passkey to enable making a viewer for 'KinA'.  
         sender0_passkey_msg = mms_to_free_tier(time.time(), Sender_0.tel_id, Sender_0.svc_A, 'passkey', None, None)    # nq_sqs happens 
         sender0_passkey =  sender0_passkey_msg.split('"')[1]
-
-        print(f'\nDebug line 148 test_functional passkey_msg: {sender0_passkey_msg}/n{sender0_passkey}\n')
-
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
         http_response = tickles('request_dummy')
 
@@ -168,19 +162,20 @@ class OneCmdTests(TestCase):
         # And check the results
         self.assertEqual(response2.status_code, 200)
         self.assertEqual(KinA_postbox_id, pobox_id_again)
-        self.assertIsNone(pobox_id_if_good_passkey(Sender0.mobile, 'some wrong twilio number'))
+        self.assertIsNone(pobox_id_if_good_passkey(Sender_0.tel_id, 'some wrong twilio number'))
         self.assertIn(Sender_0.tel_id, KinA_viewer_data)
         self.assertEqual(KinA_sender0_viewer_data['profile_url'], Sender_0.profile_url)
 
         # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
-        filerviews.send_an_sqs_message(Sender0.newpostcard_haveviewer('twil0'), CMD_URL)
+        msg0 = dict(wip=Sender_0.new_card_wip(), context='HaveViewer', \
+                    tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg0, CMD_URL)
         tickles('request_dummy')
-        boxlink0toA = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+        boxlink0toA = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
         sender0_first_card_id = boxlink0toA['card_current']
         sender0_second_card_id = boxlink0toA['cardlist_unplayed'][0]
         sender0_pobox_id = boxlink0toA['pobox_id']
         pobox = saveget.get_pobox(sender0_pobox_id)
-
         # Check the results.  
         self.assertIn(sender0_second_card_id, boxlink0toA['cardlist_unplayed'])
 
@@ -188,28 +183,21 @@ class OneCmdTests(TestCase):
         # update_viewer_data(pobox, sender0_viewer_data)
         secondcard_pobox = saveget.get_pobox(sender0_pobox_id)
         secondcard_viewer_data = saveget.get_viewer_data(sender0_pobox_id)
-        self.assertEqual(sender0_first_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
-        self.assertNotEqual(sender0_second_card_id, secondcard_viewer_data[Sender0.mobile]['card_id'])
-
+        self.assertEqual(sender0_first_card_id, secondcard_viewer_data[Sender_0.tel_id]['card_id'])
+        self.assertNotEqual(sender0_second_card_id, secondcard_viewer_data[Sender_0.tel_id]['card_id'])
         # display_sender(Sender0.mobile, f'sender0 after setting up a viewer and sending a second card')
         # display_postal(sender0_postbox_id, f'pobox after sender0 sent that second card')
 
-        # Sender0 connects Sender1 to the viewer, now using a passkey supplied by Sender1
-        sender1_passkey_msg = mms_to_free_tier(time.time(), Sender1.mobile, sender1_twil0, 'passkey', None, None)   # nq_sqs happens 
+        # Sender0 connects Sender1 to the viewer, now using a passkey supplied by Sender1 for svc_A
+        sender1_passkey_msg = mms_to_free_tier(time.time(), Sender_1.tel_id, Sender_1.svc_A, 'passkey', None, None)   # nq_sqs happens 
         sender1_passkey =  sender1_passkey_msg.split('"')[1]
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
         http_response = tickles('request_dummy')
-
         # Issue the connect command and inspect the results
-        cmd = f'connect {Sender1.mobile} passkey {sender1_passkey}'
-        sender0_msg_back = mms_to_free_tier(time.time(), Sender0.mobile, sender0_twil0, cmd, None, None)   # nq_sqs happens 
+        cmd = f'connect {Sender_1.tel_id} passkey {sender1_passkey}'
+        sender0_msg_back = mms_to_free_tier(time.time(), Sender_0.tel_id, Sender_0.svc_A, cmd, None, None)   # nq_sqs happens 
         self.assertIn(f'Your command <{cmd}> is queued for processing', sender0_msg_back)
         tickles('request_dummy')  # again, tickle needed from some source to get the postmaster side to notice the changes
-
-
-
-
-
         boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()      
         self.assertEqual(boxlink1toA['pobox_id'], sender0_pobox_id)    # Now, sender1 has a pobox_id associated with the connection
         self.assertEqual(boxlink1toA['pobox_id'], boxlink0toA['pobox_id'])
@@ -218,25 +206,23 @@ class OneCmdTests(TestCase):
         # display_sender(Sender1.mobile, 'sender1 after sender0 connects sender1 to his postbox. Note the change to pobox_id')
         # display_postal(sender0_postbox_id, 'postbox and view_data after sender0 connects sender1. sender1 has not yet sent a card.')
 
-
         # Sender1 does his viewer setup, and gets the same url as Sender0 had:  No need to do the connection, but one can! 
-        sender1 = saveget.get_sender(Sender1.mobile)
-        sender1_passkey_msg = mms_to_free_tier(time.time(), Sender1.mobile, sender1_twil0, 'passkey', None, None)    # nq_sqs happens 
+        sender1 = saveget.get_sender(Sender_1.tel_id)
+        sender1_passkey_msg = mms_to_free_tier(time.time(), Sender_1.tel_id, Sender_1.svc_A, 'passkey', None, None)    # nq_sqs happens 
         sender1_passkey =  sender1_passkey_msg.split('"')[1]
 
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
         tickles('request_dummy')
-
-        sender1_redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender1.mobile, 'passkey': sender1_passkey})
+        sender1_redirect_response = requests.post(f'{data_source}/get_a_pobox_id', data={'tel_id': Sender_1.tel_id, 'passkey': sender1_passkey})
         sender1_redirected_url = sender1_redirect_response.url
         self.assertEqual(redirected_url, sender1_redirected_url)
 
         # Sender1 sets up a to: name for a first recipient
-        sender1_to_back = mms_to_free_tier(time.time(), Sender1.mobile, sender1_twil0, 'to: grammie', None, None)   # nq_sqs happens 
+        sender1_to_back = mms_to_free_tier(time.time(), Sender_1.tel_id, Sender_1.svc_A, 'to: grammie', None, None)   # nq_sqs happens 
         # Sender1 sets up a from: name for himself
-        sender1_from_back = mms_to_free_tier(time.time(), Sender1.mobile, sender1_twil0, 'from: sonny', None, None)   # nq_sqs happens 
+        sender1_from_back = mms_to_free_tier(time.time(), Sender_1.tel_id, Sender_1.svc_A, 'from: sonny', None, None)   # nq_sqs happens 
         # Sender1 changes its profile
-        sender1_profile_back = mms_to_free_tier(time.time(), Sender1.mobile, sender1_twil0, 'profile', 'new-profile-url', None)   # nq_sqs happens 
+        sender1_profile_back = mms_to_free_tier(time.time(), Sender_1.tel_id, Sender_1.svc_A, 'profile', 'new-profile-url', None)   # nq_sqs happens 
         self.assertIn('Your command <to: grammie> is queued for processing', sender1_to_back)
         self.assertIn('Your command <from: sonny> is queued for processing', sender1_from_back)
         self.assertEqual(sender1_profile_back, 'Your profile will be updated shortly, and you will be notified.')
@@ -245,14 +231,19 @@ class OneCmdTests(TestCase):
         # display_postal(sender0_postbox_id, 'pobox shows no change from sender1 setting to, from, and profile. Profile changes with new card.')
 
         # Sender1 now sends a card to the new connection. This will appear in connection but not yet viewer_data
-        filerviews.send_an_sqs_message(Sender1.newpostcard_haveviewer('twil0'), CMD_URL)
+        msg1 = dict(wip=Sender_1.new_card_wip(), context='HaveViewer', \
+                    tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at', event_type='new_postcard')
+        filerviews.send_an_sqs_message(msg1, CMD_URL)
         tickles('request_dummy') 
         boxlink0toA, boxlink1toA, boxlink1toB = get_3_corresponds()    
         sender0_postbox_id = boxlink1toA['pobox_id']  
         sender1_recent_card_id = boxlink1toA['cardlist_unplayed'][-1]
 
+
+        
+
         # Not sure what needs checking... Fix up this test flow, make the story more clear and examine more results!!!
-        print(f'=======Test need line 243 test_functional.... ')
+        print(f'\n\n\n=======>  Test line 243 test_functional, work here.... ')
 
 
         pobox = saveget.get_pobox(sender0_postbox_id)

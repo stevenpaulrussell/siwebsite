@@ -31,7 +31,6 @@ def _connect_joining_sender_to_lead_sender_pobox(tel_id, svc_id, requesting_tel_
     saveget.save_boxlink(requesting_boxlink)
     saveget.save_boxlink(accepting_boxlink)
     #  -> Send message to both tel_ids about the connection, the naming, and how to change.
-    print(f"================> debug line 32 connects  {tel_id, svc_id, requesting_tel_id, requester_svc_id}")
     return f'Successfully connected {requesting_tel_id} to {tel_id}'
  
 def check_the_connect_command(command_string):
