@@ -42,21 +42,25 @@ def handle_entered_text_event(tel_id, svc_id, text):
 
     if 'from:' in text:
         try:    
-            cmd, name = [word.strip() for word in text.split(' ')]
+            cmd, new_name = [word.strip() for word in text.split(' ')]
             assert cmd == 'from:'
         except (ValueError, AssertionError):
             if os.environ['TEST'] == 'True':
                 raise
             return f'Sorry, there is some problem with, "{text}". Try "?" for help.'
         sender = saveget.get_sender(tel_id)
-        if sender['sender_moniker'] == postcards.create_default_using_tel_id(tel_id):      # Had been using the default name, so change all
-            sender['sender_moniker'] = name
+        former_name = sender['sender_moniker']
+        if former_name == postcards.create_default_using_tel_id(tel_id):      # Had been using the default name, so change all
+            sender['sender_moniker'] = new_name
             for each_svc_id in sender['morsel']:
-                sender['morsel'][each_svc_id]['sender_moniker'] = name
+                sender['morsel'][each_svc_id]['sender_moniker'] = new_name
         else:
-            sender['morsel'][svc_id]['from'] = name
+            sender['morsel'][svc_id]['from'] = new_name
         saveget.update_sender_and_morsel(sender)
-        return f'You will now be identified to others in your sending group by {name} rather than by your sending telephone number.'
+        boxlink = saveget.get_boxlink(tel_id, svc_id)
+        boxlink['sender_moniker'] = new_name
+        saveget.save_boxlink(boxlink)
+        return f'You will now be identified to others in your sending group by "{new_name}" rather than by "{former_name}".'
 
     if 'to:' in text and len(text.split(' '))==2:
         try:    
@@ -70,8 +74,10 @@ def handle_entered_text_event(tel_id, svc_id, text):
         former_name = sender['morsel'][svc_id]['recipient_moniker']
         sender['morsel'][svc_id]['recipient_moniker'] = new_name
         saveget.update_sender_and_morsel(sender)
-        return f'Renamed recipient {former_name} to {new_name}'
-
+        boxlink = saveget.get_boxlink(tel_id, svc_id)
+        boxlink['recipient_moniker'] = new_name
+        saveget.save_boxlink(boxlink)
+        return f'Renamed recipient "{former_name}" to {new_name}'
     else:
         return f"Do not recognize commmand '{text}'. Send '?' for more help."
 

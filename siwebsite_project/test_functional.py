@@ -33,8 +33,19 @@ CMD_URL = filerviews.EVENT_URL
 
 
 """
-Simulate use.  Sender0 uses a single svc_id and makes a viewer for recipient KinA.
-Sender1 uses two svc_ids, sending to both KinA and KinB.
+Simulate use.  Sender_0 uses a single svc_id and makes a viewer for recipient KinA.
+Sender_1 uses two svc_ids, sending to both KinA and KinB.
+Flow:
+    Sender_0 signs up using twilio 'svc_A'  
+    Sender_1 signs up, also using twilio 'svc_A'
+    Sender_1 sends to a second twilio number, 'svc_B'
+    Sender_0 gets a passkey, and uses it in a http request to be assigned a postbox_id
+    Sender_0 sends a second card
+    Sender_1 gets a passkey for his svc_A 'boxlink'. Sender_0 uses the passkey to connect that boxlink to his own pobox.
+    Sender_1 sets up a viewer for svc_A, and it is the same view that Sender_0 set up.
+    Sender_1 changes his from: id, the recipient to: id, and also his profile image
+    Sender_1 senda a card on that connection.
+    ==> The other two connections are not exercised in this test.
 """
 
 
@@ -46,8 +57,13 @@ def display_sender(tel_id, comment=None):
     morsel = filerviews.load_from_free_tier(tel_id)
     print(f'\nsender <{tel_id}>:')
     pp.pprint(sender)
-    print(f'\nmorsel <{tel_id}>:')
-    pp.pprint(morsel)
+
+def display_boxlink(boxlink, comment=None):
+    if comment:
+        print('\n\n','='*20)
+        print(comment)
+    print(f"\nboxlink <{boxlink['tel_id'], boxlink['svc_id']}>:")
+    pp.pprint(boxlink)
 
 def display_postal(pobox_id, comment=None):
     if comment:
@@ -118,7 +134,7 @@ class OneCmdTests(TestCase):
         sender1_first_card = saveget.get_postcard(sender1_first_card_id)
         self.assertEqual(sender1_first_card['tel_id'], (Sender_1.tel_id))
 
-        # Sender1 sends to a second twilio number. twi2 notices the first use of that number by this sender
+        # Sender_1 sends to a second twilio number. twi2 notices the first use of that number by this sender
         msg1 = dict(wip=Sender_1.new_card_wip(), context='NewRecipientFirst', profile_url=Sender_1.profile_url, \
                     tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_B, sent_at='sent_at', event_type='new_postcard')
         filerviews.send_an_sqs_message(msg1, CMD_URL)
@@ -137,11 +153,11 @@ class OneCmdTests(TestCase):
         self.assertEqual(sender1_profile, '+..2_profile')
         self.assertEqual(sender1_morsel[Sender_1.svc_A]['recipient_moniker'], 'kith or kin')
         self.assertEqual(sender1_morsel[Sender_1.svc_B]['have_viewer'], False)
+        display_sender(Sender_0.tel_id, 'sender_0 before setting any viewer')
+        display_sender(Sender_1.tel_id, 'sender_1, two recipients, before setting any viewer')
+        display_boxlink(boxlink1toA, 'sender_1 first boxlink')
 
-        # display_sender(Sender0.mobile, 'sender0 before setting any viewer')
-        # display_sender(Sender1.mobile, 'sender1, two recipients, before setting any viewer')
-
-        # Sender0 gets a passkey to enable making a viewer for 'KinA'.  
+        # Sender_0 gets a passkey to enable making a viewer for 'KinA'.  
         sender0_passkey_msg = mms_to_free_tier(time.time(), Sender_0.tel_id, Sender_0.svc_A, 'passkey', None, None)    # nq_sqs happens 
         sender0_passkey =  sender0_passkey_msg.split('"')[1]
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
@@ -166,7 +182,7 @@ class OneCmdTests(TestCase):
         self.assertIn(Sender_0.tel_id, KinA_viewer_data)
         self.assertEqual(KinA_sender0_viewer_data['profile_url'], Sender_0.profile_url)
 
-        # Sender0 sends a second card, which appears in the pobox, but not yet in viewer_data.
+        # Sender_0 sends a second card, which appears in the pobox, but not yet in viewer_data.
         msg0 = dict(wip=Sender_0.new_card_wip(), context='HaveViewer', \
                     tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at', event_type='new_postcard')
         filerviews.send_an_sqs_message(msg0, CMD_URL)
@@ -185,10 +201,11 @@ class OneCmdTests(TestCase):
         secondcard_viewer_data = saveget.get_viewer_data(sender0_pobox_id)
         self.assertEqual(sender0_first_card_id, secondcard_viewer_data[Sender_0.tel_id]['card_id'])
         self.assertNotEqual(sender0_second_card_id, secondcard_viewer_data[Sender_0.tel_id]['card_id'])
+
         # display_sender(Sender0.mobile, f'sender0 after setting up a viewer and sending a second card')
         # display_postal(sender0_postbox_id, f'pobox after sender0 sent that second card')
 
-        # Sender0 connects Sender1 to the viewer, now using a passkey supplied by Sender1 for svc_A
+        # Sender_0 connects Sender_1 to the viewer, using a passkey supplied by Sender_1 for svc_A
         sender1_passkey_msg = mms_to_free_tier(time.time(), Sender_1.tel_id, Sender_1.svc_A, 'passkey', None, None)   # nq_sqs happens 
         sender1_passkey =  sender1_passkey_msg.split('"')[1]
         # To use the passkey, postmaster must be tickled!  Manual now, might change so that pobox search fires off a tickle first!
@@ -240,17 +257,11 @@ class OneCmdTests(TestCase):
         sender1_recent_card_id = boxlink1toA['cardlist_unplayed'][-1]
 
 
-        
-
-        # Not sure what needs checking... Fix up this test flow, make the story more clear and examine more results!!!
-        print(f'\n\n\n=======>  Test line 243 test_functional, work here.... ')
-
-
         pobox = saveget.get_pobox(sender0_postbox_id)
         viewer_data = saveget.get_viewer_data(sender0_postbox_id)
 
         # Below used to say NotIn, because the update of viewer_data did not occur when with a new card.  But, check all this and complete the test!
-        self.assertIn(Sender1.mobile, viewer_data)
+        self.assertIn(Sender_1.tel_id, viewer_data)
 
 
         # Played it???????????????????????/
@@ -267,14 +278,19 @@ class OneCmdTests(TestCase):
         print(f"What is to be checked with the new logic, line 264?? Here is viewer_data:\n{viewer_data}\n")
 
 
-        self.assertIn(Sender0.mobile, viewer_data)
-        self.assertIn(Sender1.mobile, viewer_data)
+        self.assertIn(Sender_0.tel_id, viewer_data)
+        self.assertIn(Sender_1.tel_id, viewer_data)
+
+        display_boxlink(boxlink0toA, 'Ending sender_0  boxlink')
+        display_boxlink(boxlink1toA, 'Ending sender_1 first boxlink')
+        display_boxlink(boxlink1toB, 'Ending sender_1 second boxlink')
+
 
         # display_postal(pobox_id, f'sender1 just sent a card.  This appears in the pobox, and viewer_data shows the changed profile')
 
         self.assertFalse('connect command needs to check whether the issuer is the key_operator.  Make unit and functional tests for this case.')
 
-        self.assertFalse('Still need to check on this last part, and see if the tes on played it and new cards is here.  Almost done!')
+        self.assertFalse('Still need to check on this last part, and see if the test on played it and new cards is here.  Almost done!')
 
 
 

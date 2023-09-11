@@ -7,7 +7,7 @@ from twitalk.tests import SiWebCarepostUser
 from saveget import saveget
 from siwebsite_project import utils_4_testing
 
-from . import postcards, connects, views
+from . import event_handler, postcards, connects, views
 
 
 class PostcardProcessing(TestCase):
@@ -227,3 +227,43 @@ class ConnectCases(TestCase):
         
     def test_event_context(self):
         self.assertFalse('postcards.new_postcard eventcontext still needs work')
+
+
+class TextCommandCases(TestCase):
+    def setUp(self):
+        # clear out AWS bucket and queue
+        filerviews.clear_the_read_bucket()
+        filerviews.clear_the_sqs_queue_TEST_SQS()
+        # reset New_Tests_Sender
+        utils_4_testing.New_Tests_Sender.reset()
+        # First sender completes sign-up
+        Sender_1 = utils_4_testing.New_Tests_Sender()
+        msg = dict(sent_at='sent_at', wip=Sender_1.new_card_wip(), context='NewSenderFirst', profile_url=Sender_1.profile_url)
+        postcards.new_postcard(Sender_1.tel_id, Sender_1.svc_A, msg)
+        # Connect to a viewer
+        boxlink = saveget.get_boxlink(Sender_1.tel_id, Sender_1.svc_A)
+        views.new_pobox_id(boxlink)
+        self.Sender_1 = Sender_1
+        self.tel_id = Sender_1.tel_id
+        self.svc = Sender_1.svc_A
+    
+    def test_from_command(self):
+        text = f'from: Sonny'
+        response = event_handler.handle_entered_text_event(self.tel_id, self.svc, text)
+        updated_sender = saveget.get_sender(self.tel_id)
+        updated_morsel = updated_sender['morsel']
+        updated_boxlink = saveget.get_boxlink(self.tel_id, self.svc)
+        self.assertEqual(updated_sender['sender_moniker'], 'Sonny')
+        self.assertEqual(updated_morsel[self.svc]['sender_moniker'], 'Sonny')
+        self.assertEqual(updated_boxlink['sender_moniker'], 'Sonny')
+        self.assertIn('Sonny', response)
+
+    def test_to_command(self):
+        text = f'to: Grammie'
+        response = event_handler.handle_entered_text_event(self.tel_id, self.svc, text)
+        updated_sender = saveget.get_sender(self.tel_id)
+        updated_morsel = updated_sender['morsel']
+        updated_boxlink = saveget.get_boxlink(self.tel_id, self.svc)
+        self.assertEqual(updated_morsel[self.svc]['recipient_moniker'], 'Grammie')
+        self.assertEqual(updated_boxlink['recipient_moniker'], 'Grammie')
+        self.assertIn('Grammie', response)
