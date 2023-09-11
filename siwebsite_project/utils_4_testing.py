@@ -1,6 +1,9 @@
 """Use this to replace sender_object_for_tests, making the tests easier to read."""
 
 import time
+import pprint
+
+pp = pprint.PrettyPrinter(indent=2)
 
 class New_Tests_Sender():
     """This intended to simplify test by simpler naming and simple methods."""

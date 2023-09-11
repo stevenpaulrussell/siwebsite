@@ -1,4 +1,5 @@
 from django.test import TestCase
+import time
 
 
 # make cards and pobox. Test played_it, update update_pobox_new_card.
@@ -9,44 +10,52 @@ from filer import views as filerviews
 from postoffice import event_handler, connects
 from postoffice import views as postofficeviews
 from saveget import saveget
-from siwebsite_project.sender_object_for_tests import TwiSim, pp
+from siwebsite_project.utils_4_testing import pp, New_Tests_Sender
 from . import views
 
 
 def make_two_sender_viewer_data():
-    Sender0 = TwiSim('Mr0')
-    Sender1 = TwiSim('Ms1')
-    sender1_twil0 = Sender1.twi_directory['twil0']
-    sender1_twil1 = Sender1.twi_directory['twil1']
-    sender0_twil0 = Sender0.twi_directory['twil0']
+    Sender_0 = New_Tests_Sender()
+    Sender_1 = New_Tests_Sender()
+    # Sender_0 signs up: first sends a postcard, then a profile (following Twilio prompts). 'twi2' sends the NewSenderFirst message on an AWS queue. 
+    event = dict(event_type='new_postcard', wip=Sender_0.new_card_wip(), context='NewSenderFirst', profile_url=Sender_0.profile_url, \
+                tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at')
+    event_handler.interpret_one_event(event)
+    # Sender_1 signs up
+    event = dict(event_type = 'new_postcard', wip=Sender_1.new_card_wip(), context='NewSenderFirst', profile_url=Sender_1.profile_url, \
+                tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at')
+    event_handler.interpret_one_event(event)
 
-    event_handler.interpret_one_event(Sender0.newsender_firstpostcard())
-    event_handler.interpret_one_event(Sender1.newsender_firstpostcard())
-    # Sender1 sends to a second twilio number
-    event_handler.interpret_one_event(Sender1.newrecipient_postcard('twil1'))
-
-    # # Sender0 makes a viewer.  This sets up the pobox, the viewer_data, putting a card in viewer_data, returning pobox_id
-    # sender0 = saveget.get_sender(Sender0.mobile)
-    # pobox_id = postofficeviews.new_pobox_id(sender0, sender0_twil0)
+    # Sender_1 sends to a second twilio number
+    event = dict(event_type='new_postcard', wip=Sender_1.new_card_wip(), context='NoViewer', profile_url=Sender_1.profile_url, \
+                tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at')
+    event_handler.interpret_one_event(event)
 
     # Get a viewer for sender0's boxlink (tel_id, svc_id)
-    boxlink = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+    boxlink = saveget.get_boxlink(Sender_0.tel_id, Sender_0.svc_A)
     pobox_id = postofficeviews.new_pobox_id(boxlink)
 
-    # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
-    event_handler.interpret_one_event(Sender0.newpostcard_haveviewer('twil0'))
+    # Sender_0 sends another card. This appears in the pobox, but not yet in viewer_data.
+    # ====> Note change to context from 'NoViewer' to 'HaveViewer'!  The context sets the logic !!!!!!!!!!
+    event = dict(event_type='new_postcard', wip=Sender_0.new_card_wip(), context='HaveViewer', profile_url=Sender_1.profile_url, \
+                tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A, sent_at='sent_at')
+    event_handler.interpret_one_event(event)
 
     # Sender0 connects Sender1 to the viewer:
-    event_handler.interpret_one_event(Sender1.passkey('twil0'))
-    sender1_passkey, svc_id_used = connects.get_passkey(Sender1.mobile)
+    PASSKEY = 'pw_1'
+    event = dict(event_type='passkey', passkey=PASSKEY, expire=time.time()+10, tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A)
+    response = event_handler.interpret_one_event(event)
     # Issue the connect command and inspect the results
-    sender0_msg_back = event_handler.interpret_one_event(Sender0.connect('twil0', Sender1.mobile, sender1_passkey))
+    text = f'connect {Sender_1.tel_id} passkey {PASSKEY}'
+    event = dict(event_type='text_was_entered', text=text, tel_id=Sender_0.tel_id, svc_id=Sender_0.svc_A)
+    sender0_msg_back = event_handler.interpret_one_event(event)
 
     # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
-    event_handler.interpret_one_event(Sender1.newpostcard_haveviewer('twil0'))
+    event = dict(event_type='new_postcard', wip=Sender_1.new_card_wip(), context='HaveViewer', profile_url=Sender_1.profile_url, \
+                tel_id=Sender_1.tel_id, svc_id=Sender_1.svc_A, sent_at='sent_at')
+    event_handler.interpret_one_event(event)
     pobox = saveget.get_pobox(pobox_id)
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    views.update_viewer_data(pobox, viewer_data)
+    viewer_data = pobox['viewer_data']
     return viewer_data
 
 
@@ -58,8 +67,10 @@ class OneCmdTests(TestCase):
     def test_can_do_make_two_sender_viewer_data(self):
         """Makes test data using code from postmaster.test_event_handler.  Testing to see if this can be fed to the new postcard viwer code."""
         viewer_data = make_two_sender_viewer_data()
-        self.assertIn('meta', viewer_data)
+        print(f'\nline 69 postbox tests, here is viewer_data:')
         pp.pprint(viewer_data)
+        self.assertEqual(len(viewer_data), 2)
+
 
 
 
