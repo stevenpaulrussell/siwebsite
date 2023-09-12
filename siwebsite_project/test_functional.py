@@ -399,19 +399,15 @@ def run_simulation_of_two_senders():
     event_handler.interpret_one_event(Sender1.newpostcard_noviewer('twil0'))
     # Sender0 makes a viewer.  This sets up the pobox, returning pobox_id.  Viewer_data is initialized with meta only
     sender0 = saveget.get_sender(Sender0.mobile)
-    pobox_id       = new_pobox_id(sender0, sender0_twil0)
-    sender0_viewer_data = saveget.get_viewer_data(pobox_id)
-
+    boxlink0A = saveget.get_boxlink(Sender0.mobile, sender0_twil0)
+    pobox_id       = new_pobox_id(boxlink0A)
+ 
     # postbox.update_viewer_data  puts a card in viewer_data
     pobox = saveget.get_pobox(pobox_id)
-    update_viewer_data(pobox, sender0_viewer_data)
-    updated_viewer_data = saveget.get_viewer_data(pobox_id)
+    updated_viewer_data = pobox['viewer_data']
 
     # Sender0 sends another card. This appears in the pobox, but not yet in viewer_data.
-    # The pobox is updated on each new card, but viewer_data updates only on some viewer refresh
     event_handler.interpret_one_event(Sender0.newpostcard_haveviewer('twil0'))
-    sender0 = saveget.get_sender(Sender0.mobile)
-    sender0_second_card_id = sender0['conn'][sender0_twil0]['recent_card_id']
     pobox = saveget.get_pobox(pobox_id)
 
     # Sender0 connects Sender1 to the viewer:
@@ -434,8 +430,5 @@ def run_simulation_of_two_senders():
 
     # Sender1 now sends a card to the new connection. This will appear in pobox but not yet viewer_data
     event_handler.interpret_one_event(Sender1.newpostcard_haveviewer('twil0'))
-    pobox = saveget.get_pobox(pobox_id)
-    viewer_data = saveget.get_viewer_data(pobox_id)
-    update_viewer_data(pobox, viewer_data)
 
     return Sender0, Sender1
