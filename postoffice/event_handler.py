@@ -34,6 +34,8 @@ def interpret_one_event(event):
         case _:
             """ Send admin an error message or in test raise exception"""
             message = f'whoops, do not recognize command {event_type}.'
+            if os.environ['TEST']:
+                print(f'\nBad event in event_handler: {event}\n')
 
 def handle_entered_text_event(tel_id, svc_id, text): 
     if 'connect' in text:
@@ -83,18 +85,23 @@ def handle_entered_text_event(tel_id, svc_id, text):
 
 
 def handle_played_it_event(event):
-    pobox_id = event['pobox_id']
+    # Needs unit test, and likely can simplify to just getting the card id.
     card_id = event['card_id']
-    pobox = saveget.get_pobox(pobox_id)
     card = saveget.get_postcard(card_id)
+    tel_id = card['tel_id']
+    svc_id = card['svc_id']
+    boxlink = saveget.get_boxlink(tel_id, svc_id)
+    pobox_id = event['pobox_id']
+    pobox = saveget.get_pobox(pobox_id)
+    pobox['played_a_card'] = time.time()
+    pobox['heard_from'] = time.time()
+    pobox['viewer_data'][tel_id]['play_count'] += 1                    
     card['play_count'] += 1
     card['pobox_id'] = pobox_id
-    tel_id, svc_id = card['boxlink']
-    boxlink = saveget.get_boxlink(tel_id, svc_id)
+    card['retired_at'] = time.time()
+    saveget.save_postcard(card)     
     if boxlink['cardlist_unplayed'] != []:
         postcards.push_cards_along(boxlink, pobox)
-    saveget.save_boxlink(boxlink)
     saveget.save_pobox(pobox)
-
-
-
+    saveget.save_boxlink(boxlink)
+    saveget.save_postcard(card) 

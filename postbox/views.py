@@ -48,12 +48,13 @@ def return_playable_viewer_data(request, pobox_id):
         viewer_data = _make_playable_viewer_data_for_testing()
     else:
         pobox = saveget.get_pobox(pobox_id)
-        viewer_data = saveget.get_viewer_data(pobox_id)
+        pobox['heard_from'] = time.time()
+        saveget.save_pobox(pobox)
+        viewer_data = pobox['viewer_data']
     return HttpResponse(content = json.dumps(viewer_data))
 
 
 def played_this_card(request, pobox_id, card_id):
-    # ------->>>>>>> This should now just enque an event, and exit
     if 'test' in pobox_id:
         return HttpResponse(content=json.dumps(f'Testing, got: pobox_id: {pobox_id};  card_id: {card_id}'))
     saveget.nq_played_this_card(pobox_id, card_id)

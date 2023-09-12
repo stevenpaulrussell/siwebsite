@@ -8,8 +8,6 @@ using only sqs and urls to drive state.  Examine state with anything.
 
 
 import time
-import uuid
-import pprint
 import json
 import os
 import requests
@@ -70,7 +68,7 @@ def display_postal(pobox_id, comment=None):
         print('\n\n','='*20)
         print(comment)
     pobox = saveget.get_pobox(pobox_id)
-    viewer_data = saveget.get_viewer_data(pobox_id)
+    viewer_data = pobox['viewer_data']
     print(f'\npobox <{pobox_id}>:')
     pp.pprint(pobox)
     print(f'\nviewer_data <{pobox_id}>:')
@@ -198,7 +196,7 @@ class OneCmdTests(TestCase):
         # updating viewer_data changes nothing becaue the card in viewer_data remains unplayed
         # update_viewer_data(pobox, sender0_viewer_data)
         secondcard_pobox = saveget.get_pobox(sender0_pobox_id)
-        secondcard_viewer_data = saveget.get_viewer_data(sender0_pobox_id)
+        secondcard_viewer_data = secondcard_pobox['viewer_data']
         self.assertEqual(sender0_first_card_id, secondcard_viewer_data[Sender_0.tel_id]['card_id'])
         self.assertNotEqual(sender0_second_card_id, secondcard_viewer_data[Sender_0.tel_id]['card_id'])
 
@@ -258,7 +256,7 @@ class OneCmdTests(TestCase):
 
 
         pobox = saveget.get_pobox(sender0_postbox_id)
-        viewer_data = saveget.get_viewer_data(sender0_postbox_id)
+        viewer_data = pobox['viewer_data']
 
         # Below used to say NotIn, because the update of viewer_data did not occur when with a new card.  But, check all this and complete the test!
         self.assertIn(Sender_1.tel_id, viewer_data)
@@ -273,7 +271,7 @@ class OneCmdTests(TestCase):
 
         sender1_postbox_id =  sender1_redirected_url.split('/postbox/')[-1]        
         pobox = saveget.get_pobox(sender1_postbox_id)
-        viewer_data = saveget.get_viewer_data(sender1_postbox_id)
+        viewer_data = pobox['viewer_data']
 
         print(f"What is to be checked with the new logic, line 264?? Here is viewer_data:\n{viewer_data}\n")
 
@@ -291,6 +289,7 @@ class OneCmdTests(TestCase):
         self.assertFalse('connect command needs to check whether the issuer is the key_operator.  Make unit and functional tests for this case.')
 
         self.assertFalse('Still need to check on this last part, and see if the test on played it and new cards is here.  Almost done!')
+        self.assertFalse('Need to make the process to archive cards and move media!')
 
 
 
